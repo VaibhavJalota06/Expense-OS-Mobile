@@ -32,6 +32,18 @@ class SupabaseService {
     return await client.auth.signInWithPassword(email: email, password: password);
   }
 
+  Future<bool> signInWithGoogle() async {
+    try {
+      return await client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'com.expensecalculator.expenseosmobile://login-callback',
+      );
+    } catch (e) {
+      debugPrint('Google Sign-In Exception: $e');
+      return false;
+    }
+  }
+
   Future<void> signOut() async {
     await client.auth.signOut();
   }

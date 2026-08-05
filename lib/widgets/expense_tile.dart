@@ -49,26 +49,24 @@ class ExpenseTile extends StatelessWidget {
   }
 
   Color _getCategoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'food':
-        return const Color(0xFFFF9F43);
-      case 'shopping':
-        return const Color(0xFFFF5252);
-      case 'housing':
-        return const Color(0xFF706FD3);
-      case 'transport':
-        return const Color(0xFF00D2D3);
-      case 'entertainment':
-        return const Color(0xFFFF793F);
-      case 'utilities':
-        return const Color(0xFFFECA57);
-      case 'healthcare':
-        return const Color(0xFFFF5252);
-      case 'salary':
-      case 'income':
-        return AppTheme.successGreen;
+    switch (category) {
+      case 'Food & Dining':
+        return const Color(0xFF34D399); // Emerald
+      case 'Transportation':
+        return const Color(0xFF38BDF8); // Sky
+      case 'Shopping':
+        return const Color(0xFFA78BFA); // Violet
+      case 'Bills & Utilities':
+        return const Color(0xFFFBBF24); // Amber
+      case 'Services & Subscriptions':
+        return const Color(0xFF818CF8); // Indigo
+      case 'Entertainment':
+        return const Color(0xFFF472B6); // Pink
+      case 'Health & Fitness':
+        return const Color(0xFFFB923C); // Orange
+      case 'Miscellaneous':
       default:
-        return AppTheme.primaryCyan;
+        return const Color(0xFF94A3B8); // Slate
     }
   }
 

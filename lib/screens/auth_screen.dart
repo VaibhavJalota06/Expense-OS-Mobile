@@ -296,6 +296,70 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ),
                                 ),
                         ),
+                        const SizedBox(height: 14),
+
+                        // OR Divider
+                        Row(
+                          children: [
+                            const Expanded(child: Divider(color: Colors.white24)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                              child: Text('OR', style: GoogleFonts.poppins(color: AppTheme.textMuted, fontSize: 12)),
+                            ),
+                            const Expanded(child: Divider(color: Colors.white24)),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Google Sign In Button
+                        OutlinedButton(
+                          onPressed: () async {
+                            setState(() => _isLoading = true);
+                            final success = await _supabaseService.signInWithGoogle();
+                            setState(() => _isLoading = false);
+                            if (success && mounted) {
+                              widget.onAuthSuccess();
+                            }
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: const BorderSide(color: Colors.white24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  'G',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF4285F4),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Sign in with Google',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         const SizedBox(height: 16),
 
                         // Demo Mode / Guest Access Button
