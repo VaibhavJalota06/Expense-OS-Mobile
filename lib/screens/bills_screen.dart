@@ -195,93 +195,219 @@ class _BillsScreenState extends State<BillsScreen> {
 
               // Subscriptions List
               Expanded(
-                child: ListView.separated(
-                  itemCount: _subscriptions.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final item = _subscriptions[index];
-                    final daysLeft = item.dueDate.difference(DateTime.now()).inDays;
-
-                    return GlassCard(
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppTheme.accentCyan.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
+                child: _subscriptions.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.subscriptions_outlined, size: 54, color: AppTheme.textSecondary),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No subscriptions added yet.',
+                              style: GoogleFonts.poppins(color: AppTheme.textSecondary),
                             ),
-                            child: const Icon(Icons.subscriptions_outlined, color: AppTheme.accentCyan),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            const SizedBox(height: 4),
+                            Text(
+                              'Tap "Add Bill" below to track recurring payments.',
+                              style: GoogleFonts.poppins(color: AppTheme.textMuted, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: _subscriptions.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final item = _subscriptions[index];
+                          final now = DateTime.now();
+                          final daysLeft = item.dueDate.difference(now).inDays;
+                          final isExpiringSoon = !item.isPaid && daysLeft >= 0 && daysLeft <= 7;
+                          final isOverdue = !item.isPaid && daysLeft < 0;
+
+                          return GlassCard(
+                            child: Row(
                               children: [
-                                Text(
-                                  item.title,
-                                  style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Due in ${daysLeft <= 0 ? "Today" : "$daysLeft days"} (${DateFormat("MMM dd").format(item.dueDate)})',
-                                  style: GoogleFonts.poppins(
-                                    color: daysLeft <= 3 ? AppTheme.accentRed : AppTheme.textSecondary,
-                                    fontSize: 12,
+                                // Category / Status Badge Icon
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: item.isPaid
+                                        ? AppTheme.emerald.withOpacity(0.15)
+                                        : (isOverdue
+                                            ? AppTheme.accentRed.withOpacity(0.15)
+                                            : AppTheme.accentCyan.withOpacity(0.1)),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
+                                  child: Icon(
+                                    item.isPaid
+                                        ? Icons.check_circle_outline
+                                        : (isOverdue ? Icons.warning_amber_rounded : Icons.subscriptions_outlined),
+                                    color: item.isPaid
+                                        ? AppTheme.emerald
+                                        : (isOverdue ? AppTheme.accentRed : AppTheme.accentCyan),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+
+                                // Details: Title, Due / Paid status & Expiring Soon tag
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              item.title,
+                                              style: GoogleFonts.poppins(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (isExpiringSoon) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.amber.withOpacity(0.2),
+                                                borderRadius: BorderRadius.circular(6),
+                                                border: Border.all(color: AppTheme.amber.withOpacity(0.5)),
+                                              ),
+                                              child: Text(
+                                                'Expiring Soon',
+                                                style: GoogleFonts.poppins(color: AppTheme.amber, fontSize: 9, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ],
+                                          if (isOverdue) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.accentRed.withOpacity(0.2),
+                                                borderRadius: BorderRadius.circular(6),
+                                                border: Border.all(color: AppTheme.accentRed.withOpacity(0.5)),
+                                              ),
+                                              child: Text(
+                                                'Overdue',
+                                                style: GoogleFonts.poppins(color: AppTheme.accentRed, fontSize: 9, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      const SizedBox(height: 3),
+
+                                      // Subtitle: Due Date & Month Expiration Notice
+                                      Text(
+                                        item.isPaid
+                                            ? 'Paid for this month • Next due ${DateFormat("MMM dd, yyyy").format(item.dueDate)}'
+                                            : (daysLeft <= 0
+                                                ? 'Due Today (${DateFormat("MMM dd").format(item.dueDate)})'
+                                                : 'Due in $daysLeft days (${DateFormat("MMM dd").format(item.dueDate)})'),
+                                        style: GoogleFonts.poppins(
+                                          color: item.isPaid
+                                              ? AppTheme.emerald
+                                              : (daysLeft <= 3 ? AppTheme.accentRed : AppTheme.textSecondary),
+                                          fontSize: 12,
+                                          fontWeight: item.isPaid ? FontWeight.w600 : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+
+                                // Amount & Pay Now / Paid Button
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      currency.format(item.amount),
+                                      style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    InkWell(
+                                      onTap: item.isPaid
+                                          ? null // Already paid
+                                          : () async {
+                                              final newExpense = Expense(
+                                                title: item.title,
+                                                amount: item.amount,
+                                                category: item.category,
+                                                type: 'expense',
+                                                date: DateTime.now(),
+                                                paymentMethod: item.paymentMethod,
+                                              );
+                                              await _supabaseService.addExpense(newExpense);
+
+                                              // Advance due date by 1 month or 1 year
+                                              final nextDueDate = item.cycle == 'yearly'
+                                                  ? DateTime(item.dueDate.year + 1, item.dueDate.month, item.dueDate.day)
+                                                  : DateTime(item.dueDate.year, item.dueDate.month + 1, item.dueDate.day);
+
+                                              setState(() {
+                                                _subscriptions[index] = item.copyWith(
+                                                  isPaid: true,
+                                                  lastPaidDate: DateTime.now(),
+                                                  dueDate: nextDueDate,
+                                                );
+                                              });
+
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('Logged ${item.title} payment (${currency.format(item.amount)}) in Expenses!'),
+                                                    backgroundColor: AppTheme.emerald,
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 300),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                        decoration: BoxDecoration(
+                                          color: item.isPaid
+                                              ? AppTheme.emerald.withOpacity(0.2)
+                                              : AppTheme.accentCyan.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: item.isPaid
+                                                ? AppTheme.emerald.withOpacity(0.6)
+                                                : AppTheme.accentCyan.withOpacity(0.4),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (item.isPaid) ...[
+                                              const Icon(Icons.check, size: 12, color: AppTheme.emerald),
+                                              const SizedBox(width: 4),
+                                            ],
+                                            Text(
+                                              item.isPaid ? 'PAID ✓' : 'PAY NOW',
+                                              style: GoogleFonts.poppins(
+                                                color: item.isPaid ? AppTheme.emerald : AppTheme.accentCyan,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                currency.format(item.amount),
-                                style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                              ),
-                              const SizedBox(height: 4),
-                              InkWell(
-                                onTap: () async {
-                                  final newExpense = Expense(
-                                    title: item.title,
-                                    amount: item.amount,
-                                    category: item.category,
-                                    type: 'expense',
-                                    date: DateTime.now(),
-                                    paymentMethod: item.paymentMethod,
-                                  );
-                                  await _supabaseService.addExpense(newExpense);
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Logged ${item.title} payment (${currency.format(item.amount)}) in Expenses!'),
-                                        backgroundColor: AppTheme.emerald,
-                                      ),
-                                    );
-                                  }
-                                },
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.accentCyan.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: AppTheme.accentCyan.withOpacity(0.4)),
-                                  ),
-                                  child: Text(
-                                    'PAY NOW',
-                                    style: GoogleFonts.poppins(color: AppTheme.accentCyan, fontSize: 10, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),
