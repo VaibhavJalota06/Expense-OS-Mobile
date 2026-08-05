@@ -17,28 +17,28 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  late final List<Widget> _screens;
-
-  @override
-  void initState() {
-    super.initState();
-    _screens = [
-      const DashboardScreen(),
-      const TransactionsScreen(),
-      const BillsScreen(),
-      const AnalyticsScreen(),
-      ProfileScreen(onSignOut: widget.onSignOut),
-    ];
+  Widget _buildScreen(int index) {
+    switch (index) {
+      case 0:
+        return const DashboardScreen();
+      case 1:
+        return const TransactionsScreen();
+      case 2:
+        return const BillsScreen();
+      case 3:
+        return const AnalyticsScreen();
+      case 4:
+        return ProfileScreen(onSignOut: widget.onSignOut);
+      default:
+        return const DashboardScreen();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: _buildScreen(_currentIndex),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF0F172A),

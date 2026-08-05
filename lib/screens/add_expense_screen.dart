@@ -23,14 +23,19 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   late TextEditingController _titleController;
   late TextEditingController _amountController;
   
-  String _selectedCategory = 'Food';
+  String _selectedCategory = 'Food & Dining';
   String _selectedType = 'expense';
   String _selectedPaymentMethod = 'Card';
   DateTime _selectedDate = DateTime.now();
 
   final List<String> _categories = [
-    'Food', 'Shopping', 'Housing', 'Transport', 
-    'Entertainment', 'Utilities', 'Healthcare', 'Salary', 'Investment', 'Miscellaneous'
+    'Food & Dining',
+    'Transportation',
+    'Shopping',
+    'Bills & Utilities',
+    'Services & Subscriptions',
+    'Health & Fitness',
+    'Miscellaneous'
   ];
 
   final List<String> _paymentMethods = ['Cash', 'Card', 'UPI', 'Net Banking'];
