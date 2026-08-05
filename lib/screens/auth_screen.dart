@@ -82,22 +82,25 @@ class _AuthScreenState extends State<AuthScreen> {
               children: [
                 // Logo & Header
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.accentCyan.withOpacity(0.4),
-                        blurRadius: 20,
+                        color: AppTheme.emerald.withOpacity(0.4),
+                        blurRadius: 24,
                         spreadRadius: 2,
                       )
                     ],
                   ),
-                  child: const Icon(
-                    Icons.account_balance_wallet_outlined,
-                    size: 44,
-                    color: Colors.black,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      'assets/icon/app_icon.png',
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

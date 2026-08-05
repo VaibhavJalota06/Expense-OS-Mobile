@@ -197,23 +197,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 padding: const EdgeInsets.all(20.0),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // Title Bar
+                    // Title Bar with Branding Logo
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Row(
                           children: [
-                            Text(
-                              'Expense OS',
-                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.asset(
+                                'assets/icon/app_icon.png',
+                                width: 36,
+                                height: 36,
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                            const Text(
-                              'Finance Command Center',
-                              style: TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Expense OS',
+                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                        fontSize: 22,
+                                      ),
+                                ),
+                                const Text(
+                                  'Finance Command Center',
+                                  style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                                ),
+                              ],
                             ),
                           ],
                         ),
