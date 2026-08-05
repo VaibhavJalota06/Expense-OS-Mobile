@@ -22,7 +22,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   @override
   void initState() {
     super.initState();
+    SupabaseService.refreshNotifier.addListener(_loadData);
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    SupabaseService.refreshNotifier.removeListener(_loadData);
+    super.dispose();
   }
 
   Future<void> _loadData() async {

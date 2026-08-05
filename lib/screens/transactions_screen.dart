@@ -35,12 +35,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   void initState() {
     super.initState();
+    SupabaseService.refreshNotifier.addListener(_loadData);
     _loadData();
     _searchController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
+    SupabaseService.refreshNotifier.removeListener(_loadData);
     _searchController.dispose();
     super.dispose();
   }

@@ -70,6 +70,9 @@ class SupabaseService {
     }
   }
 
+  // Static global refresh notifier for real-time automatic screen updates
+  static final ValueNotifier<int> refreshNotifier = ValueNotifier<int>(0);
+
   // Add new expense with graceful fallback
   Future<Expense> addExpense(Expense expense) async {
     final Map<String, dynamic> json = expense.toJson();
@@ -84,13 +87,16 @@ class SupabaseService {
           .select()
           .single();
       
-      return Expense.fromJson(response);
+      final result = Expense.fromJson(response);
+      refreshNotifier.value++;
+      return result;
     } catch (e) {
       // Fallback to local memory storage
       final localItem = expense.copyWith(
         id: expense.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       );
       _localExpenses.insert(0, localItem);
+      refreshNotifier.value++;
       return localItem;
     }
   }
@@ -107,12 +113,15 @@ class SupabaseService {
           .select()
           .single();
 
-      return Expense.fromJson(response);
+      final result = Expense.fromJson(response);
+      refreshNotifier.value++;
+      return result;
     } catch (e) {
       final index = _localExpenses.indexWhere((e) => e.id == expense.id);
       if (index != -1) {
         _localExpenses[index] = expense;
       }
+      refreshNotifier.value++;
       return expense;
     }
   }
@@ -123,6 +132,8 @@ class SupabaseService {
       await client.from('expenses').delete().eq('id', id);
     } catch (e) {
       _localExpenses.removeWhere((e) => e.id == id);
+    } finally {
+      refreshNotifier.value++;
     }
   }
 }

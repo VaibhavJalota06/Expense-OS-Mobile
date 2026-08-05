@@ -25,8 +25,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    SupabaseService.refreshNotifier.addListener(_loadExpenses);
     _loadBudgetCap();
     _loadExpenses();
+  }
+
+  @override
+  void dispose() {
+    SupabaseService.refreshNotifier.removeListener(_loadExpenses);
+    super.dispose();
   }
 
   Future<void> _loadBudgetCap() async {
