@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../models/expense_model.dart';
 import '../models/subscription_model.dart';
+import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass_card.dart';
 
@@ -13,6 +15,7 @@ class BillsScreen extends StatefulWidget {
 }
 
 class _BillsScreenState extends State<BillsScreen> {
+  final SupabaseService _supabaseService = SupabaseService();
   final List<SubscriptionItem> _subscriptions = [
     SubscriptionItem(
       id: '1',
@@ -270,9 +273,40 @@ class _BillsScreenState extends State<BillsScreen> {
                                 currency.format(item.amount),
                                 style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
                               ),
-                              Text(
-                                item.cycle.toUpperCase(),
-                                style: GoogleFonts.poppins(color: AppTheme.accentCyan, fontSize: 10, fontWeight: FontWeight.bold),
+                              const SizedBox(height: 4),
+                              InkWell(
+                                onTap: () async {
+                                  final newExpense = Expense(
+                                    title: item.title,
+                                    amount: item.amount,
+                                    category: item.category,
+                                    type: 'expense',
+                                    date: DateTime.now(),
+                                    paymentMethod: item.paymentMethod,
+                                  );
+                                  await _supabaseService.addExpense(newExpense);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Logged ${item.title} payment (${currency.format(item.amount)}) in Expenses!'),
+                                        backgroundColor: AppTheme.emerald,
+                                      ),
+                                    );
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.accentCyan.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: AppTheme.accentCyan.withOpacity(0.4)),
+                                  ),
+                                  child: Text(
+                                    'PAY NOW',
+                                    style: GoogleFonts.poppins(color: AppTheme.accentCyan, fontSize: 10, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
