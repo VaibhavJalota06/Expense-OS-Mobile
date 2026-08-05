@@ -30,6 +30,16 @@ class _BillsScreenState extends State<BillsScreen> {
     final amountController = TextEditingController();
     String category = 'Services & Subscriptions';
     String cycle = 'monthly';
+    DateTime selectedDueDate = DateTime.now().add(const Duration(days: 7));
+
+    final List<String> categories = [
+      'Services & Subscriptions',
+      'Bills & Utilities',
+      'Housing',
+      'Entertainment',
+      'Health & Fitness',
+      'Miscellaneous',
+    ];
 
     showModalBottomSheet(
       context: context,
@@ -40,7 +50,7 @@ class _BillsScreenState extends State<BillsScreen> {
           builder: (context, setSheetState) {
             return Container(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
                 top: 24,
                 left: 20,
                 right: 20,
@@ -49,74 +59,167 @@ class _BillsScreenState extends State<BillsScreen> {
                 color: Color(0xFF0F172A),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Add Recurring Subscription',
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 16),
-
-                  TextField(
-                    controller: titleController,
-                    keyboardType: TextInputType.text,
-                    textCapitalization: TextCapitalization.sentences,
-                    style: GoogleFonts.poppins(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: 'Subscription Title',
-                      labelStyle: const TextStyle(color: Colors.white70),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.05),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Add Recurring Subscription / Bill',
+                          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white70),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 16),
 
-                  TextField(
-                    controller: amountController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                    ],
-                    style: GoogleFonts.poppins(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: 'Cost (₹)',
-                      labelStyle: const TextStyle(color: Colors.white70),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.05),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    // Title
+                    TextField(
+                      controller: titleController,
+                      keyboardType: TextInputType.text,
+                      textCapitalization: TextCapitalization.sentences,
+                      style: GoogleFonts.poppins(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Subscription / Bill Name',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.05),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
-                  ElevatedButton(
-                    onPressed: () {
-                      if (titleController.text.isEmpty || amountController.text.isEmpty) return;
-                      final newSub = SubscriptionItem(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        title: titleController.text.trim(),
-                        amount: double.tryParse(amountController.text) ?? 0.0,
-                        category: category,
-                        cycle: cycle,
-                        dueDate: DateTime.now().add(const Duration(days: 30)),
-                      );
-
-                      setState(() {
-                        _subscriptions.add(newSub);
-                      });
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: AppTheme.accentCyan,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    // Cost
+                    TextField(
+                      controller: amountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                      ],
+                      style: GoogleFonts.poppins(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Amount (₹)',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.05),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
                     ),
-                    child: Text('SAVE SUBSCRIPTION', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+
+                    // Category Dropdown
+                    DropdownButtonFormField<String>(
+                      value: category,
+                      dropdownColor: const Color(0xFF0F172A),
+                      style: GoogleFonts.poppins(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Category',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.05),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      items: categories.map((cat) {
+                        return DropdownMenuItem(value: cat, child: Text(cat));
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) setSheetState(() => category = val);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Billing Cycle Dropdown (Monthly vs Yearly)
+                    DropdownButtonFormField<String>(
+                      value: cycle,
+                      dropdownColor: const Color(0xFF0F172A),
+                      style: GoogleFonts.poppins(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Billing Cycle',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.05),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'monthly', child: Text('Monthly')),
+                        DropdownMenuItem(value: 'yearly', child: Text('Yearly')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) setSheetState(() => cycle = val);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Due Date Picker Button
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDueDate,
+                          firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                          lastDate: DateTime(2030),
+                        );
+                        if (picked != null) {
+                          setSheetState(() => selectedDueDate = picked);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: AppTheme.accentCyan, size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Due Date: ${DateFormat('MMM dd, yyyy').format(selectedDueDate)}',
+                              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w500),
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.arrow_drop_down, color: Colors.white70),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Submit Button
+                    ElevatedButton(
+                      onPressed: () {
+                        if (titleController.text.isEmpty || amountController.text.isEmpty) return;
+                        final newSub = SubscriptionItem(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          title: titleController.text.trim(),
+                          amount: double.tryParse(amountController.text) ?? 0.0,
+                          category: category,
+                          cycle: cycle,
+                          dueDate: selectedDueDate,
+                        );
+
+                        setState(() {
+                          _subscriptions.add(newSub);
+                        });
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: AppTheme.accentCyan,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text('SAVE SUBSCRIPTION', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
               ),
             );
           },
