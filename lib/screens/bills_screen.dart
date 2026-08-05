@@ -61,6 +61,8 @@ class _BillsScreenState extends State<BillsScreen> {
 
                   TextField(
                     controller: titleController,
+                    keyboardType: TextInputType.text,
+                    textCapitalization: TextCapitalization.sentences,
                     style: GoogleFonts.poppins(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Subscription Title',

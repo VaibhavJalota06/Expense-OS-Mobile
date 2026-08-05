@@ -125,6 +125,8 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                 // Title Input
                 TextFormField(
                   controller: _titleController,
+                  keyboardType: TextInputType.text,
+                  textCapitalization: TextCapitalization.sentences,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Title / Description',
