@@ -159,13 +159,17 @@ class ExpenseTile extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    '${isIncome ? "+" : "-"}${currencyFormatter.format(expense.amount)}',
-                    style: TextStyle(
-                      fontFamily: 'IBM Plex Mono',
-                      color: isIncome ? AppTheme.successGreen : AppTheme.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${isIncome ? "+" : "-"}${currencyFormatter.format(expense.amount)}',
+                      style: TextStyle(
+                        fontFamily: 'IBM Plex Mono',
+                        color: isIncome ? AppTheme.successGreen : AppTheme.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),

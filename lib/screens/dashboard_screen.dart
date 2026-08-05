@@ -245,13 +245,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            currencyFormat.format(_totalExpense),
-                            style: const TextStyle(
-                              fontFamily: 'IBM Plex Mono',
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryCyan,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              currencyFormat.format(_totalExpense),
+                              style: const TextStyle(
+                                fontFamily: 'IBM Plex Mono',
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryCyan,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -271,16 +275,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ),
                                       child: const Icon(Icons.account_balance_wallet, color: AppTheme.amber, size: 16),
                                     ),
-                                    const SizedBox(width: 10),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text('Budget Cap', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
-                                        Text(
-                                          currencyFormat.format(_monthlyBudgetCap),
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                                        ),
-                                      ],
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('Budget Cap', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              currencyFormat.format(_monthlyBudgetCap),
+                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -298,16 +308,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ),
                                       child: const Icon(Icons.check_circle_outline, color: AppTheme.emerald, size: 16),
                                     ),
-                                    const SizedBox(width: 10),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text('Remaining', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
-                                        Text(
-                                          currencyFormat.format((_monthlyBudgetCap - _totalExpense).clamp(0.0, double.infinity)),
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                                        ),
-                                      ],
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('Remaining', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              currencyFormat.format((_monthlyBudgetCap - _totalExpense).clamp(0.0, double.infinity)),
+                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
