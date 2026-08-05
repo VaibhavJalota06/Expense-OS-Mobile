@@ -33,8 +33,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     final data = await _supabaseService.getExpenses();
+    if (!mounted) return;
     setState(() {
       _expenses = data;
       _isLoading = false;

@@ -48,14 +48,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final items = await _supabaseService.getExpenses();
+      if (!mounted) return;
       setState(() {
         _allExpenses = items;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
     }
   }
