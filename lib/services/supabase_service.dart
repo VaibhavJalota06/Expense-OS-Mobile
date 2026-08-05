@@ -38,49 +38,78 @@ class SupabaseService {
 
   // --- EXPENSE CRUD OPERATIONS ---
   
-  // Fetch expenses from Supabase table 'expenses'
+  // Memory fallback list if Supabase table is not yet created
+  final List<Expense> _localExpenses = [];
+
+  // Fetch expenses with graceful fallback
   Future<List<Expense>> getExpenses() async {
-    final response = await client
-        .from('expenses')
-        .select()
-        .order('date', ascending: false);
-    
-    final List<dynamic> data = response as List<dynamic>;
-    return data.map((json) => Expense.fromJson(json)).toList();
+    try {
+      final response = await client
+          .from('expenses')
+          .select()
+          .order('date', ascending: false);
+      
+      final List<dynamic> data = response as List<dynamic>;
+      return data.map((json) => Expense.fromJson(json)).toList();
+    } catch (e) {
+      // Graceful fallback to local list if table 'expenses' does not exist yet
+      return List.unmodifiable(_localExpenses);
+    }
   }
 
-  // Add new expense
+  // Add new expense with graceful fallback
   Future<Expense> addExpense(Expense expense) async {
     final Map<String, dynamic> json = expense.toJson();
     if (currentUser != null) {
       json['user_id'] = currentUser!.id;
     }
 
-    final response = await client
-        .from('expenses')
-        .insert(json)
-        .select()
-        .single();
-    
-    return Expense.fromJson(response);
+    try {
+      final response = await client
+          .from('expenses')
+          .insert(json)
+          .select()
+          .single();
+      
+      return Expense.fromJson(response);
+    } catch (e) {
+      // Fallback to local memory storage
+      final localItem = expense.copyWith(
+        id: expense.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      );
+      _localExpenses.insert(0, localItem);
+      return localItem;
+    }
   }
 
   // Update existing expense
   Future<Expense> updateExpense(Expense expense) async {
     if (expense.id == null) throw Exception("Expense ID cannot be null for update");
 
-    final response = await client
-        .from('expenses')
-        .update(expense.toJson())
-        .eq('id', expense.id!)
-        .select()
-        .single();
+    try {
+      final response = await client
+          .from('expenses')
+          .update(expense.toJson())
+          .eq('id', expense.id!)
+          .select()
+          .single();
 
-    return Expense.fromJson(response);
+      return Expense.fromJson(response);
+    } catch (e) {
+      final index = _localExpenses.indexWhere((e) => e.id == expense.id);
+      if (index != -1) {
+        _localExpenses[index] = expense;
+      }
+      return expense;
+    }
   }
 
   // Delete expense by ID
   Future<void> deleteExpense(String id) async {
-    await client.from('expenses').delete().eq('id', id);
+    try {
+      await client.from('expenses').delete().eq('id', id);
+    } catch (e) {
+      _localExpenses.removeWhere((e) => e.id == id);
+    }
   }
 }

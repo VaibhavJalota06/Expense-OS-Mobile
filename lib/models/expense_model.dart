@@ -52,5 +52,28 @@ class Expense {
       'payment_method': paymentMethod,
       if (userId != null) 'user_id': userId,
     };
+  // copyWith method for immutability
+  Expense copyWith({
+    String? id,
+    String? title,
+    double? amount,
+    String? category,
+    String? type,
+    DateTime? date,
+    String? paymentMethod,
+    String? userId,
+    DateTime? createdAt,
+  }) {
+    return Expense(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      amount: amount ?? this.amount,
+      category: category ?? this.category,
+      type: type ?? this.type,
+      date: date ?? this.date,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      userId: userId ?? this.userId,
+      createdAt: createdAt ?? this.createdAt,
+    );
   }
 }
