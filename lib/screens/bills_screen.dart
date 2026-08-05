@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/expense_model.dart';
@@ -74,6 +75,9 @@ class _BillsScreenState extends State<BillsScreen> {
                   TextField(
                     controller: amountController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                    ],
                     style: GoogleFonts.poppins(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Cost (₹)',

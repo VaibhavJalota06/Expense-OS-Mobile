@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense_model.dart';
@@ -130,6 +131,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               TextField(
                 controller: controller,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
                 style: const TextStyle(color: Colors.white, fontFamily: 'IBM Plex Mono', fontSize: 18),
                 decoration: InputDecoration(
                   labelText: 'Monthly Target (₹)',

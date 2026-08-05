@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../models/expense_model.dart';
 import '../theme/app_theme.dart';
@@ -144,6 +145,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                 TextFormField(
                   controller: _amountController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  ],
                   style: const TextStyle(color: Colors.white, fontFamily: 'IBM Plex Mono'),
                   decoration: InputDecoration(
                     labelText: 'Amount (₹)',
