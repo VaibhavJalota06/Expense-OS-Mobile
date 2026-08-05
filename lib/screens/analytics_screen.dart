@@ -54,7 +54,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final currency = NumberFormat.currency(symbol: '₹', locale: 'en_IN', decimalDigits: 2);
     final categoryMap = _categoryTotals;
 
     final List<Color> chartColors = [

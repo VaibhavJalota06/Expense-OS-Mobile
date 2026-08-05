@@ -74,7 +74,7 @@ class ExpenseTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isIncome = expense.type == 'income';
     final categoryColor = _getCategoryColor(expense.category);
-    final currencyFormatter = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final currencyFormatter = NumberFormat.currency(symbol: '₹', locale: 'en_IN', decimalDigits: 2);
     final dateStr = DateFormat('MMM dd, yyyy').format(expense.date);
 
     return Dismissible(

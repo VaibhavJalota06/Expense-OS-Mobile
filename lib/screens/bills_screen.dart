@@ -110,7 +110,7 @@ class _BillsScreenState extends State<BillsScreen> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     style: GoogleFonts.poppins(color: Colors.white),
                     decoration: InputDecoration(
-                      labelText: 'Cost (\$)',
+                      labelText: 'Cost (₹)',
                       labelStyle: const TextStyle(color: Colors.white70),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.05),
@@ -155,7 +155,7 @@ class _BillsScreenState extends State<BillsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final currency = NumberFormat.currency(symbol: '₹', locale: 'en_IN', decimalDigits: 2);
 
     return Scaffold(
       backgroundColor: AppTheme.background,

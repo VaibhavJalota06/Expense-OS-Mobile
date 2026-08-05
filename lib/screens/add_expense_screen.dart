@@ -185,7 +185,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   style: const TextStyle(color: Colors.white, fontFamily: 'IBM Plex Mono'),
                   decoration: InputDecoration(
-                    labelText: 'Amount (\$)',
+                    labelText: 'Amount (₹)',
                     labelStyle: const TextStyle(color: Colors.white60),
                     prefixIcon: const Icon(Icons.attach_money, color: AppTheme.primaryCyan),
                     filled: true,

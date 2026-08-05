@@ -14,7 +14,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final SupabaseService _supabaseService = SupabaseService();
-  String _selectedCurrency = '\$ USD';
+  String _selectedCurrency = '₹ INR';
 
   Future<void> _handleSignOut() async {
     final confirm = await showDialog<bool>(

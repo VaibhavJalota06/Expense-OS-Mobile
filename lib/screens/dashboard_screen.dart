@@ -80,7 +80,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final currencyFormat = NumberFormat.currency(symbol: '₹', locale: 'en_IN', decimalDigits: 2);
     final filteredExpenses = _expenses.where((e) {
       return e.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           e.category.toLowerCase().contains(_searchQuery.toLowerCase());
