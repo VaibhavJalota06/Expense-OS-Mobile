@@ -1,0 +1,44 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+server.key
+
+# IntelliJ IDEA / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Android
+android/app/debug/
+android/app/release/
+*.apk
+*.aab
+
+# iOS
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/Runner.xcworkspace/
+*.ipa
+
+# Environment secrets
+.env
+.env.local
