@@ -52,6 +52,8 @@ class Expense {
       'payment_method': paymentMethod,
       if (userId != null) 'user_id': userId,
     };
+  }
+
   // copyWith method for immutability
   Expense copyWith({
     String? id,
