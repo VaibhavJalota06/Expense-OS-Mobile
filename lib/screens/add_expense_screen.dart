@@ -166,7 +166,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
 
                 // Category Dropdown
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedCategory,
+                  value: _selectedCategory,
                   dropdownColor: AppTheme.background,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
@@ -189,7 +189,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
 
                 // Payment Method Dropdown
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedPaymentMethod,
+                  value: _selectedPaymentMethod,
                   dropdownColor: AppTheme.background,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(

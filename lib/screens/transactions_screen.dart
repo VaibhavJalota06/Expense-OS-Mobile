@@ -19,7 +19,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   List<Expense> _allExpenses = [];
   bool _isLoading = true;
   String _selectedCategory = 'All';
-  String _selectedType = 'All'; // 'All', 'expense', 'income'
 
   final List<String> _categories = [
     'All',
@@ -71,15 +70,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           item.category.toLowerCase().contains(query);
 
       final matchesCategory = _selectedCategory == 'All' || item.category == _selectedCategory;
-      final matchesType = _selectedType == 'All' || item.type == _selectedType;
 
-      return matchesSearch && matchesCategory && matchesType;
+      return matchesSearch && matchesCategory;
     }).toList();
   }
 
   Future<void> _deleteExpense(Expense item) async {
     if (item.id == null) return;
     await _supabaseService.deleteExpense(item.id!);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Deleted "${item.title}"', style: GoogleFonts.poppins()),
@@ -203,20 +202,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               separatorBuilder: (_, __) => const SizedBox(height: 10),
                               itemBuilder: (context, index) {
                                 final item = filtered[index];
-                                return Dismissible(
-                                  key: Key(item.id ?? index.toString()),
-                                  direction: DismissDirection.endToStart,
-                                  background: Container(
-                                    alignment: Alignment.centerRight,
-                                    padding: const EdgeInsets.only(right: 20),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.accentRed.withOpacity(0.8),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: const Icon(Icons.delete, color: Colors.white),
-                                  ),
-                                  onDismissed: (_) => _deleteExpense(item),
-                                  child: ExpenseTile(expense: item),
+                                return ExpenseTile(
+                                  expense: item,
+                                  onDelete: () => _deleteExpense(item),
                                 );
                               },
                             ),

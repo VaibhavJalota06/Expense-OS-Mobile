@@ -67,15 +67,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  double get _totalIncome => _expenses
-      .where((e) => e.type == 'income')
-      .fold(0.0, (sum, e) => sum + e.amount);
-
   double get _totalExpense => _expenses
       .where((e) => e.type == 'expense')
       .fold(0.0, (sum, e) => sum + e.amount);
-
-  double get _totalBalance => _totalIncome - _totalExpense;
 
   void _openAddExpenseSheet([Expense? expenseToEdit]) {
     showModalBottomSheet(
@@ -531,7 +525,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 return ExpenseTile(
                                   expense: expense,
                                   onTap: () => _openAddExpenseSheet(expense),
-                                  onDelete: () => _deleteExpense(expense.id!),
+                                  onDelete: () {
+                                    if (expense.id != null) {
+                                      _deleteExpense(expense.id!);
+                                    }
+                                  },
                                 );
                               },
                               childCount: filteredExpenses.length,

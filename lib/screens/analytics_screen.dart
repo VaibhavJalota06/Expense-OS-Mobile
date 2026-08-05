@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense_model.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
@@ -18,11 +19,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   final SupabaseService _supabaseService = SupabaseService();
   List<Expense> _expenses = [];
   bool _isLoading = true;
+  double _monthlyBudgetCap = 50000.0;
 
   @override
   void initState() {
     super.initState();
     SupabaseService.refreshNotifier.addListener(_loadData);
+    _loadBudgetCap();
     _loadData();
   }
 
@@ -30,6 +33,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   void dispose() {
     SupabaseService.refreshNotifier.removeListener(_loadData);
     super.dispose();
+  }
+
+  Future<void> _loadBudgetCap() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 50000.0;
+    });
   }
 
   Future<void> _loadData() async {
@@ -55,10 +66,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   double get _totalExpenses => _expenses
       .where((e) => e.type == 'expense')
-      .fold(0.0, (sum, item) => sum + item.amount);
-
-  double get _totalIncome => _expenses
-      .where((e) => e.type == 'income')
       .fold(0.0, (sum, item) => sum + item.amount);
 
   @override
@@ -120,7 +127,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                 Text('Budget Cap', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12)),
                                 const SizedBox(height: 4),
                                 Text(
-                                  currency.format(50000.0),
+                                  currency.format(_monthlyBudgetCap),
                                   style: GoogleFonts.poppins(color: AppTheme.amber, fontSize: 16, fontWeight: FontWeight.bold),
                                 ),
                               ],
