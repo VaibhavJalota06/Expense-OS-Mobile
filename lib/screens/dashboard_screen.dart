@@ -38,6 +38,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadBudgetCap() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 50000.0;
     });
@@ -46,13 +47,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _saveBudgetCap(double newBudget) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('monthly_budget_cap', newBudget);
+    if (!mounted) return;
     setState(() {
       _monthlyBudgetCap = newBudget;
     });
+    SupabaseService.refreshNotifier.value++;
   }
 
   Future<void> _loadExpenses() async {
     if (!mounted) return;
+    _loadBudgetCap();
     setState(() => _isLoading = true);
     try {
       final list = await _supabaseService.getExpenses();
@@ -344,33 +348,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Monthly Budget Cap Card
-                    GlassCard(
-                      borderColor: AppTheme.amber.withOpacity(0.5),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: const [
-                                  Icon(Icons.tune, color: AppTheme.amber, size: 18),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'MONTHLY BUDGET CAP',
-                                    style: TextStyle(
-                                      color: AppTheme.textMuted,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 1.2,
+                    // Monthly Budget Cap Card (Tappable anywhere to set budget)
+                    GestureDetector(
+                      onTap: _openSetBudgetSheet,
+                      child: GlassCard(
+                        borderColor: AppTheme.amber.withOpacity(0.5),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: const [
+                                    Icon(Icons.tune, color: AppTheme.amber, size: 18),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'MONTHLY BUDGET CAP',
+                                      style: TextStyle(
+                                        color: AppTheme.textMuted,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 1.2,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              GestureDetector(
-                                onTap: _openSetBudgetSheet,
-                                child: Container(
+                                  ],
+                                ),
+                                Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: AppTheme.amber.withOpacity(0.15),
@@ -388,65 +392,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ],
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                currencyFormat.format(_monthlyBudgetCap),
-                                style: const TextStyle(
-                                  fontFamily: 'IBM Plex Mono',
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  currencyFormat.format(_monthlyBudgetCap),
+                                  style: const TextStyle(
+                                    fontFamily: 'IBM Plex Mono',
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '${(_totalExpense / (_monthlyBudgetCap > 0 ? _monthlyBudgetCap : 1) * 100).toStringAsFixed(1)}% Spent',
-                                style: TextStyle(
-                                  color: _totalExpense > _monthlyBudgetCap ? AppTheme.dangerRed : AppTheme.emerald,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
+                                Text(
+                                  '${(_totalExpense / (_monthlyBudgetCap > 0 ? _monthlyBudgetCap : 1) * 100).toStringAsFixed(1)}% Spent',
+                                  style: TextStyle(
+                                    color: _totalExpense > _monthlyBudgetCap ? AppTheme.dangerRed : AppTheme.emerald,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: LinearProgressIndicator(
-                              value: (_monthlyBudgetCap > 0 ? (_totalExpense / _monthlyBudgetCap).clamp(0.0, 1.0) : 0.0),
-                              minHeight: 8,
-                              backgroundColor: Colors.white10,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                _totalExpense > _monthlyBudgetCap ? AppTheme.dangerRed : AppTheme.emerald,
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: LinearProgressIndicator(
+                                value: (_monthlyBudgetCap > 0 ? (_totalExpense / _monthlyBudgetCap).clamp(0.0, 1.0) : 0.0),
+                                minHeight: 8,
+                                backgroundColor: Colors.white10,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  _totalExpense > _monthlyBudgetCap ? AppTheme.dangerRed : AppTheme.emerald,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Spent: ${currencyFormat.format(_totalExpense)}',
-                                style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
-                              ),
-                              Text(
-                                'Remaining: ${currencyFormat.format((_monthlyBudgetCap - _totalExpense).clamp(0.0, double.infinity))}',
-                                style: TextStyle(
-                                  color: _monthlyBudgetCap - _totalExpense < 0 ? AppTheme.dangerRed : AppTheme.textSecondary,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Spent: ${currencyFormat.format(_totalExpense)}',
+                                  style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                Text(
+                                  'Remaining: ${currencyFormat.format((_monthlyBudgetCap - _totalExpense).clamp(0.0, double.infinity))}',
+                                  style: TextStyle(
+                                    color: _monthlyBudgetCap - _totalExpense < 0 ? AppTheme.dangerRed : AppTheme.textSecondary,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
