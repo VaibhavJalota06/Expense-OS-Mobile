@@ -136,23 +136,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-
-              // Filter Type Selector (All | Expenses | Income)
-              Row(
-                children: [
-                  _buildTypeChip('All', 'All'),
-                  const SizedBox(width: 8),
-                  _buildTypeChip('Expenses', 'expense'),
-                  const SizedBox(width: 8),
-                  _buildTypeChip('Income', 'income'),
-                ],
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // Category Filter Horizontal List
               SizedBox(
-                height: 38,
+                height: 40,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _categories.length,
@@ -168,12 +156,20 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           _selectedCategory = cat;
                         });
                       },
-                      selectedColor: AppTheme.accentCyan,
-                      backgroundColor: Colors.white.withOpacity(0.08),
+                      selectedColor: AppTheme.emerald,
+                      backgroundColor: Colors.white.withOpacity(0.06),
+                      showCheckmark: false,
+                      side: BorderSide(
+                        color: isSelected ? AppTheme.emerald : Colors.white12,
+                        width: 1,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       labelStyle: GoogleFonts.poppins(
                         color: isSelected ? Colors.black : Colors.white70,
                         fontSize: 12,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                       ),
                     );
                   },
@@ -227,34 +223,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTypeChip(String label, String value) {
-    final isSelected = _selectedType == value;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedType = value),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? AppTheme.accentCyan.withOpacity(0.2) : Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isSelected ? AppTheme.accentCyan : Colors.transparent,
-            ),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              color: isSelected ? AppTheme.accentCyan : AppTheme.textSecondary,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
           ),
         ),
       ),
