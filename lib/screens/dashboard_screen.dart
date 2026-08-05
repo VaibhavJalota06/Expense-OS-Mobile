@@ -147,7 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     final val = double.tryParse(controller.text.trim());
-                    if (val != null && val > 0) {
+                    if (val != null && val >= 0) {
                       _saveBudgetCap(val);
                     }
                     Navigator.pop(ctx);
