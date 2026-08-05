@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../models/expense_model.dart';
 import '../theme/app_theme.dart';
 import 'glass_card.dart';
@@ -17,35 +16,35 @@ class ExpenseTile extends StatelessWidget {
     this.onDelete,
   });
 
-  // Get icon and color based on category
+  // Get icon and color based on category using built-in Material Icons
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
       case 'food':
       case 'dining':
-        return FontAwesomeIcons.utensils;
+        return Icons.restaurant;
       case 'shopping':
-        return FontAwesomeIcons.bagShopping;
+        return Icons.shopping_bag;
       case 'housing':
       case 'rent':
-        return FontAwesomeIcons.house;
+        return Icons.home;
       case 'transport':
       case 'travel':
-        return FontAwesomeIcons.car;
+        return Icons.directions_car;
       case 'entertainment':
-        return FontAwesomeIcons.film;
+        return Icons.movie;
       case 'utilities':
       case 'bills':
-        return FontAwesomeIcons.bolt;
+        return Icons.bolt;
       case 'healthcare':
       case 'medical':
-        return FontAwesomeIcons.heartPulse;
+        return Icons.favorite;
       case 'salary':
       case 'income':
-        return FontAwesomeIcons.wallet;
+        return Icons.account_balance_wallet;
       case 'investment':
-        return FontAwesomeIcons.chartLine;
+        return Icons.trending_up;
       default:
-        return FontAwesomeIcons.receipt;
+        return Icons.receipt_long;
     }
   }
 
@@ -91,7 +90,7 @@ class ExpenseTile extends StatelessWidget {
           color: AppTheme.dangerRed.withOpacity(0.3),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Icon(FontAwesomeIcons.trash, color: Colors.white, size: 20),
+        child: const Icon(Icons.delete_outline, color: Colors.white, size: 24),
       ),
       child: GlassCard(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -114,7 +113,7 @@ class ExpenseTile extends StatelessWidget {
                 child: Icon(
                   _getCategoryIcon(expense.category),
                   color: categoryColor,
-                  size: 20,
+                  size: 22,
                 ),
               ),
               const SizedBox(width: 14),
