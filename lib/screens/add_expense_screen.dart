@@ -103,7 +103,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      widget.expenseToEdit == null ? 'Add Transaction' : 'Edit Transaction',
+                      widget.expenseToEdit == null ? 'Add Expense' : 'Edit Expense',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontSize: 20,
                           ),
@@ -114,51 +114,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-
-                // Type Switcher (Expense / Income)
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedType = 'expense'),
-                        child: GlassCard(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          borderColor: _selectedType == 'expense' ? AppTheme.dangerRed : Colors.transparent,
-                          child: Center(
-                            child: Text(
-                              'Expense',
-                              style: TextStyle(
-                                color: _selectedType == 'expense' ? AppTheme.dangerRed : Colors.white60,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedType = 'income'),
-                        child: GlassCard(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          borderColor: _selectedType == 'income' ? AppTheme.successGreen : Colors.transparent,
-                          child: Center(
-                            child: Text(
-                              'Income',
-                              style: TextStyle(
-                                color: _selectedType == 'income' ? AppTheme.successGreen : Colors.white60,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Title Input
                 TextFormField(
@@ -288,17 +244,13 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                   child: ElevatedButton(
                     onPressed: _submitForm,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _selectedType == 'income'
-                          ? AppTheme.successGreen
-                          : AppTheme.dangerRed,
+                      backgroundColor: AppTheme.emerald,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     child: Text(
-                      widget.expenseToEdit != null
-                          ? 'Save Changes'
-                          : (_selectedType == 'income' ? 'Add Income' : 'Add Expense'),
+                      widget.expenseToEdit != null ? 'Save Changes' : 'Add Expense',
                       style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
