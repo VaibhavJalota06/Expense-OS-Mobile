@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense_model.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
@@ -19,11 +20,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Expense> _expenses = [];
   bool _isLoading = true;
   String _searchQuery = '';
+  double _monthlyBudgetCap = 50000.0;
 
   @override
   void initState() {
     super.initState();
+    _loadBudgetCap();
     _loadExpenses();
+  }
+
+  Future<void> _loadBudgetCap() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 50000.0;
+    });
+  }
+
+  Future<void> _saveBudgetCap(double newBudget) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('monthly_budget_cap', newBudget);
+    setState(() {
+      _monthlyBudgetCap = newBudget;
+    });
   }
 
   Future<void> _loadExpenses() async {
@@ -69,6 +87,81 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
           _loadExpenses();
         },
+      ),
+    );
+  }
+
+  void _openSetBudgetSheet() {
+    final controller = TextEditingController(text: _monthlyBudgetCap.toStringAsFixed(0));
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: AppTheme.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(top: BorderSide(color: AppTheme.cardBorder, width: 1.5)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Set Monthly Budget Cap',
+                    style: Theme.of(ctx).textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white70),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(color: Colors.white, fontFamily: 'IBM Plex Mono', fontSize: 18),
+                decoration: InputDecoration(
+                  labelText: 'Monthly Target (₹)',
+                  labelStyle: const TextStyle(color: Colors.white60),
+                  prefixIcon: const Icon(Icons.currency_rupee, color: AppTheme.amber),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.05),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final val = double.tryParse(controller.text.trim());
+                    if (val != null && val > 0) {
+                      _saveBudgetCap(val);
+                    }
+                    Navigator.pop(ctx);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.amber,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text(
+                    'SAVE BUDGET CAP',
+                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -219,27 +312,116 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-                    // Search Input
-                    TextField(
-                      onChanged: (val) => setState(() => _searchQuery = val),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: 'Search transactions...',
-                        hintStyle: const TextStyle(color: AppTheme.textMuted),
-                        prefixIcon: const Icon(Icons.search, color: AppTheme.primaryCyan),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: AppTheme.cardBorder),
-                        ),
+                    // Monthly Budget Cap Card
+                    GlassCard(
+                      borderColor: AppTheme.amber.withOpacity(0.5),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: const [
+                                  Icon(Icons.tune, color: AppTheme.amber, size: 18),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'MONTHLY BUDGET CAP',
+                                    style: TextStyle(
+                                      color: AppTheme.textMuted,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: _openSetBudgetSheet,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.amber.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: AppTheme.amber.withOpacity(0.4)),
+                                  ),
+                                  child: Row(
+                                    children: const [
+                                      Icon(Icons.edit, color: AppTheme.amber, size: 12),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Set Budget',
+                                        style: TextStyle(color: AppTheme.amber, fontSize: 11, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                currencyFormat.format(_monthlyBudgetCap),
+                                style: const TextStyle(
+                                  fontFamily: 'IBM Plex Mono',
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                '${(_totalExpense / (_monthlyBudgetCap > 0 ? _monthlyBudgetCap : 1) * 100).toStringAsFixed(1)}% Spent',
+                                style: TextStyle(
+                                  color: _totalExpense > _monthlyBudgetCap ? AppTheme.dangerRed : AppTheme.emerald,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: LinearProgressIndicator(
+                              value: (_monthlyBudgetCap > 0 ? (_totalExpense / _monthlyBudgetCap).clamp(0.0, 1.0) : 0.0),
+                              minHeight: 8,
+                              backgroundColor: Colors.white10,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                _totalExpense > _monthlyBudgetCap ? AppTheme.dangerRed : AppTheme.emerald,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Spent: ${currencyFormat.format(_totalExpense)}',
+                                style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
+                              ),
+                              Text(
+                                'Remaining: ${currencyFormat.format((_monthlyBudgetCap - _totalExpense).clamp(0.0, double.infinity))}',
+                                style: TextStyle(
+                                  color: _monthlyBudgetCap - _totalExpense < 0 ? AppTheme.dangerRed : AppTheme.textSecondary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                    // Recent Transactions Header
+                    // Search Bar & Recent Section Title
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -254,58 +436,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
+
+                    // Search Field
+                    TextField(
+                      onChanged: (val) => setState(() => _searchQuery = val),
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Search title or category...',
+                        hintStyle: const TextStyle(color: AppTheme.textMuted),
+                        prefixIcon: const Icon(Icons.search, color: AppTheme.primaryCyan),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppTheme.cardBorder),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
                   ]),
                 ),
               ),
 
-              // Expense List or Loading State
-              if (_isLoading)
-                const SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(30.0),
-                      child: CircularProgressIndicator(color: AppTheme.primaryCyan),
-                    ),
-                  ),
-                )
-              else if (filteredExpenses.isEmpty)
-                const SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(40.0),
-                      child: Text(
-                        'No transactions found.\nTap + to add your first expense!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppTheme.textMuted),
+              // Transactions List
+              _isLoading
+                  ? const SliverToBoxAdapter(
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(40.0),
+                          child: CircularProgressIndicator(color: AppTheme.primaryCyan),
+                        ),
                       ),
-                    ),
-                  ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final expense = filteredExpenses[index];
-                        return ExpenseTile(
-                          expense: expense,
-                          onTap: () => _openAddExpenseSheet(expense),
-                          onDelete: () => _deleteExpense(expense.id!),
-                        );
-                      },
-                      childCount: filteredExpenses.length,
-                    ),
-                  ),
-                ),
+                    )
+                  : filteredExpenses.isEmpty
+                      ? SliverToBoxAdapter(
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(40.0),
+                              child: Column(
+                                children: const [
+                                  Icon(Icons.receipt_long, size: 48, color: Colors.white24),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    'No transactions found',
+                                    style: TextStyle(color: AppTheme.textMuted),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
+                      : SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final expense = filteredExpenses[index];
+                                return ExpenseTile(
+                                  expense: expense,
+                                  onTap: () => _openAddExpenseSheet(expense),
+                                  onDelete: () => _deleteExpense(expense.id!),
+                                );
+                              },
+                              childCount: filteredExpenses.length,
+                            ),
+                          ),
+                        ),
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openAddExpenseSheet(),
         backgroundColor: AppTheme.primaryCyan,
-        child: const Icon(Icons.add, color: Colors.black, size: 28),
+        foregroundColor: Colors.black,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Expense', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }
