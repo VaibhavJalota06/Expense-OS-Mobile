@@ -273,7 +273,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         ElevatedButton(
                           onPressed: _isLoading ? null : _submit,
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.vertical(14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             backgroundColor: AppTheme.accentCyan,
                             foregroundColor: Colors.black,
                             shape: RoundedRectangleBorder(
