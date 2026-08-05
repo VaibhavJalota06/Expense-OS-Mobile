@@ -160,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: const Icon(Icons.logout, color: Colors.white),
                   label: Text('SIGN OUT', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.vertical(14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     backgroundColor: AppTheme.accentRed,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),

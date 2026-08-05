@@ -234,7 +234,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       child: GestureDetector(
         onTap: () => setState(() => _selectedType = value),
         child: Container(
-          padding: const EdgeInsets.vertical(8),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: isSelected ? AppTheme.accentCyan.withOpacity(0.2) : Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(10),

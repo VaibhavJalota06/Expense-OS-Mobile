@@ -13,6 +13,11 @@ class AppTheme {
   static const Color dangerRed = Color(0xFFFF4B4B);
   static const Color successGreen = Color(0xFF00E676);
   static const Color warningOrange = Color(0xFFFF9100);
+
+  // Aliases
+  static const Color accentCyan = primaryCyan;
+  static const Color accentRed = dangerRed;
+  static const Color accentGreen = successGreen;
   
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0x99FFFFFF); // 60% opacity white

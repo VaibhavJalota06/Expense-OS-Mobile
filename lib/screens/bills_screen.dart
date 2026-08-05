@@ -137,7 +137,7 @@ class _BillsScreenState extends State<BillsScreen> {
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.vertical(14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: AppTheme.accentCyan,
                       foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

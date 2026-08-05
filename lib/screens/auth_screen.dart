@@ -133,7 +133,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               child: GestureDetector(
                                 onTap: () => setState(() => _isLogin = true),
                                 child: Container(
-                                  padding: const EdgeInsets.vertical(12),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                   decoration: BoxDecoration(
                                     border: Border(
                                       bottom: BorderSide(
@@ -158,7 +158,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               child: GestureDetector(
                                 onTap: () => setState(() => _isLogin = false),
                                 child: Container(
-                                  padding: const EdgeInsets.vertical(12),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                   decoration: BoxDecoration(
                                     border: Border(
                                       bottom: BorderSide(
