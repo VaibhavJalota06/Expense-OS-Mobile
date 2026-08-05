@@ -116,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.attach_money, color: AppTheme.accentCyan),
+                      leading: const Icon(Icons.currency_rupee, color: AppTheme.accentCyan),
                       title: Text('Primary Currency', style: GoogleFonts.poppins(color: Colors.white)),
                       trailing: DropdownButton<String>(
                         value: _selectedCurrency,

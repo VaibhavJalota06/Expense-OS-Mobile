@@ -187,7 +187,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                   decoration: InputDecoration(
                     labelText: 'Amount (₹)',
                     labelStyle: const TextStyle(color: Colors.white60),
-                    prefixIcon: const Icon(Icons.attach_money, color: AppTheme.primaryCyan),
+                    prefixIcon: const Icon(Icons.currency_rupee, color: AppTheme.primaryCyan),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
                     border: OutlineInputBorder(
