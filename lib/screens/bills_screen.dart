@@ -16,44 +16,7 @@ class BillsScreen extends StatefulWidget {
 
 class _BillsScreenState extends State<BillsScreen> {
   final SupabaseService _supabaseService = SupabaseService();
-  final List<SubscriptionItem> _subscriptions = [
-    SubscriptionItem(
-      id: '1',
-      title: 'Netflix Premium',
-      amount: 19.99,
-      category: 'Services & Subscriptions',
-      cycle: 'monthly',
-      dueDate: DateTime.now().add(const Duration(days: 3)),
-      paymentMethod: 'Credit Card',
-    ),
-    SubscriptionItem(
-      id: '2',
-      title: 'Spotify Family',
-      amount: 14.99,
-      category: 'Services & Subscriptions',
-      cycle: 'monthly',
-      dueDate: DateTime.now().add(const Duration(days: 7)),
-      paymentMethod: 'PayPal',
-    ),
-    SubscriptionItem(
-      id: '3',
-      title: 'High Speed Fiber Internet',
-      amount: 65.00,
-      category: 'Bills & Utilities',
-      cycle: 'monthly',
-      dueDate: DateTime.now().add(const Duration(days: 12)),
-      paymentMethod: 'Auto Debit',
-    ),
-    SubscriptionItem(
-      id: '4',
-      title: 'Cloud Server Hosting',
-      amount: 29.00,
-      category: 'Services & Subscriptions',
-      cycle: 'monthly',
-      dueDate: DateTime.now().add(const Duration(days: 18)),
-      paymentMethod: 'Credit Card',
-    ),
-  ];
+  final List<SubscriptionItem> _subscriptions = [];
 
   double get _totalMonthlyCost {
     return _subscriptions.fold(0.0, (sum, item) {
