@@ -288,13 +288,17 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                   child: ElevatedButton(
                     onPressed: _submitForm,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryCyan,
+                      backgroundColor: _selectedType == 'income'
+                          ? AppTheme.successGreen
+                          : AppTheme.dangerRed,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     child: Text(
-                      widget.expenseToEdit == null ? 'Add Expense' : 'Save Changes',
+                      widget.expenseToEdit != null
+                          ? 'Save Changes'
+                          : (_selectedType == 'income' ? 'Add Income' : 'Add Expense'),
                       style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
