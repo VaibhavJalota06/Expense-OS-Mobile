@@ -115,11 +115,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Total Income', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12)),
+                                Text('Budget Cap', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12)),
                                 const SizedBox(height: 4),
                                 Text(
-                                  currency.format(_totalIncome),
-                                  style: GoogleFonts.poppins(color: AppTheme.accentGreen, fontSize: 16, fontWeight: FontWeight.bold),
+                                  currency.format(50000.0),
+                                  style: GoogleFonts.poppins(color: AppTheme.amber, fontSize: 16, fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),

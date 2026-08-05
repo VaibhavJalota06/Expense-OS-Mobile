@@ -231,14 +231,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Total Balance Card
+                    // Total Monthly Expenses Card
                     GlassCard(
                       borderColor: AppTheme.primaryCyan.withOpacity(0.5),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'TOTAL NET BALANCE',
+                            'TOTAL MONTHLY EXPENSES',
                             style: TextStyle(
                               color: AppTheme.textMuted,
                               fontSize: 12,
@@ -248,7 +248,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            currencyFormat.format(_totalBalance),
+                            currencyFormat.format(_totalExpense),
                             style: const TextStyle(
                               fontFamily: 'IBM Plex Mono',
                               fontSize: 32,
@@ -258,28 +258,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // Income & Expense Breakdown Row
+                          // Budget Breakdown Row (Budget Cap vs Remaining)
                           Row(
                             children: [
-                              // Income
+                              // Budget Cap
                               Expanded(
                                 child: Row(
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.successGreen.withOpacity(0.2),
+                                        color: AppTheme.amber.withOpacity(0.2),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.arrow_downward, color: AppTheme.successGreen, size: 16),
+                                      child: const Icon(Icons.account_balance_wallet, color: AppTheme.amber, size: 16),
                                     ),
                                     const SizedBox(width: 10),
                                     Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        const Text('Income', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
+                                        const Text('Budget Cap', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
                                         Text(
-                                          currencyFormat.format(_totalIncome),
+                                          currencyFormat.format(_monthlyBudgetCap),
                                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                                         ),
                                       ],
@@ -288,25 +288,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                               ),
 
-                              // Expense
+                              // Remaining Budget
                               Expanded(
                                 child: Row(
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.dangerRed.withOpacity(0.2),
+                                        color: AppTheme.emerald.withOpacity(0.2),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.arrow_upward, color: AppTheme.dangerRed, size: 16),
+                                      child: const Icon(Icons.check_circle_outline, color: AppTheme.emerald, size: 16),
                                     ),
                                     const SizedBox(width: 10),
                                     Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        const Text('Expenses', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
+                                        const Text('Remaining', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
                                         Text(
-                                          currencyFormat.format(_totalExpense),
+                                          currencyFormat.format((_monthlyBudgetCap - _totalExpense).clamp(0.0, double.infinity)),
                                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                                         ),
                                       ],
