@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Brand Color Palette
-  static const Color background = Color(0FF050811);
-  static const Color cardBackground = Color(0x1Affffff); // 10% white for glass
-  static const Color cardBorder = Color(0x33ffffff); // 20% white border
+  // Brand Color Palette (0xFF for hex colors in Dart)
+  static const Color background = Color(0xFF050811);
+  static const Color cardBackground = Color(0x1AFFFFFF); // 10% white for glass
+  static const Color cardBorder = Color(0x33FFFFFF); // 20% white border
   
-  static const Color primaryCyan = Color(0FF00F2FE);
-  static const Color primaryPurple = Color(0FF4FACFE);
-  static const Color accentNeon = Color(0FF00FFCC);
-  static const Color dangerRed = Color(0FFFF4B4B);
-  static const Color successGreen = Color(0FF00E676);
-  static const Color warningOrange = Color(0FFFF9100);
+  static const Color primaryCyan = Color(0xFF00F2FE);
+  static const Color primaryPurple = Color(0xFF4FACFE);
+  static const Color accentNeon = Color(0xFF00FFCC);
+  static const Color dangerRed = Color(0xFFFF4B4B);
+  static const Color successGreen = Color(0xFF00E676);
+  static const Color warningOrange = Color(0xFFFF9100);
   
-  static const Color textPrimary = Color(0FFFFFFFF);
+  static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0x99FFFFFF); // 60% opacity white
   static const Color textMuted = Color(0x66FFFFFF); // 40% opacity white
 

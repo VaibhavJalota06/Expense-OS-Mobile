@@ -205,7 +205,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
 
                 // Category Dropdown
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   dropdownColor: AppTheme.background,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
@@ -223,6 +223,29 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                     return DropdownMenuItem(value: c, child: Text(c));
                   }).toList(),
                   onChanged: (val) => setState(() => _selectedCategory = val!),
+                ),
+                const SizedBox(height: 16),
+
+                // Payment Method Dropdown
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedPaymentMethod,
+                  dropdownColor: AppTheme.background,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Payment Method',
+                    labelStyle: const TextStyle(color: Colors.white60),
+                    prefixIcon: const Icon(Icons.payment, color: AppTheme.primaryCyan),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.05),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: AppTheme.cardBorder),
+                    ),
+                  ),
+                  items: _paymentMethods.map((p) {
+                    return DropdownMenuItem(value: p, child: Text(p));
+                  }).toList(),
+                  onChanged: (val) => setState(() => _selectedPaymentMethod = val!),
                 ),
                 const SizedBox(height: 16),
 
