@@ -11,22 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Java JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
 
-      - name: Install CocoaPods
-        run: sudo gem install cocoapods
-
-      - name: Install Dependencies
-        run: flutter pub get
+      - name: Install CocoaPods & Dependencies
+        run: |
+          flutter pub get
+          cd ios
+          pod install
+          cd ..
 
       - name: Build iOS Application Bundle
         run: flutter build ios --release --no-codesign
