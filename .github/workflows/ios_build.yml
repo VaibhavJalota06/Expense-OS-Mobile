@@ -14,7 +14,6 @@ jobs:
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.x'
           channel: 'stable'
 
       - name: Install Dependencies
@@ -26,7 +25,7 @@ jobs:
       - name: Create IPA Payload
         run: |
           mkdir -p Payload
-          mv build/ios/iphoneos/Runner.app Payload/
+          cp -r build/ios/iphoneos/Runner.app Payload/
           zip -r Expense_OS_Mobile.ipa Payload
 
       - name: Upload IPA Artifact
@@ -49,7 +48,6 @@ jobs:
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.x'
           channel: 'stable'
 
       - name: Install Dependencies
