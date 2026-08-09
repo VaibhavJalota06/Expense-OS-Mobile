@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/biometric_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass_card.dart';
@@ -14,7 +15,70 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final SupabaseService _supabaseService = SupabaseService();
+  final BiometricService _biometricService = BiometricService();
   String _selectedCurrency = '₹ INR';
+  bool _isAppLockEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppLockState();
+  }
+
+  Future<void> _loadAppLockState() async {
+    final enabled = await _biometricService.isAppLockEnabled();
+    if (mounted) {
+      setState(() {
+        _isAppLockEnabled = enabled;
+      });
+    }
+  }
+
+  Future<void> _toggleAppLock(bool value) async {
+    if (value) {
+      // Prompt biometric authentication before enabling App Lock
+      final authenticated = await _biometricService.authenticate(
+        reason: 'Authenticate to enable Biometric App Lock',
+      );
+      if (authenticated) {
+        await _biometricService.setAppLockEnabled(true);
+        if (mounted) {
+          setState(() {
+            _isAppLockEnabled = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Biometric App Lock Enabled', style: GoogleFonts.poppins()),
+              backgroundColor: AppTheme.accentGreen,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Biometric authentication failed', style: GoogleFonts.poppins()),
+              backgroundColor: AppTheme.accentRed,
+            ),
+          );
+        }
+      }
+    } else {
+      // Disabling App Lock
+      await _biometricService.setAppLockEnabled(false);
+      if (mounted) {
+        setState(() {
+          _isAppLockEnabled = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Biometric App Lock Disabled', style: GoogleFonts.poppins()),
+            backgroundColor: AppTheme.amber,
+          ),
+        );
+      }
+    }
+  }
 
   Future<void> _handleSignOut() async {
     final confirm = await showDialog<bool>(
@@ -81,9 +145,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             userEmail,
                             style: GoogleFonts.poppins(
                               color: Colors.white,
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
                           ),
                           const SizedBox(height: 4),
                           Row(
@@ -141,11 +208,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const Divider(color: Colors.white10),
 
-                    ListTile(
-                      leading: const Icon(Icons.security, color: AppTheme.accentCyan),
+                    SwitchListTile(
+                      activeThumbColor: AppTheme.accentCyan,
+                      secondary: const Icon(Icons.security, color: AppTheme.accentCyan),
                       title: Text('Security & Biometrics', style: GoogleFonts.poppins(color: Colors.white)),
-                      subtitle: Text('App lock protection enabled', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12)),
-                      trailing: const Icon(Icons.lock_outline, color: Colors.white54),
+                      subtitle: Text(
+                        _isAppLockEnabled ? 'Fingerprint / Face ID lock active' : 'Tap to enable biometric app lock',
+                        style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12),
+                      ),
+                      value: _isAppLockEnabled,
+                      onChanged: _toggleAppLock,
                     ),
                   ],
                 ),

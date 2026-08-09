@@ -67,9 +67,12 @@ class _BillsScreenState extends State<BillsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Add Recurring Subscription / Bill',
-                          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        Expanded(
+                          child: Text(
+                            'Add Recurring Subscription / Bill',
+                            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, color: Colors.white70),

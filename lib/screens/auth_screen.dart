@@ -75,9 +75,11 @@ class _AuthScreenState extends State<AuthScreen> {
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-            child: Column(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Logo & Header
@@ -318,10 +320,29 @@ class _AuthScreenState extends State<AuthScreen> {
                         OutlinedButton(
                           onPressed: () async {
                             setState(() => _isLoading = true);
-                            final success = await _supabaseService.signInWithGoogle();
-                            setState(() => _isLoading = false);
-                            if (success && mounted) {
-                              widget.onAuthSuccess();
+                            try {
+                              final success = await _supabaseService.signInWithGoogle();
+                              if (!success && mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Could not complete Google Sign-In. Please check Supabase Google Provider setup.'),
+                                    backgroundColor: Colors.amber,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Google Sign-In Error: $e'),
+                                    backgroundColor: Colors.redAccent,
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() => _isLoading = false);
+                              }
                             }
                           },
                           style: OutlinedButton.styleFrom(
@@ -368,20 +389,23 @@ class _AuthScreenState extends State<AuthScreen> {
                         // Demo Mode / Guest Access Button
                         TextButton(
                           onPressed: widget.onAuthSuccess,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Continue as Guest (Demo Mode)',
-                                style: GoogleFonts.poppins(
-                                  color: AppTheme.accentCyan,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Continue as Guest (Demo Mode)',
+                                  style: GoogleFonts.poppins(
+                                    color: AppTheme.accentCyan,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Icon(Icons.arrow_forward, size: 16, color: AppTheme.accentCyan),
-                            ],
+                                const SizedBox(width: 6),
+                                const Icon(Icons.arrow_forward, size: 16, color: AppTheme.accentCyan),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -393,6 +417,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

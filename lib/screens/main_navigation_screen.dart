@@ -21,15 +21,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          const DashboardScreen(),
-          const TransactionsScreen(),
-          const BillsScreen(),
-          const AnalyticsScreen(),
-          ProfileScreen(onSignOut: widget.onSignOut),
-        ],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 650),
+          child: IndexedStack(
+            index: _currentIndex,
+            children: [
+              const DashboardScreen(),
+              const TransactionsScreen(),
+              const BillsScreen(),
+              const AnalyticsScreen(),
+              ProfileScreen(onSignOut: widget.onSignOut),
+            ],
+          ),
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -41,43 +46,49 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ),
           ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: AppTheme.accentCyan,
-          unselectedItemColor: AppTheme.textSecondary,
-          selectedFontSize: 12,
-          unselectedFontSize: 11,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
+        child: Center(
+          heightFactor: 1.0,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 650),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) => setState(() => _currentIndex = index),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: AppTheme.accentCyan,
+              unselectedItemColor: AppTheme.textSecondary,
+              selectedFontSize: 10,
+              unselectedFontSize: 10,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.dashboard_outlined),
+                  activeIcon: Icon(Icons.dashboard),
+                  label: 'Dashboard',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.receipt_long_outlined),
+                  activeIcon: Icon(Icons.receipt_long),
+                  label: 'Transactions',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.subscriptions_outlined),
+                  activeIcon: Icon(Icons.subscriptions),
+                  label: 'Bills',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.pie_chart_outline),
+                  activeIcon: Icon(Icons.pie_chart),
+                  label: 'Analytics',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  activeIcon: Icon(Icons.person),
+                  label: 'Profile',
+                ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long_outlined),
-              activeIcon: Icon(Icons.receipt_long),
-              label: 'Transactions',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.subscriptions_outlined),
-              activeIcon: Icon(Icons.subscriptions),
-              label: 'Bills',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.pie_chart_outline),
-              activeIcon: Icon(Icons.pie_chart),
-              label: 'Analytics',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
+          ),
         ),
       ),
     );

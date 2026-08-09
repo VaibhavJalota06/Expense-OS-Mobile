@@ -124,8 +124,8 @@ class ExpenseTile extends StatelessWidget {
                     Text(
                       expense.title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
                           ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -139,7 +139,7 @@ class ExpenseTile extends StatelessWidget {
                             style: TextStyle(
                               color: categoryColor,
                               fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w700,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -151,6 +151,7 @@ class ExpenseTile extends StatelessWidget {
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 fontSize: 12,
                                 color: AppTheme.textMuted,
+                                fontWeight: FontWeight.w600,
                               ),
                         ),
                       ],
@@ -171,8 +172,8 @@ class ExpenseTile extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'IBM Plex Mono',
                         color: isIncome ? AppTheme.successGreen : AppTheme.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
                       ),
                     ),
                   ),
@@ -188,7 +189,7 @@ class ExpenseTile extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 10,
                         color: AppTheme.textSecondary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),

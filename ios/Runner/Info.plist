@@ -7,7 +7,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Expense Os Mobile</string>
+	<string>Expense OS</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Authenticate using Face ID to unlock Expense OS Command Center</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/expense_model.dart';
 
@@ -13,6 +14,16 @@ class SupabaseService {
 
   SupabaseClient get client => Supabase.instance.client;
 
+  SupabaseClient? get safeClient {
+    try {
+      return Supabase.instance.client;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool get isInitialized => safeClient != null;
+
   // Initialize Supabase Flutter Client
   static Future<void> initialize() async {
     await Supabase.initialize(
@@ -22,7 +33,13 @@ class SupabaseService {
   }
 
   // --- AUTHENTICATION ---
-  User? get currentUser => client.auth.currentUser;
+  User? get currentUser {
+    try {
+      return client.auth.currentUser;
+    } catch (_) {
+      return null;
+    }
+  }
   bool get isAuthenticated => currentUser != null;
 
   Future<AuthResponse> signUp({required String email, required String password}) async {
@@ -35,13 +52,48 @@ class SupabaseService {
 
   Future<bool> signInWithGoogle() async {
     try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+      );
+
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        return false;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
+
+      final String redirectUrl = kIsWeb 
+          ? Uri.base.origin 
+          : 'com.expensecalculator.expenseosmobile://login-callback';
+
+      if (idToken != null) {
+        final response = await client.auth.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+          accessToken: accessToken,
+        );
+        return response.user != null;
+      } else {
+        return await client.auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: redirectUrl,
+          queryParams: {'prompt': 'select_account'},
+        );
+      }
+    } catch (e) {
+      debugPrint('Google Native Sign-In Exception: $e');
+      final String redirectUrl = kIsWeb 
+          ? Uri.base.origin 
+          : 'com.expensecalculator.expenseosmobile://login-callback';
+
       return await client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'com.expensecalculator.expenseosmobile://login-callback',
+        redirectTo: redirectUrl,
+        queryParams: {'prompt': 'select_account'},
       );
-    } catch (e) {
-      debugPrint('Google Sign-In Exception: $e');
-      return false;
     }
   }
 

@@ -78,32 +78,34 @@ class AppTheme {
       textTheme: TextTheme(
         displayLarge: GoogleFonts.poppins(
           fontSize: 32,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w800,
           color: textPrimary,
+          letterSpacing: -0.5,
         ),
         headlineMedium: GoogleFonts.poppins(
           fontSize: 22,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
+          letterSpacing: 0.2,
         ),
         titleLarge: GoogleFonts.poppins(
           fontSize: 18,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
         ),
         bodyLarge: GoogleFonts.poppins(
           fontSize: 16,
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         bodyMedium: GoogleFonts.poppins(
           fontSize: 14,
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w600,
           color: textSecondary,
         ),
         labelLarge: GoogleFonts.ibmPlexMono(
           fontSize: 14,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: emerald,
         ),
       ),

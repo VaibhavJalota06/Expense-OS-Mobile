@@ -170,7 +170,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ),
-    );
+    ).whenComplete(() => controller.dispose());
   }
 
   void _deleteExpense(String id) async {
@@ -255,9 +255,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const Text(
                             'TOTAL MONTHLY EXPENSES',
                             style: TextStyle(
-                              color: AppTheme.textMuted,
+                              color: Colors.white70,
                               fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                               letterSpacing: 1.2,
                             ),
                           ),
@@ -269,8 +269,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               currencyFormat.format(_totalExpense),
                               style: const TextStyle(
                                 fontFamily: 'IBM Plex Mono',
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 34,
+                                fontWeight: FontWeight.w800,
                                 color: AppTheme.primaryCyan,
                               ),
                             ),
@@ -363,20 +363,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  children: const [
-                                    Icon(Icons.tune, color: AppTheme.amber, size: 18),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'MONTHLY BUDGET CAP',
-                                      style: TextStyle(
-                                        color: AppTheme.textMuted,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 1.2,
+                                Expanded(
+                                  child: Row(
+                                    children: const [
+                                      Icon(Icons.tune, color: AppTheme.amber, size: 18),
+                                      SizedBox(width: 8),
+                                      Flexible(
+                                        child: Text(
+                                          'MONTHLY BUDGET CAP',
+                                          style: TextStyle(
+                                            color: AppTheme.textMuted,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 1.2,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
