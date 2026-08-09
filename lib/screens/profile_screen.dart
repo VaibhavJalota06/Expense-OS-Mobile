@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/biometric_service.dart';
 import '../services/supabase_service.dart';
@@ -19,7 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final BiometricService _biometricService = BiometricService();
   String _selectedCurrency = '₹ INR';
   bool _isAppLockEnabled = false;
-  String? _customAvatarUrl;
+  String? _customAvatarPath;
 
   @override
   void initState() {
@@ -32,89 +35,110 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _customAvatarUrl = prefs.getString('custom_avatar_url');
+        _customAvatarPath = prefs.getString('custom_avatar_path');
       });
     }
   }
 
-  Future<void> _updateProfilePhoto() async {
-    final controller = TextEditingController(text: _customAvatarUrl ?? '');
-    final newUrl = await showModalBottomSheet<String>(
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 600,
+        maxHeight: 600,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('custom_avatar_path', pickedFile.path);
+        if (mounted) {
+          setState(() {
+            _customAvatarPath = pickedFile.path;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Image picking error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not pick image: $e', style: GoogleFonts.poppins()),
+            backgroundColor: AppTheme.accentRed,
+          ),
+        );
+      }
+    }
+  }
+
+  void _updateProfilePhoto() {
+    showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       backgroundColor: const Color(0xFF0F172A),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 24,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-        ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Update Profile Photo', style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('Enter an image URL or choose a preset avatar:', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 13)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              style: GoogleFonts.poppins(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'https://example.com/photo.jpg',
-                hintStyle: GoogleFonts.poppins(color: Colors.white38),
-                filled: true,
-                fillColor: const Color(0xFF1E293B),
-                prefixIcon: const Icon(Icons.link, color: AppTheme.accentCyan),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ),
+            Text(
+              'Change Profile Photo',
+              style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            Text('Select Preset Avatar:', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-              ].map((url) => GestureDetector(
-                onTap: () => Navigator.pop(context, url),
-                child: CircleAvatar(radius: 26, backgroundImage: NetworkImage(url)),
-              )).toList(),
+            const SizedBox(height: 6),
+            Text(
+              'Select an option to update your picture:',
+              style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context, controller.text.trim()),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accentCyan,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
+            // Option 1: Take Live Photo (Camera)
+            ListTile(
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentCyan.withOpacity(0.15),
+                  shape: BoxShape.circle,
                 ),
-                child: Text('Save Profile Photo', style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold)),
+                child: const Icon(Icons.camera_alt, color: AppTheme.accentCyan, size: 24),
               ),
+              title: Text('Take Live Photo (Camera)', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
+              subtitle: Text('Capture a new photo with device camera', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12)),
+              trailing: const Icon(Icons.chevron_right, color: Colors.white38),
             ),
+            const Divider(color: Colors.white12, height: 16),
+
+            // Option 2: Upload Photo from Gallery
+            ListTile(
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentGreen.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.photo_library, color: AppTheme.accentGreen, size: 24),
+              ),
+              title: Text('Upload Photo from Gallery', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
+              subtitle: Text('Choose an existing photo from device storage', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12)),
+              trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+            ),
+            const SizedBox(height: 12),
           ],
         ),
       ),
     );
-
-    if (newUrl != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('custom_avatar_url', newUrl);
-      if (mounted) {
-        setState(() {
-          _customAvatarUrl = newUrl;
-        });
-      }
-    }
   }
 
   Future<void> _loadAppLockState() async {
@@ -203,10 +227,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = _supabaseService.currentUser;
     final userEmail = user?.email ?? 'Guest User (Demo Mode)';
-    final String? activeAvatar = (_customAvatarUrl != null && _customAvatarUrl!.isNotEmpty)
-        ? _customAvatarUrl
-        : (user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture']);
     final String initial = userEmail.isNotEmpty ? userEmail[0].toUpperCase() : 'G';
+
+    ImageProvider? avatarImage;
+    if (_customAvatarPath != null && _customAvatarPath!.isNotEmpty) {
+      if (kIsWeb || _customAvatarPath!.startsWith('http')) {
+        avatarImage = NetworkImage(_customAvatarPath!);
+      } else {
+        avatarImage = FileImage(File(_customAvatarPath!));
+      }
+    } else if (user?.userMetadata?['avatar_url'] != null) {
+      avatarImage = NetworkImage(user!.userMetadata!['avatar_url']);
+    } else if (user?.userMetadata?['picture'] != null) {
+      avatarImage = NetworkImage(user!.userMetadata!['picture']);
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -234,10 +268,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           CircleAvatar(
                             radius: 30,
                             backgroundColor: AppTheme.accentCyan.withOpacity(0.2),
-                            backgroundImage: activeAvatar != null && activeAvatar.isNotEmpty
-                                ? NetworkImage(activeAvatar)
-                                : null,
-                            child: (activeAvatar == null || activeAvatar.isEmpty)
+                            backgroundImage: avatarImage,
+                            child: avatarImage == null
                                 ? Text(
                                     initial,
                                     style: GoogleFonts.poppins(
