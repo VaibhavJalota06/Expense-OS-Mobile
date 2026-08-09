@@ -111,6 +111,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = _supabaseService.currentUser;
     final userEmail = user?.email ?? 'Guest User (Demo Mode)';
+    final String? avatarUrl = user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
+    final String initial = userEmail.isNotEmpty ? userEmail[0].toUpperCase() : 'G';
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -134,7 +136,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     CircleAvatar(
                       radius: 28,
                       backgroundColor: AppTheme.accentCyan.withOpacity(0.2),
-                      child: const Icon(Icons.person, color: AppTheme.accentCyan, size: 32),
+                      backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                      child: avatarUrl == null
+                          ? Text(
+                              initial,
+                              style: GoogleFonts.poppins(
+                                color: AppTheme.accentCyan,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : null,
                     ),
                     const SizedBox(width: 16),
                     Expanded(

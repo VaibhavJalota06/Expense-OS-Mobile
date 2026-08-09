@@ -21,7 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Expense> _expenses = [];
   bool _isLoading = true;
   String _searchQuery = '';
-  double _monthlyBudgetCap = 50000.0;
+  double _monthlyBudgetCap = 0.0;
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 50000.0;
+      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
     });
   }
 

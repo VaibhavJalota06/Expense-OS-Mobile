@@ -19,7 +19,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   final SupabaseService _supabaseService = SupabaseService();
   List<Expense> _expenses = [];
   bool _isLoading = true;
-  double _monthlyBudgetCap = 50000.0;
+  double _monthlyBudgetCap = 0.0;
 
   @override
   void initState() {
@@ -39,7 +39,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 50000.0;
+      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
     });
   }
 
