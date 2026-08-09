@@ -23,14 +23,14 @@ jobs:
           pod install
           cd ..
 
-      - name: Build iOS Application Bundle
-        run: flutter build ios --simulator --no-codesign
+      - name: Build Optimized Small iOS Application Bundle
+        run: flutter build ios --simulator --no-codesign --tree-shake-icons
 
-      - name: Create IPA Payload
+      - name: Create Compact IPA Payload
         run: |
           mkdir -p Payload
           cp -r build/ios/iphonesimulator/Runner.app Payload/
-          zip -r Expense_OS_Mobile.ipa Payload
+          zip -9 -r Expense_OS_Mobile.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
