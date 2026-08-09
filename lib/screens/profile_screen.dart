@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/biometric_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
@@ -18,11 +19,102 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final BiometricService _biometricService = BiometricService();
   String _selectedCurrency = '₹ INR';
   bool _isAppLockEnabled = false;
+  String? _customAvatarUrl;
 
   @override
   void initState() {
     super.initState();
     _loadAppLockState();
+    _loadCustomAvatar();
+  }
+
+  Future<void> _loadCustomAvatar() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _customAvatarUrl = prefs.getString('custom_avatar_url');
+      });
+    }
+  }
+
+  Future<void> _updateProfilePhoto() async {
+    final controller = TextEditingController(text: _customAvatarUrl ?? '');
+    final newUrl = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Update Profile Photo', style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('Enter an image URL or choose a preset avatar:', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 13)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              style: GoogleFonts.poppins(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'https://example.com/photo.jpg',
+                hintStyle: GoogleFonts.poppins(color: Colors.white38),
+                filled: true,
+                fillColor: const Color(0xFF1E293B),
+                prefixIcon: const Icon(Icons.link, color: AppTheme.accentCyan),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('Select Preset Avatar:', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+              ].map((url) => GestureDetector(
+                onTap: () => Navigator.pop(context, url),
+                child: CircleAvatar(radius: 26, backgroundImage: NetworkImage(url)),
+              )).toList(),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context, controller.text.trim()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.accentCyan,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Save Profile Photo', style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (newUrl != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('custom_avatar_url', newUrl);
+      if (mounted) {
+        setState(() {
+          _customAvatarUrl = newUrl;
+        });
+      }
+    }
   }
 
   Future<void> _loadAppLockState() async {
@@ -111,7 +203,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = _supabaseService.currentUser;
     final userEmail = user?.email ?? 'Guest User (Demo Mode)';
-    final String? avatarUrl = user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
+    final String? activeAvatar = (_customAvatarUrl != null && _customAvatarUrl!.isNotEmpty)
+        ? _customAvatarUrl
+        : (user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture']);
     final String initial = userEmail.isNotEmpty ? userEmail[0].toUpperCase() : 'G';
 
     return Scaffold(
@@ -133,20 +227,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
               GlassCard(
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: AppTheme.accentCyan.withOpacity(0.2),
-                      backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                      child: avatarUrl == null
-                          ? Text(
-                              initial,
-                              style: GoogleFonts.poppins(
+                    GestureDetector(
+                      onTap: _updateProfilePhoto,
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundColor: AppTheme.accentCyan.withOpacity(0.2),
+                            backgroundImage: activeAvatar != null && activeAvatar.isNotEmpty
+                                ? NetworkImage(activeAvatar)
+                                : null,
+                            child: (activeAvatar == null || activeAvatar.isEmpty)
+                                ? Text(
+                                    initial,
+                                    style: GoogleFonts.poppins(
+                                      color: AppTheme.accentCyan,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
                                 color: AppTheme.accentCyan,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
+                                shape: BoxShape.circle,
                               ),
-                            )
-                          : null,
+                              child: const Icon(Icons.camera_alt, color: Colors.black, size: 14),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
