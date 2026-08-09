@@ -35,7 +35,7 @@ jobs:
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Expense_OS_Mobile_iOS_IPA
+          name: Expense_OS_Mobile.ipa
           path: Expense_OS_Mobile.ipa
 
   build-android:
