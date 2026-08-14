@@ -1,16 +1,28 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense_model.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/glass_card.dart';
 import '../widgets/expense_tile.dart';
 import 'add_expense_screen.dart';
+import 'calendar_expenses_screen.dart';
+import 'gamification_screen.dart';
+import 'ocr_scanner_screen.dart';
+import 'profile_screen.dart';
+import 'savings_goals_screen.dart';
+import 'split_bill_screen.dart';
+import 'tools_hub_screen.dart';
+import '../services/budget_rules_engine.dart';
+import '../services/currency_service.dart';
+import '../services/notification_service.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final VoidCallback? onOpenAddExpense;
+
+  const DashboardScreen({super.key, this.onOpenAddExpense});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -20,15 +32,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final SupabaseService _supabaseService = SupabaseService();
   List<Expense> _expenses = [];
   bool _isLoading = true;
-  String _searchQuery = '';
-  double _monthlyBudgetCap = 0.0;
+  double _monthlyBudgetCap = 3380.0;
+  double _startingBalance = 0.0;
+  String? _avatarUrl;
+  String? _customAvatarPath;
+  int _activeStatIndex = 1; // Default highlighted card: 1 = Total Expense
+  String _activeEntryType = 'expense'; // 'expense' or 'income'
+
+  List<Expense> get _filteredEntries =>
+      _expenses.where((e) => e.type == _activeEntryType).toList();
 
   @override
   void initState() {
     super.initState();
     SupabaseService.refreshNotifier.addListener(_loadExpenses);
+    _loadUserData();
     _loadBudgetCap();
+    _loadStartingBalance();
     _loadExpenses();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = _supabaseService.currentUser;
+    final googleAvatar = prefs.getString('google_user_avatar');
+    final customAvatar = prefs.getString('custom_avatar_path');
+    String? photoUrl = googleAvatar;
+
+    if (user != null) {
+      final meta = user.userMetadata;
+      if (meta != null) {
+        photoUrl = photoUrl ?? meta['avatar_url'] ?? meta['picture'];
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _avatarUrl = photoUrl;
+        _customAvatarPath = customAvatar;
+      });
+    }
   }
 
   @override
@@ -37,27 +80,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
+  Future<void> _loadStartingBalance() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _startingBalance = prefs.getDouble('user_starting_balance') ?? 0.0;
+    });
+  }
+
   Future<void> _loadBudgetCap() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 3380.0;
     });
-  }
-
-  Future<void> _saveBudgetCap(double newBudget) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('monthly_budget_cap', newBudget);
-    if (!mounted) return;
-    setState(() {
-      _monthlyBudgetCap = newBudget;
-    });
-    SupabaseService.refreshNotifier.value++;
   }
 
   Future<void> _loadExpenses() async {
     if (!mounted) return;
-    _loadBudgetCap();
     setState(() => _isLoading = true);
     try {
       final list = await _supabaseService.getExpenses();
@@ -66,15 +106,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _expenses = list;
         _isLoading = false;
       });
-    } catch (e) {
+
+      // Automatically evaluate AI Smart Budget Rules and push device notifications
+      BudgetRulesEngine().evaluateRules(
+        expenses: _expenses,
+        budgetCap: _monthlyBudgetCap,
+        totalIncome: _totalIncome,
+        currencySymbol: CurrencyService.currencySymbolNotifier.value,
+      );
+    } catch (_) {
       if (!mounted) return;
-      setState(() => _isLoading = false);
+      setState(() {
+        _expenses = _supabaseService.localExpenses;
+        _isLoading = false;
+      });
     }
   }
 
-  double get _totalExpense => _expenses
-      .where((e) => e.type == 'expense')
-      .fold(0.0, (sum, e) => sum + e.amount);
+  double get _totalIncome {
+    final loggedIncome = _expenses.where((e) => e.type == 'income').fold(0.0, (sum, e) => sum + e.amount);
+    return _startingBalance + loggedIncome;
+  }
+
+  double get _totalExpenses {
+    return _expenses.where((e) => e.type == 'expense').fold(0.0, (sum, e) => sum + e.amount);
+  }
 
   void _openAddExpenseSheet([Expense? expenseToEdit]) {
     showModalBottomSheet(
@@ -95,470 +151,974 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _openSetBudgetSheet() {
-    final controller = TextEditingController(text: _monthlyBudgetCap.toStringAsFixed(0));
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
-            color: AppTheme.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(top: BorderSide(color: AppTheme.cardBorder, width: 1.5)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Set Monthly Budget Cap',
-                    style: Theme.of(ctx).textTheme.headlineMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white70),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                ],
-                style: const TextStyle(color: Colors.white, fontFamily: 'IBM Plex Mono', fontSize: 18),
-                decoration: InputDecoration(
-                  labelText: 'Monthly Target (₹)',
-                  labelStyle: const TextStyle(color: Colors.white60),
-                  prefixIcon: const Icon(Icons.currency_rupee, color: AppTheme.amber),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    final val = double.tryParse(controller.text.trim());
-                    if (val != null && val >= 0) {
-                      _saveBudgetCap(val);
-                    }
-                    Navigator.pop(ctx);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.amber,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: const Text(
-                    'SAVE BUDGET CAP',
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ).whenComplete(() => controller.dispose());
-  }
 
-  void _deleteExpense(String id) async {
-    await _supabaseService.deleteExpense(id);
-    _loadExpenses();
-  }
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '₹', locale: 'en_IN', decimalDigits: 2);
-    final filteredExpenses = _expenses.where((e) {
-      return e.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          e.category.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
+    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+    final currency = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 2);
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _loadExpenses,
-          color: AppTheme.primaryCyan,
-          backgroundColor: AppTheme.background,
-          child: CustomScrollView(
-            slivers: [
-              // Header & Balance Card Section
-              SliverPadding(
-                padding: const EdgeInsets.all(20.0),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // Title Bar with Branding Logo
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.asset(
-                                'assets/icon/app_icon.png',
-                                width: 36,
-                                height: 36,
-                                fit: BoxFit.cover,
-                              ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppTheme.monexBlue))
+            : RefreshIndicator(
+                color: AppTheme.monexBlue,
+                onRefresh: _loadExpenses,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top Header: "Overview" + Clickable User Avatar
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Overview',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.textPrimary,
+                              letterSpacing: -0.3,
                             ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Expense OS',
-                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                        fontSize: 22,
-                                      ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ProfileScreen(
+                                    onSignOut: () {
+                                      Navigator.pop(context);
+                                    },
+                                  ),
                                 ),
-                                const Text(
-                                  'Finance Command Center',
-                                  style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                              ).then((_) {
+                                if (mounted) setState(() {});
+                              });
+                            },
+                            child: Stack(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppTheme.monexBlue,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppTheme.monexBlue.withValues(alpha: 0.25),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipOval(
+                                    child: _buildAvatarContent(),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 1,
+                                  right: 1,
+                                  child: Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF12B76A),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Colors.white10,
-                          child: IconButton(
-                            icon: const Icon(Icons.refresh, color: AppTheme.primaryCyan, size: 20),
-                            onPressed: _loadExpenses,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Total Monthly Expenses Card
-                    GlassCard(
-                      borderColor: AppTheme.primaryCyan.withOpacity(0.5),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'TOTAL MONTHLY EXPENSES',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              currencyFormat.format(_totalExpense),
-                              style: const TextStyle(
-                                fontFamily: 'IBM Plex Mono',
-                                fontSize: 34,
-                                fontWeight: FontWeight.w800,
-                                color: AppTheme.primaryCyan,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Budget Breakdown Row (Budget Cap vs Remaining)
-                          Row(
-                            children: [
-                              // Budget Cap
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.amber.withOpacity(0.2),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.account_balance_wallet, color: AppTheme.amber, size: 16),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text('Budget Cap', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Text(
-                                              currencyFormat.format(_monthlyBudgetCap),
-                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Remaining Budget
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.emerald.withOpacity(0.2),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.check_circle_outline, color: AppTheme.emerald, size: 16),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text('Remaining', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Text(
-                                              currencyFormat.format((_monthlyBudgetCap - _totalExpense).clamp(0.0, double.infinity)),
-                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
 
-                    // Monthly Budget Cap Card (Tappable anywhere to set budget)
-                    GestureDetector(
-                      onTap: _openSetBudgetSheet,
-                      child: GlassCard(
-                        borderColor: AppTheme.amber.withOpacity(0.5),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 20),
+
+                      // Horizontal Stat Cards Carousel
+                      SizedBox(
+                        height: 145,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          clipBehavior: Clip.none,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
+                            // Card 1: Total Money
+                            _buildStatCard(
+                              index: 0,
+                              title: 'Total Money',
+                              amount: currency.format(_totalIncome),
+                              icon: Icons.account_balance_wallet_outlined,
+                              isHighlighted: _activeStatIndex == 0,
+                            ),
+                            const SizedBox(width: 14),
+
+                            // Card 2: Total Expense (Hero Royal Blue Card)
+                            _buildStatCard(
+                              index: 1,
+                              title: 'Total Expense',
+                              amount: currency.format(_totalExpenses),
+                              icon: Icons.credit_card_rounded,
+                              isHighlighted: _activeStatIndex == 1,
+                            ),
+                            const SizedBox(width: 14),
+
+                            // Card 3: Monthly Budget
+                            _buildStatCard(
+                              index: 2,
+                              title: 'Monthly Budget',
+                              amount: currency.format(_monthlyBudgetCap),
+                              icon: Icons.pie_chart_outline_rounded,
+                              isHighlighted: _activeStatIndex == 2,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      // Quick Intelligence Tools Bar
+                      Row(
+                        children: [
+                          _buildQuickToolButton(
+                            icon: Icons.document_scanner_rounded,
+                            label: 'Scan Receipt',
+                            badge: 'AI',
+                            color: AppTheme.monexBlue,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => OCRScannerScreen(
+                                    onParsedResult: (amount, title, category) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Scanned receipt: $title • \$$amount', style: GoogleFonts.plusJakartaSans()),
+                                          backgroundColor: AppTheme.monexBlue,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          _buildQuickToolButton(
+                            icon: Icons.call_split_rounded,
+                            label: 'Split Bill',
+                            color: const Color(0xFF7A5AF8),
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const SplitBillScreen()));
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          _buildQuickToolButton(
+                            icon: Icons.calendar_month_rounded,
+                            label: 'Calendar',
+                            color: const Color(0xFF2E90FA),
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const CalendarExpensesScreen()));
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          _buildQuickToolButton(
+                            icon: Icons.emoji_events_rounded,
+                            label: 'Quests',
+                            badge: 'XP',
+                            color: const Color(0xFFF79009),
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const GamificationScreen()));
+                            },
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Category Filter Capsule Switcher: [💸 Expenses] & [💰 Extra Income Logs]
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF2F4F7),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color(0xFFE4E7EC), width: 1.2),
+                        ),
+                        child: Row(
+                          children: [
+                            // 💸 Expenses Pill
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => setState(() => _activeEntryType = 'expense'),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(vertical: 11),
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: _activeEntryType == 'expense' ? AppTheme.monexBlue : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: _activeEntryType == 'expense'
+                                        ? [
+                                            BoxShadow(
+                                              color: AppTheme.monexBlue.withValues(alpha: 0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
                                   child: Row(
-                                    children: const [
-                                      Icon(Icons.tune, color: AppTheme.amber, size: 18),
-                                      SizedBox(width: 8),
-                                      Flexible(
-                                        child: Text(
-                                          'MONTHLY BUDGET CAP',
-                                          style: TextStyle(
-                                            color: AppTheme.textMuted,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 1.2,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text('💸', style: TextStyle(fontSize: 14)),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Expenses',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: _activeEntryType == 'expense' ? Colors.white : const Color(0xFF667085),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+
+                            // 💰 Extra Income Logs Pill
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => setState(() => _activeEntryType = 'income'),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(vertical: 11),
+                                  alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: AppTheme.amber.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: AppTheme.amber.withOpacity(0.4)),
+                                    color: _activeEntryType == 'income' ? AppTheme.monexBlue : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: _activeEntryType == 'income'
+                                        ? [
+                                            BoxShadow(
+                                              color: AppTheme.monexBlue.withValues(alpha: 0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ]
+                                        : null,
                                   ),
                                   child: Row(
-                                    children: const [
-                                      Icon(Icons.edit, color: AppTheme.amber, size: 12),
-                                      SizedBox(width: 4),
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text('💰', style: TextStyle(fontSize: 14)),
+                                      const SizedBox(width: 6),
                                       Text(
-                                        'Set Budget',
-                                        style: TextStyle(color: AppTheme.amber, fontSize: 11, fontWeight: FontWeight.bold),
+                                        'Extra Income Logs',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: _activeEntryType == 'income' ? Colors.white : const Color(0xFF667085),
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
-                                Text(
-                                  currencyFormat.format(_monthlyBudgetCap),
-                                  style: const TextStyle(
-                                    fontFamily: 'IBM Plex Mono',
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  '${(_totalExpense / (_monthlyBudgetCap > 0 ? _monthlyBudgetCap : 1) * 100).toStringAsFixed(1)}% Spent',
-                                  style: TextStyle(
-                                    color: _totalExpense > _monthlyBudgetCap ? AppTheme.dangerRed : AppTheme.emerald,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: LinearProgressIndicator(
-                                value: (_monthlyBudgetCap > 0 ? (_totalExpense / _monthlyBudgetCap).clamp(0.0, 1.0) : 0.0),
-                                minHeight: 8,
-                                backgroundColor: Colors.white10,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  _totalExpense > _monthlyBudgetCap ? AppTheme.dangerRed : AppTheme.emerald,
-                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Spent: ${currencyFormat.format(_totalExpense)}',
-                                  style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
-                                ),
-                                Text(
-                                  'Remaining: ${currencyFormat.format((_monthlyBudgetCap - _totalExpense).clamp(0.0, double.infinity))}',
-                                  style: TextStyle(
-                                    color: _monthlyBudgetCap - _totalExpense < 0 ? AppTheme.dangerRed : AppTheme.textSecondary,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
 
-                    // Search Bar & Recent Section Title
+                      const SizedBox(height: 24),
+
+                      // "Latest Entries" Header Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _activeEntryType == 'expense' ? 'Expense Logs' : 'Income Logs',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            '${_filteredEntries.length} ${_filteredEntries.length == 1 ? 'entry' : 'entries'}',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF98A2B3),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Filtered Transaction Entries List
+                      if (_filteredEntries.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                          alignment: Alignment.center,
+                          child: Column(
+                            children: [
+                              Icon(
+                                _activeEntryType == 'expense' ? Icons.receipt_long_outlined : Icons.account_balance_wallet_outlined,
+                                size: 44,
+                                color: const Color(0xFFD0D5DD),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                _activeEntryType == 'expense' ? 'No expense logs recorded yet' : 'No extra income logs recorded yet',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _filteredEntries.length,
+                          itemBuilder: (context, index) {
+                            final expense = _filteredEntries[index];
+                            return ExpenseTile(
+                              expense: expense,
+                              onTap: () => _openAddExpenseSheet(expense),
+                              onDelete: () async {
+                                if (expense.id != null) {
+                                  await _supabaseService.deleteExpense(expense.id!);
+                                  _loadExpenses();
+                                }
+                              },
+                            );
+                          },
+                        ),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+
+
+  void _showRemindersSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (rCtx) {
+        bool dailyLogReminder = true;
+        bool billDueReminder = true;
+        bool budgetWarning = true;
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(color: const Color(0xFFD0D5DD), borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Recent Transactions',
-                          style: Theme.of(context).textTheme.titleLarge,
+                          'Expense OS Reminders',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
-                        Text(
-                          '${filteredExpenses.length} items',
-                          style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: const Color(0xFFECFDF3), borderRadius: BorderRadius.circular(8)),
+                          child: Text('ACTIVE', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.successGreen)),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-
-                    // Search Field
-                    TextField(
-                      onChanged: (val) => setState(() => _searchQuery = val),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: 'Search title or category...',
-                        hintStyle: const TextStyle(color: AppTheme.textMuted),
-                        prefixIcon: const Icon(Icons.search, color: AppTheme.primaryCyan),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: AppTheme.cardBorder),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.edit_calendar_rounded, color: AppTheme.monexBlue, size: 20),
+                      ),
+                      title: Text('Daily Spending Log Reminder', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
+                      subtitle: Text('Remind me at 9:00 PM to record today\'s expenses', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF667085))),
+                      value: dailyLogReminder,
+                      activeTrackColor: AppTheme.monexBlue,
+                      onChanged: (val) => setSheetState(() => dailyLogReminder = val),
+                    ),
+                    const Divider(height: 16, color: Color(0xFFF1F3F9)),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: const Color(0xFFFEF3F2), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.event_repeat_rounded, color: AppTheme.dangerRed, size: 20),
+                      ),
+                      title: Text('Bill Due Date Alert', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
+                      subtitle: Text('Alert 2 days before recurring bills and rent', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF667085))),
+                      value: billDueReminder,
+                      activeTrackColor: AppTheme.monexBlue,
+                      onChanged: (val) => setSheetState(() => billDueReminder = val),
+                    ),
+                    const Divider(height: 16, color: Color(0xFFF1F3F9)),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: const Color(0xFFFEF0C7), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFF79009), size: 20),
+                      ),
+                      title: Text('80% Budget Cap Warning', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
+                      subtitle: Text('Notify when nearing monthly limit threshold', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF667085))),
+                      value: budgetWarning,
+                      activeTrackColor: AppTheme.monexBlue,
+                      onChanged: (val) => setSheetState(() => budgetWarning = val),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(rCtx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Notification preferences saved!', style: GoogleFonts.plusJakartaSans()),
+                              backgroundColor: AppTheme.monexBlue,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.monexBlue,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text('SAVE PREFERENCES', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13)),
                       ),
                     ),
-                  ]),
+                  ],
                 ),
               ),
+            );
+          },
+        );
+      },
+    );
+  }
 
-              // Transactions List
-              _isLoading
-                  ? const SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(40.0),
-                          child: CircularProgressIndicator(color: AppTheme.primaryCyan),
+  void _showSetTotalMoneyDialog() {
+    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+    final controller = TextEditingController(text: _totalIncome.toStringAsFixed(0));
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Total Money (Bank Balance)',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary, fontSize: 18),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Enter your total bank account money (overall available funds):',
+              style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.monexBlue),
+              decoration: InputDecoration(
+                prefixText: '$currencySymbol ',
+                prefixStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.monexBlue),
+                filled: true,
+                fillColor: const Color(0xFFF9FAFB),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF667085), fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final val = double.tryParse(controller.text.trim());
+              if (val != null && val >= 0) {
+                final prefs = await SharedPreferences.getInstance();
+                final currentIncomeLogs = _expenses.where((e) => e.type == 'income').fold(0.0, (sum, e) => sum + e.amount);
+                final newStarting = (val - currentIncomeLogs).clamp(0.0, double.infinity);
+                await prefs.setDouble('user_starting_balance', newStarting);
+                if (mounted) {
+                  setState(() {
+                    _startingBalance = newStarting;
+                  });
+                  _evaluateBudgetRules();
+                }
+              }
+              if (mounted) Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.monexBlue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text('Save', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSetBudgetDialog() {
+    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+    final controller = TextEditingController(text: _monthlyBudgetCap.toStringAsFixed(0));
+    String? errorMessage;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(
+            'Set Monthly Budget',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary, fontSize: 18),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Enter the spending budget taken out from your total bank money ($currencySymbol${_totalIncome.toStringAsFixed(0)} available):',
+                style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onChanged: (text) {
+                  final val = double.tryParse(text.trim()) ?? 0.0;
+                  if (val > _totalIncome) {
+                    setDialogState(() {
+                      errorMessage = 'Cannot exceed total bank money ($currencySymbol${_totalIncome.toStringAsFixed(0)})';
+                    });
+                  } else if (errorMessage != null) {
+                    setDialogState(() {
+                      errorMessage = null;
+                    });
+                  }
+                },
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  color: errorMessage != null ? AppTheme.dangerRed : AppTheme.monexBlue,
+                ),
+                decoration: InputDecoration(
+                  prefixText: '$currencySymbol ',
+                  prefixStyle: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: errorMessage != null ? AppTheme.dangerRed : AppTheme.monexBlue,
+                  ),
+                  filled: true,
+                  fillColor: errorMessage != null ? const Color(0xFFFEF3F2) : const Color(0xFFF9FAFB),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: errorMessage != null ? AppTheme.dangerRed : const Color(0xFFE4E7EC)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: errorMessage != null ? AppTheme.dangerRed : const Color(0xFFE4E7EC)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: errorMessage != null ? AppTheme.dangerRed : AppTheme.monexBlue, width: 1.5),
+                  ),
+                ),
+              ),
+              if (errorMessage != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.error_outline_rounded, color: AppTheme.dangerRed, size: 16),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        errorMessage!,
+                        style: GoogleFonts.plusJakartaSans(
+                          color: AppTheme.dangerRed,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    )
-                  : filteredExpenses.isEmpty
-                      ? SliverToBoxAdapter(
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(40.0),
-                              child: Column(
-                                children: const [
-                                  Icon(Icons.receipt_long, size: 48, color: Colors.white24),
-                                  SizedBox(height: 12),
-                                  Text(
-                                    'No transactions found',
-                                    style: TextStyle(color: AppTheme.textMuted),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )
-                      : SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final expense = filteredExpenses[index];
-                                return ExpenseTile(
-                                  expense: expense,
-                                  onTap: () => _openAddExpenseSheet(expense),
-                                  onDelete: () {
-                                    if (expense.id != null) {
-                                      _deleteExpense(expense.id!);
-                                    }
-                                  },
-                                );
-                              },
-                              childCount: filteredExpenses.length,
-                            ),
-                          ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF667085), fontWeight: FontWeight.w600)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final val = double.tryParse(controller.text.trim());
+                if (val == null || val < 0) return;
+
+                // Hard block if budget exceeds total bank account money
+                if (val > _totalIncome) {
+                  setDialogState(() {
+                    errorMessage = 'Cannot exceed total bank money ($currencySymbol${_totalIncome.toStringAsFixed(0)})';
+                  });
+                  return;
+                }
+
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setDouble('monthly_budget_cap', val);
+                setState(() => _monthlyBudgetCap = val);
+                _evaluateBudgetRules();
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.monexBlue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('Save Budget', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _evaluateBudgetRules() async {
+    final alerts = await BudgetRulesEngine().evaluateRules(
+      expenses: _expenses,
+      budgetCap: _monthlyBudgetCap,
+      totalIncome: _totalIncome,
+      currencySymbol: CurrencyService.currencySymbolNotifier.value,
+    );
+
+    if (alerts.isNotEmpty && mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  alerts.first,
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 12.5),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFFB42318),
+          duration: const Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      );
+    }
+  }
+
+  Widget _buildStatCard({
+    required int index,
+    required String title,
+    required String amount,
+    required IconData icon,
+    required bool isHighlighted,
+  }) {
+    final isEditable = index == 0 || index == 2;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() => _activeStatIndex = index);
+        if (index == 0) {
+          _showSetTotalMoneyDialog();
+        } else if (index == 2) {
+          _showSetBudgetDialog();
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: 155,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isHighlighted ? AppTheme.monexBlue : Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: isHighlighted
+              ? null
+              : Border.all(color: const Color(0xFFF1F3F9), width: 1.5),
+          boxShadow: isHighlighted ? AppTheme.heroBlueShadow : AppTheme.cardShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Icon in small square container
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: isHighlighted
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isHighlighted ? Colors.white : AppTheme.textPrimary,
+                    size: 18,
+                  ),
+                ),
+                if (isEditable)
+                  Icon(
+                    Icons.edit_rounded,
+                    size: 14,
+                    color: isHighlighted ? Colors.white70 : const Color(0xFF98A2B3),
+                  ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: isHighlighted ? Colors.white70 : AppTheme.textSecondary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  amount,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: isHighlighted ? Colors.white : AppTheme.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionPill({
+    required String label,
+    required IconData? icon,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? AppTheme.monexBlue : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: isActive
+              ? null
+              : Border.all(color: const Color(0xFFE4E7EC), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF101828).withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 16,
+                color: isActive ? Colors.white : const Color(0xFF475467),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: isActive ? Colors.white : const Color(0xFF344054),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarContent() {
+    if (_customAvatarPath != null && File(_customAvatarPath!).existsSync()) {
+      return Image.file(
+        File(_customAvatarPath!),
+        width: 44,
+        height: 44,
+        fit: BoxFit.cover,
+      );
+    } else if (_avatarUrl != null && _avatarUrl!.isNotEmpty) {
+      return Image.network(
+        _avatarUrl!,
+        width: 44,
+        height: 44,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildInitialAvatar(),
+      );
+    }
+    return _buildInitialAvatar();
+  }
+
+  Widget _buildInitialAvatar() {
+    final email = _supabaseService.currentUser?.email ?? 'User';
+    final initial = email.isNotEmpty ? email[0].toUpperCase() : 'U';
+    return Center(
+      child: Text(
+        initial,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickToolButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    String? badge,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE4E7EC), width: 1.1),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF101828).withValues(alpha: 0.03),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: color, size: 19),
+                  ),
+                  if (badge != null)
+                    Positioned(
+                      top: -4,
+                      right: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(6),
                         ),
+                        child: Text(
+                          badge,
+                          style: GoogleFonts.plusJakartaSans(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddExpenseSheet(),
-        backgroundColor: AppTheme.primaryCyan,
-        foregroundColor: Colors.black,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Expense', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }

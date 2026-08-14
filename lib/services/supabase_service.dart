@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/expense_model.dart';
 
@@ -43,11 +44,21 @@ class SupabaseService {
   bool get isAuthenticated => currentUser != null;
 
   Future<AuthResponse> signUp({required String email, required String password}) async {
-    return await client.auth.signUp(email: email, password: password);
+    final res = await client.auth.signUp(email: email, password: password);
+    if (res.user != null || res.session != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('persistent_user_logged_in', true);
+    }
+    return res;
   }
 
   Future<AuthResponse> signIn({required String email, required String password}) async {
-    return await client.auth.signInWithPassword(email: email, password: password);
+    final res = await client.auth.signInWithPassword(email: email, password: password);
+    if (res.user != null || res.session != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('persistent_user_logged_in', true);
+    }
+    return res;
   }
 
   Future<bool> signInWithGoogle() async {
@@ -59,6 +70,16 @@ class SupabaseService {
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         return false;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('persistent_user_logged_in', true);
+      if (googleUser.displayName != null && googleUser.displayName!.isNotEmpty) {
+        await prefs.setString('custom_user_name', googleUser.displayName!);
+      }
+      await prefs.setString('google_user_email', googleUser.email);
+      if (googleUser.photoUrl != null && googleUser.photoUrl!.isNotEmpty) {
+        await prefs.setString('google_user_avatar', googleUser.photoUrl!);
       }
 
       final googleAuth = await googleUser.authentication;
@@ -77,11 +98,12 @@ class SupabaseService {
         );
         return response.user != null;
       } else {
-        return await client.auth.signInWithOAuth(
+        await client.auth.signInWithOAuth(
           OAuthProvider.google,
           redirectTo: redirectUrl,
           queryParams: {'prompt': 'select_account'},
         );
+        return true;
       }
     } catch (e) {
       debugPrint('Google Native Sign-In Exception: $e');
@@ -89,15 +111,21 @@ class SupabaseService {
           ? Uri.base.origin 
           : 'com.expensecalculator.expenseosmobile://login-callback';
 
-      return await client.auth.signInWithOAuth(
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('persistent_user_logged_in', true);
+
+      await client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: redirectUrl,
         queryParams: {'prompt': 'select_account'},
       );
+      return true;
     }
   }
 
   Future<void> signOut() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('persistent_user_logged_in', false);
     await client.auth.signOut();
   }
 
@@ -121,6 +149,8 @@ class SupabaseService {
       return List.unmodifiable(_localExpenses);
     }
   }
+
+  List<Expense> get localExpenses => List.unmodifiable(_localExpenses);
 
   // Static global refresh notifier for real-time automatic screen updates
   static final ValueNotifier<int> refreshNotifier = ValueNotifier<int>(0);

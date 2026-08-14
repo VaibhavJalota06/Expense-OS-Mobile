@@ -2,113 +2,196 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Web App Exact Core Backgrounds
-  static const Color background = Color(0xFF090C11);
-  static const Color elevatedBackground = Color(0xFF0E131A);
-  static const Color cardBackground = Color(0x0CFFFFFF); // rgba(255, 255, 255, 0.045)
-  static const Color cardBorder = Color(0x17FFFFFF);     // rgba(255, 255, 255, 0.09)
-  
-  // Web App Exact Accent Color Palette
-  static const Color emerald = Color(0xFF34D399);   // Primary Accent
-  static const Color sky = Color(0xFF38BDF8);       // Sky Blue
-  static const Color violet = Color(0xFFA78BFA);    // Violet
-  static const Color amber = Color(0xFFFBBF24);     // Amber
-  static const Color rose = Color(0xFFFB7185);      // Rose
-  static const Color dangerRed = Color(0xFFF87171);  // Danger
-  static const Color orange = Color(0xFFFB923C);    // Orange
-  static const Color pink = Color(0xFFF472B6);      // Pink
-  static const Color slate = Color(0xFF94A3B8);     // Slate
+  // Monex Primary Signature Royal Blue Palette
+  static const Color monexBlue = Color(0xFF2B59FF);
+  static const Color monexBlueHover = Color(0xFF1E4CE6);
+  static const Color monexBlueDark = Color(0xFF1738B3);
+  static const Color monexBlueLight = Color(0xFFEEF2FF);
+  static const Color monexBlueSubtle = Color(0xFFF0F4FF);
+  static const Color monexNavy = Color(0xFF0F172A);
 
-  // Color Aliases for 100% Backward Compatibility
-  static const Color primaryEmerald = emerald;
-  static const Color primaryCyan = emerald; // Maps cyan calls to Web Emerald!
-  static const Color primaryPurple = violet;
-  static const Color accentNeon = emerald;
-  static const Color successGreen = emerald;
-  static const Color accentCyan = emerald;
+  // Background & Surface Canvas
+  static const Color background = Color(0xFFF8F9FE);
+  static const Color backgroundElevated = Color(0xFFFFFFFF);
+  static const Color surfaceLight = Color(0xFFFFFFFF);
+  static const Color cardLight = Color(0xFFFFFFFF);
+  static const Color surfaceDark = Color(0xFF101828);
+  static const Color cardDark = Color(0xFF161F30);
+
+  // Borders & Dividers
+  static const Color borderLight = Color(0xFFE9ECF2);
+  static const Color borderSubtle = Color(0xFFF1F3F9);
+  static const Color cardBorder = Color(0xFFEAECF0);
+  static const Color cardBackground = Color(0xFFFFFFFF);
+
+  // Typography Colors
+  static const Color textPrimary = Color(0xFF101828);
+  static const Color textSecondary = Color(0xFF667085);
+  static const Color textMuted = Color(0xFF98A2B3);
+  static const Color textLight = Color(0xFFFFFFFF);
+
+  // Transaction & Status Accents
+  static const Color successGreen = Color(0xFF12B76A);
+  static const Color dangerRed = Color(0xFFF04438);
+  static const Color warningOrange = Color(0xFFFB6514);
+  static const Color warningAmber = Color(0xFFF79009);
+  static const Color purple = Color(0xFF7A5AF8);
+  static const Color sky = Color(0xFF0BA5EC);
+
+  // Backward-compatible color aliases for existing modules
+  static const Color primaryEmerald = monexBlue;
+  static const Color primaryCyan = monexBlue;
+  static const Color primaryPurple = purple;
+  static const Color accentNeon = monexBlue;
+  static const Color mint = monexBlue;
+  static const Color mintBright = monexBlueLight;
+  static const Color mintDark = monexBlueDark;
+  static const Color emerald = successGreen;
+  static const Color mintAccent = monexBlue;
+  static const Color violet = purple;
+  static const Color amber = warningAmber;
+  static const Color coral = dangerRed;
+  static const Color pink = Color(0xFFEE46BC);
+  static const Color rose = Color(0xFFF63D68);
+  static const Color orange = warningOrange;
+  static const Color slate = textSecondary;
+  static const Color accentPurple = purple;
+  static const Color accentPink = dangerRed;
+  static const Color accentCyan = monexBlue;
   static const Color accentRed = dangerRed;
-  static const Color accentGreen = emerald;
+  static const Color accentGreen = successGreen;
 
-  // Typography High-Contrast Colors
-  static const Color textPrimary = Color(0xFFF8FAFC);  // --text-hi
-  static const Color textSecondary = Color(0xFFCBD5E1); // --text-mid
-  static const Color textMuted = Color(0xFF94A3B8);     // --text-low
+  // Modern Soft Ambient Shadows
+  static List<BoxShadow> get cardShadow => [
+        BoxShadow(
+          color: const Color(0xFF101828).withValues(alpha: 0.05),
+          blurRadius: 16,
+          spreadRadius: 0,
+          offset: const Offset(0, 4),
+        ),
+        BoxShadow(
+          color: const Color(0xFF101828).withValues(alpha: 0.03),
+          blurRadius: 6,
+          spreadRadius: -1,
+          offset: const Offset(0, 2),
+        ),
+      ];
 
-  // Web App Exact Linear Gradients
-  static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF34D399), Color(0xFF059669)],
+  static List<BoxShadow> get heroBlueShadow => [
+        BoxShadow(
+          color: monexBlue.withValues(alpha: 0.35),
+          blurRadius: 20,
+          spreadRadius: -2,
+          offset: const Offset(0, 8),
+        ),
+      ];
+
+  static List<BoxShadow> get buttonShadow => [
+        BoxShadow(
+          color: monexBlue.withValues(alpha: 0.3),
+          blurRadius: 16,
+          offset: const Offset(0, 6),
+        ),
+      ];
+
+  static List<BoxShadow> get cardSoftShadow => cardShadow;
+  static List<BoxShadow> get mintGlowShadow => heroBlueShadow;
+
+  // Gradients
+  static const LinearGradient blueHeroGradient = LinearGradient(
+    colors: [Color(0xFF3B66FF), Color(0xFF2550E8), Color(0xFF1A40D0)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const LinearGradient skyGradient = LinearGradient(
-    colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+  static const LinearGradient cardWhiteGradient = LinearGradient(
+    colors: [Color(0xFFFFFFFF), Color(0xFFFAFBFF)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
   );
 
-  static const LinearGradient violetGradient = LinearGradient(
-    colors: [Color(0xFFA78BFA), Color(0xFF7C3AED)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
+  static const LinearGradient heroMintGradient = blueHeroGradient;
+  static const LinearGradient darkCardGradient = blueHeroGradient;
   static const LinearGradient glassGradient = LinearGradient(
     colors: [
-      Color(0x13FFFFFF), // rgba(255, 255, 255, 0.075)
-      Color(0x0CFFFFFF), // rgba(255, 255, 255, 0.045)
+      Color(0x1F2B59FF),
+      Color(0x0A2B59FF),
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  // Theme Data Setup (Web Match)
-  static ThemeData get darkTheme {
+  // Main Monex Theme Data
+  static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: background,
-      primaryColor: emerald,
-      colorScheme: const ColorScheme.dark(
-        primary: emerald,
-        secondary: sky,
-        surface: elevatedBackground,
+      primaryColor: monexBlue,
+      colorScheme: const ColorScheme.light(
+        primary: monexBlue,
+        secondary: monexBlueLight,
+        surface: surfaceLight,
         error: dangerRed,
       ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: textPrimary, size: 20),
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: textPrimary,
+        ),
+      ),
       textTheme: TextTheme(
-        displayLarge: GoogleFonts.poppins(
+        displayLarge: GoogleFonts.plusJakartaSans(
           fontSize: 32,
           fontWeight: FontWeight.w800,
           color: textPrimary,
           letterSpacing: -0.5,
         ),
-        headlineMedium: GoogleFonts.poppins(
+        headlineMedium: GoogleFonts.plusJakartaSans(
           fontSize: 22,
           fontWeight: FontWeight.w700,
           color: textPrimary,
-          letterSpacing: 0.2,
+          letterSpacing: -0.2,
         ),
-        titleLarge: GoogleFonts.poppins(
+        titleLarge: GoogleFonts.plusJakartaSans(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: textPrimary,
         ),
-        bodyLarge: GoogleFonts.poppins(
+        titleMedium: GoogleFonts.plusJakartaSans(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
-        bodyMedium: GoogleFonts.poppins(
-          fontSize: 14,
+        bodyLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 15,
           fontWeight: FontWeight.w600,
+          color: textPrimary,
+        ),
+        bodyMedium: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
           color: textSecondary,
         ),
-        labelLarge: GoogleFonts.ibmPlexMono(
+        bodySmall: GoogleFonts.plusJakartaSans(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: textMuted,
+        ),
+        labelLarge: GoogleFonts.plusJakartaSans(
           fontSize: 14,
           fontWeight: FontWeight.w700,
-          color: emerald,
+          color: monexBlue,
         ),
       ),
     );
   }
+
+  // Dark Theme support
+  static ThemeData get darkTheme => lightTheme;
 }

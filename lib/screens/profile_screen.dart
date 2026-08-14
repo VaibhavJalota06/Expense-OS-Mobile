@@ -3,11 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/app_update_service.dart';
 import '../services/biometric_service.dart';
+import '../services/currency_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/glass_card.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -20,23 +22,110 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final SupabaseService _supabaseService = SupabaseService();
   final BiometricService _biometricService = BiometricService();
-  String _selectedCurrency = '₹ INR';
-  bool _isAppLockEnabled = false;
+
+  String _displayName = 'User';
+  String _email = 'user@gmail.com';
+  String? _avatarUrl;
   String? _customAvatarPath;
+  String _selectedCurrencySymbol = '\$';
+  bool _isAppLockEnabled = false;
+
+  int _totalTransactions = 0;
+  double _totalIncome = 0.0;
+  double _totalExpense = 0.0;
+  double _savingsRate = 0.0;
+
+  final List<Map<String, String>> _currencies = [
+    {'code': 'USD', 'symbol': '\$', 'name': '\$ USD (US Dollar)'},
+    {'code': 'INR', 'symbol': '₹', 'name': '₹ INR (Indian Rupee)'},
+    {'code': 'EUR', 'symbol': '€', 'name': '€ EUR (Euro)'},
+    {'code': 'GBP', 'symbol': '£', 'name': '£ GBP (British Pound)'},
+    {'code': 'JPY', 'symbol': '¥', 'name': '¥ JPY (Japanese Yen)'},
+    {'code': 'CAD', 'symbol': 'CA\$', 'name': 'CA\$ CAD (Canadian Dollar)'},
+    {'code': 'AUD', 'symbol': 'A\$', 'name': 'A\$ AUD (Australian Dollar)'},
+    {'code': 'SGD', 'symbol': 'S\$', 'name': 'S\$ SGD (Singapore Dollar)'},
+    {'code': 'AED', 'symbol': 'AED', 'name': 'AED (UAE Dirham)'},
+  ];
 
   @override
   void initState() {
     super.initState();
+    _loadUserData();
+    _loadUserStatistics();
     _loadAppLockState();
-    _loadCustomAvatar();
   }
 
-  Future<void> _loadCustomAvatar() async {
+  Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    final user = _supabaseService.currentUser;
+    final googleEmail = prefs.getString('google_user_email');
+    final googleAvatar = prefs.getString('google_user_avatar');
+    final customName = prefs.getString('custom_user_name');
+    final customAvatar = prefs.getString('custom_avatar_path');
+
+    String name = customName ?? 'Expense User';
+    String email = googleEmail ?? 'user@gmail.com';
+    String? photoUrl = googleAvatar;
+
+    if (user != null) {
+      if (user.email != null && user.email!.isNotEmpty) {
+        email = user.email!;
+      }
+      final meta = user.userMetadata;
+      if (meta != null) {
+        if (customName == null) {
+          name = meta['full_name'] ?? meta['name'] ?? email.split('@').first;
+        }
+        photoUrl = photoUrl ?? meta['avatar_url'] ?? meta['picture'];
+      }
+    }
+
+    final savedSymbol = prefs.getString('app_currency_symbol') ?? '\$';
+
     if (mounted) {
       setState(() {
-        _customAvatarPath = prefs.getString('custom_avatar_path');
+        _displayName = name;
+        _email = email;
+        _avatarUrl = photoUrl;
+        _customAvatarPath = customAvatar;
+        _selectedCurrencySymbol = savedSymbol;
       });
+    }
+  }
+
+  Future<void> _loadUserStatistics() async {
+    try {
+      final list = await _supabaseService.getExpenses();
+      final expenses = list.isNotEmpty ? list : _supabaseService.localExpenses;
+
+      double income = 0;
+      double expense = 0;
+
+      for (var e in expenses) {
+        if (e.type.toLowerCase() == 'income') {
+          income += e.amount;
+        } else {
+          expense += e.amount;
+        }
+      }
+
+      final rate = income > 0 ? (((income - expense) / income) * 100).clamp(0.0, 100.0) : 60.0;
+
+      if (mounted) {
+        setState(() {
+          _totalTransactions = expenses.length;
+          _totalIncome = income;
+          _totalExpense = expense;
+          _savingsRate = rate;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadAppLockState() async {
+    final enabled = await _biometricService.isAppLockEnabled();
+    if (mounted) {
+      setState(() => _isAppLockEnabled = enabled);
     }
   }
 
@@ -61,344 +150,625 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       debugPrint('Image picking error: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not pick image: $e', style: GoogleFonts.poppins()),
-            backgroundColor: AppTheme.accentRed,
-          ),
-        );
-      }
     }
   }
 
-  void _updateProfilePhoto() {
+  void _showEditNameDialog() {
+    final nameController = TextEditingController(text: _displayName);
+    final emailController = TextEditingController(text: _email);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Edit Profile Details',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary, fontSize: 18),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Full Name',
+                style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'e.g. Vaibhav Jalota',
+                  prefixIcon: const Icon(Icons.person_outline_rounded, size: 20, color: AppTheme.monexBlue),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE4E7EC))),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Gmail / Email Address',
+                style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'yourname@gmail.com',
+                  prefixIcon: const Icon(Icons.mail_outline_rounded, size: 20, color: AppTheme.monexBlue),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE4E7EC))),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF667085), fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              final newEmail = emailController.text.trim();
+              final prefs = await SharedPreferences.getInstance();
+
+              if (newName.isNotEmpty) {
+                await prefs.setString('custom_user_name', newName);
+              }
+              if (newEmail.isNotEmpty) {
+                await prefs.setString('google_user_email', newEmail);
+              }
+
+              setState(() {
+                if (newName.isNotEmpty) _displayName = newName;
+                if (newEmail.isNotEmpty) _email = newEmail;
+              });
+
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.monexBlue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text('Save Profile', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCurrencySelector() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF0F172A),
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+      builder: (ctx) => SafeArea(
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.60,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(color: const Color(0xFFD0D5DD), borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Select Default Currency',
+                style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _currencies.length,
+                  itemBuilder: (context, index) {
+                    final curr = _currencies[index];
+                    final isSelected = _selectedCurrencySymbol == curr['symbol'];
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      title: Text(
+                        curr['name']!,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected ? AppTheme.monexBlue : AppTheme.textPrimary,
+                        ),
+                      ),
+                      trailing: isSelected
+                          ? const Icon(Icons.check_circle_rounded, color: AppTheme.monexBlue)
+                          : null,
+                      onTap: () async {
+                        await CurrencyService().setCurrency(curr['code']!, curr['symbol']!, curr['name']!);
+                        setState(() {
+                          _selectedCurrencySymbol = curr['symbol']!;
+                        });
+                        Navigator.pop(ctx);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currencyFormatter = NumberFormat.currency(symbol: _selectedCurrencySymbol, locale: 'en_US', decimalDigits: 0);
+
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'User Profile & Settings',
+          style: GoogleFonts.plusJakartaSans(
+            color: AppTheme.textPrimary,
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Change Profile Photo',
-              style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            // ------------------------------------------------------------
+            // 1. DYNAMIC USER PROFILE CARD
+            // ------------------------------------------------------------
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFF1F3F9), width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF101828).withValues(alpha: 0.04),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // User Avatar
+                  Stack(
+                    children: [
+                      GestureDetector(
+                        onTap: () => _pickImage(ImageSource.gallery),
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppTheme.monexBlue,
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.monexBlue.withValues(alpha: 0.25),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: _customAvatarPath != null && !kIsWeb
+                              ? ClipOval(
+                                  child: Image.file(
+                                    File(_customAvatarPath!),
+                                    width: 64,
+                                    height: 64,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : _avatarUrl != null
+                                  ? ClipOval(
+                                      child: Image.network(
+                                        _avatarUrl!,
+                                        width: 64,
+                                        height: 64,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => _buildInitials(),
+                                      ),
+                                    )
+                                  : _buildInitials(),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: AppTheme.monexBlue,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+
+                  // Display Name & Email
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                _displayName,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: _showEditNameDialog,
+                              child: const Icon(Icons.edit_rounded, color: AppTheme.monexBlue, size: 16),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _email,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            color: const Color(0xFF667085),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFECFDF3),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Authenticated Member',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF027A48),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Select an option to update your picture:',
-              style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 13),
-            ),
+
             const SizedBox(height: 20),
 
-            // Option 1: Take Live Photo (Camera)
-            ListTile(
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera);
-              },
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentCyan.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.camera_alt, color: AppTheme.accentCyan, size: 24),
+            // ------------------------------------------------------------
+            // 2. USER FINANCIAL STATS & LIFETIME SUMMARY
+            // ------------------------------------------------------------
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFF1F3F9), width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF101828).withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-              title: Text('Take Live Photo (Camera)', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
-              subtitle: Text('Capture a new photo with device camera', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12)),
-              trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Financial Health Overview',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildMetricItem(
+                          label: 'Transactions',
+                          value: '$_totalTransactions',
+                          icon: Icons.receipt_long_rounded,
+                          color: AppTheme.monexBlue,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildMetricItem(
+                          label: 'Savings Rate',
+                          value: '${_savingsRate.toStringAsFixed(0)}%',
+                          icon: Icons.pie_chart_rounded,
+                          color: AppTheme.successGreen,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildMetricItem(
+                          label: 'Total Inflow',
+                          value: currencyFormatter.format(_totalIncome),
+                          icon: Icons.arrow_downward_rounded,
+                          color: AppTheme.successGreen,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildMetricItem(
+                          label: 'Total Outflow',
+                          value: currencyFormatter.format(_totalExpense),
+                          icon: Icons.arrow_upward_rounded,
+                          color: AppTheme.dangerRed,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const Divider(color: Colors.white12, height: 16),
 
-            // Option 2: Upload Photo from Gallery
-            ListTile(
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
-              },
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentGreen.withOpacity(0.15),
-                  shape: BoxShape.circle,
+            const SizedBox(height: 20),
+
+
+
+            // ------------------------------------------------------------
+            // 4. PREFERENCES & CURRENCY
+            // ------------------------------------------------------------
+            _buildSectionCard(
+              title: 'Preferences',
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.attach_money_rounded, color: AppTheme.monexBlue),
+                  title: Text('Default Currency', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _selectedCurrencySymbol,
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.monexBlue, fontSize: 16),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF98A2B3)),
+                    ],
+                  ),
+                  onTap: _showCurrencySelector,
                 ),
-                child: const Icon(Icons.photo_library, color: AppTheme.accentGreen, size: 24),
-              ),
-              title: Text('Upload Photo from Gallery', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
-              subtitle: Text('Choose an existing photo from device storage', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12)),
-              trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+                const Divider(height: 1, color: Color(0xFFF1F3F9)),
+                SwitchListTile(
+                  secondary: const Icon(Icons.fingerprint_rounded, color: AppTheme.monexBlue),
+                  title: Text('Biometric App Lock', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                  subtitle: Text(
+                    _isAppLockEnabled ? 'Fingerprint / PIN required on open' : 'Require biometrics to access app',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF667085)),
+                  ),
+                  value: _isAppLockEnabled,
+                  activeTrackColor: AppTheme.monexBlue,
+                  onChanged: (val) async {
+                    if (val) {
+                      final authed = await _biometricService.authenticate(
+                        reason: 'Confirm your Fingerprint or PIN to enable App Lock',
+                      );
+                      if (!authed) return;
+                    }
+                    await _biometricService.setAppLockEnabled(val);
+                    setState(() => _isAppLockEnabled = val);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            val ? '🔒 Biometric App Lock enabled' : '🔓 Biometric App Lock disabled',
+                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                          ),
+                          backgroundColor: val ? AppTheme.monexBlue : const Color(0xFF344054),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
+
+            const SizedBox(height: 20),
+
+            // ------------------------------------------------------------
+            // 5. ABOUT & DIRECT APP UPDATES
+            // ------------------------------------------------------------
+            _buildSectionCard(
+              title: 'About & App Updates',
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.system_update_alt_rounded, color: AppTheme.monexBlue),
+                  title: Text('App Version', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                  subtitle: Text('v${AppUpdateService.currentAppVersion} (Build ${AppUpdateService.currentBuildNumber})', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  trailing: OutlinedButton(
+                    onPressed: () async {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Checking for updates...', style: GoogleFonts.plusJakartaSans()),
+                          duration: const Duration(milliseconds: 1000),
+                        ),
+                      );
+                      final updateInfo = await AppUpdateService().checkForUpdate();
+                      if (context.mounted) {
+                        AppUpdateService().showUpdateModal(context, updateInfo, showUpToDateNotice: true);
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppTheme.monexBlue),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    ),
+                    child: Text('Check Update', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.monexBlue)),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // ------------------------------------------------------------
+            // 6. ACCOUNT SECURITY & LOGOUT
+            // ------------------------------------------------------------
+            _buildSectionCard(
+              title: 'Account Security',
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.logout_rounded, color: AppTheme.dangerRed),
+                  title: Text(
+                    'Sign Out',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.dangerRed),
+                  ),
+                  onTap: () async {
+                    await _supabaseService.signOut();
+                    widget.onSignOut();
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _loadAppLockState() async {
-    final enabled = await _biometricService.isAppLockEnabled();
-    if (mounted) {
-      setState(() {
-        _isAppLockEnabled = enabled;
-      });
-    }
-  }
-
-  Future<void> _toggleAppLock(bool value) async {
-    if (value) {
-      // Prompt biometric authentication before enabling App Lock
-      final authenticated = await _biometricService.authenticate(
-        reason: 'Authenticate to enable Biometric App Lock',
-      );
-      if (authenticated) {
-        await _biometricService.setAppLockEnabled(true);
-        if (mounted) {
-          setState(() {
-            _isAppLockEnabled = true;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Biometric App Lock Enabled', style: GoogleFonts.poppins()),
-              backgroundColor: AppTheme.accentGreen,
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Biometric authentication failed', style: GoogleFonts.poppins()),
-              backgroundColor: AppTheme.accentRed,
-            ),
-          );
-        }
-      }
-    } else {
-      // Disabling App Lock
-      await _biometricService.setAppLockEnabled(false);
-      if (mounted) {
-        setState(() {
-          _isAppLockEnabled = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Biometric App Lock Disabled', style: GoogleFonts.poppins()),
-            backgroundColor: AppTheme.amber,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _handleSignOut() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF0F172A),
-        title: Text('Sign Out', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to sign out of Expense OS?', style: GoogleFonts.poppins(color: AppTheme.textSecondary)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: GoogleFonts.poppins(color: AppTheme.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRed),
-            child: Text('Sign Out', style: GoogleFonts.poppins(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await _supabaseService.signOut();
-      widget.onSignOut();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final user = _supabaseService.currentUser;
-    final userEmail = user?.email ?? 'Guest User (Demo Mode)';
-    final String initial = userEmail.isNotEmpty ? userEmail[0].toUpperCase() : 'G';
-
-    ImageProvider? avatarImage;
-    if (_customAvatarPath != null && _customAvatarPath!.isNotEmpty) {
-      if (kIsWeb || _customAvatarPath!.startsWith('http')) {
-        avatarImage = NetworkImage(_customAvatarPath!);
-      } else {
-        avatarImage = FileImage(File(_customAvatarPath!));
-      }
-    } else if (user?.userMetadata?['avatar_url'] != null) {
-      avatarImage = NetworkImage(user!.userMetadata!['avatar_url']);
-    } else if (user?.userMetadata?['picture'] != null) {
-      avatarImage = NetworkImage(user!.userMetadata!['picture']);
-    }
-
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        backgroundColor: AppTheme.background,
-        elevation: 0,
-        title: Text(
-          'Profile & Settings',
-          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
+  Widget _buildInitials() {
+    final initials = _displayName.isNotEmpty ? _displayName[0].toUpperCase() : 'U';
+    return Center(
+      child: Text(
+        initials,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 24,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+    );
+  }
+
+  Widget _buildMetricItem({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEAECF0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              // User Avatar Card
-              GlassCard(
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: _updateProfilePhoto,
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundColor: AppTheme.accentCyan.withOpacity(0.2),
-                            backgroundImage: avatarImage,
-                            child: avatarImage == null
-                                ? Text(
-                                    initial,
-                                    style: GoogleFonts.poppins(
-                                      color: AppTheme.accentCyan,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: AppTheme.accentCyan,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.camera_alt, color: Colors.black, size: 14),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userEmail,
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            softWrap: false,
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.accentGreen,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                user != null ? 'Supabase Connected' : 'Local Demo Mode',
-                                style: GoogleFonts.poppins(color: AppTheme.accentGreen, fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Settings Options
-              GlassCard(
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.currency_rupee, color: AppTheme.accentCyan),
-                      title: Text('Primary Currency', style: GoogleFonts.poppins(color: Colors.white)),
-                      trailing: DropdownButton<String>(
-                        value: _selectedCurrency,
-                        dropdownColor: const Color(0xFF0F172A),
-                        style: GoogleFonts.poppins(color: AppTheme.accentCyan, fontWeight: FontWeight.bold),
-                        underline: const SizedBox(),
-                        items: ['\$ USD', '₹ INR', '€ EUR', '£ GBP'].map((curr) {
-                          return DropdownMenuItem(value: curr, child: Text(curr));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedCurrency = val);
-                        },
-                      ),
-                    ),
-                    const Divider(color: Colors.white10),
-
-                    ListTile(
-                      leading: const Icon(Icons.cloud_done_outlined, color: AppTheme.accentCyan),
-                      title: Text('Supabase Cloud Sync', style: GoogleFonts.poppins(color: Colors.white)),
-                      subtitle: Text('Automated real-time cloud backup', style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12)),
-                      trailing: const Icon(Icons.check_circle, color: AppTheme.accentGreen),
-                    ),
-                    const Divider(color: Colors.white10),
-
-                    SwitchListTile(
-                      activeThumbColor: AppTheme.accentCyan,
-                      secondary: const Icon(Icons.security, color: AppTheme.accentCyan),
-                      title: Text('Security & Biometrics', style: GoogleFonts.poppins(color: Colors.white)),
-                      subtitle: Text(
-                        _isAppLockEnabled ? 'Fingerprint / Face ID lock active' : 'Tap to enable biometric app lock',
-                        style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 12),
-                      ),
-                      value: _isAppLockEnabled,
-                      onChanged: _toggleAppLock,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Sign Out Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _handleSignOut,
-                  icon: const Icon(Icons.logout, color: Colors.white),
-                  label: Text('SIGN OUT', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: AppTheme.accentRed,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF667085),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({required String title, required List<Widget> children}) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFF1F3F9), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF101828).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 20, top: 16, bottom: 6),
+              child: Text(
+                title,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF98A2B3),
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            ...children,
+          ],
         ),
       ),
     );

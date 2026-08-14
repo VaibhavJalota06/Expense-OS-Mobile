@@ -6,6 +6,7 @@ class Expense {
   final String type; // 'expense' or 'income'
   final DateTime date;
   final String paymentMethod;
+  final String? notes;
   final String? userId;
   final DateTime? createdAt;
 
@@ -17,6 +18,7 @@ class Expense {
     this.type = 'expense',
     required this.date,
     this.paymentMethod = 'Card',
+    this.notes,
     this.userId,
     this.createdAt,
   });
@@ -33,6 +35,7 @@ class Expense {
           ? DateTime.parse(json['date'].toString()) 
           : DateTime.now(),
       paymentMethod: json['payment_method'] ?? 'Card',
+      notes: json['notes']?.toString(),
       userId: json['user_id']?.toString(),
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at'].toString()) 
@@ -50,6 +53,7 @@ class Expense {
       'type': type,
       'date': date.toIso8601String().split('T')[0], // YYYY-MM-DD format
       'payment_method': paymentMethod,
+      if (notes != null) 'notes': notes,
       if (userId != null) 'user_id': userId,
     };
   }

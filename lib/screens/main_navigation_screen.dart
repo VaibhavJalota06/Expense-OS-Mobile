@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'dashboard_screen.dart';
-import 'transactions_screen.dart';
-import 'bills_screen.dart';
-import 'analytics_screen.dart';
-import 'profile_screen.dart';
+import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/spendly_nav_bar.dart';
+import 'add_expense_screen.dart';
+import 'bills_screen.dart';
+import 'dashboard_screen.dart';
+import 'profile_screen.dart';
+import 'savings_goals_screen.dart';
+import 'tools_hub_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -16,78 +19,62 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
+  final SupabaseService _supabaseService = SupabaseService();
+
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      DashboardScreen(onOpenAddExpense: _openAddExpenseSheet),
+      const BillsScreen(showBackButton: false),
+      const SavingsGoalsScreen(showBackButton: false),
+      ProfileScreen(onSignOut: widget.onSignOut),
+    ];
+  }
+
+  void _openAddExpenseSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => AddExpenseSheet(
+        onSave: (newExpense) async {
+          await _supabaseService.addExpense(newExpense);
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 650),
+          constraints: const BoxConstraints(maxWidth: 600),
           child: IndexedStack(
             index: _currentIndex,
-            children: [
-              const DashboardScreen(),
-              const TransactionsScreen(),
-              const BillsScreen(),
-              const AnalyticsScreen(),
-              ProfileScreen(onSignOut: widget.onSignOut),
-            ],
+            children: _screens,
           ),
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF0F172A),
-          border: Border(
-            top: BorderSide(
-              color: Colors.white.withOpacity(0.08),
-              width: 1,
-            ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          margin: EdgeInsets.only(
+            left: screenWidth > 600 ? (screenWidth - 560) / 2 : 0,
+            right: screenWidth > 600 ? (screenWidth - 560) / 2 : 0,
+            bottom: 6,
           ),
-        ),
-        child: Center(
-          heightFactor: 1.0,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 650),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) => setState(() => _currentIndex = index),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: AppTheme.accentCyan,
-              unselectedItemColor: AppTheme.textSecondary,
-              selectedFontSize: 10,
-              unselectedFontSize: 10,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.dashboard_outlined),
-                  activeIcon: Icon(Icons.dashboard),
-                  label: 'Dashboard',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt_long_outlined),
-                  activeIcon: Icon(Icons.receipt_long),
-                  label: 'Transactions',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.subscriptions_outlined),
-                  activeIcon: Icon(Icons.subscriptions),
-                  label: 'Bills',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.pie_chart_outline),
-                  activeIcon: Icon(Icons.pie_chart),
-                  label: 'Analytics',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
-                  activeIcon: Icon(Icons.person),
-                  label: 'Profile',
-                ),
-              ],
-            ),
+          child: SpendlyNavBar(
+            currentIndex: _currentIndex,
+            onTabSelected: (index) {
+              setState(() => _currentIndex = index);
+            },
+            onAddPressed: _openAddExpenseSheet,
           ),
         ),
       ),

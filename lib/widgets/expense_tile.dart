@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/expense_model.dart';
+import '../services/currency_service.dart';
 import '../theme/app_theme.dart';
-import 'glass_card.dart';
 
 class ExpenseTile extends StatelessWidget {
   final Expense expense;
@@ -16,101 +17,114 @@ class ExpenseTile extends StatelessWidget {
     this.onDelete,
   });
 
-  // Get icon and color based on category using built-in Material Icons
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
       case 'food':
       case 'dining':
-        return Icons.restaurant;
-      case 'shopping':
-        return Icons.shopping_bag;
-      case 'housing':
-      case 'rent':
-        return Icons.home;
+      case 'food & dining':
+        return Icons.restaurant_rounded;
+      case 'uber':
       case 'transport':
-      case 'travel':
-        return Icons.directions_car;
-      case 'entertainment':
-        return Icons.movie;
+      case 'transportation':
+        return Icons.directions_car_rounded;
+      case 'shopping':
+      case 'groceries':
+        return Icons.shopping_bag_rounded;
+      case 'rent':
+      case 'house':
+        return Icons.home_rounded;
+      case 'bill':
       case 'utilities':
-      case 'bills':
-        return Icons.bolt;
+      case 'bills & utilities':
+        return Icons.receipt_rounded;
+      case 'movie':
+      case 'entertainment':
+        return Icons.movie_rounded;
+      case 'health':
       case 'healthcare':
-      case 'medical':
-        return Icons.favorite;
+        return Icons.medical_services_rounded;
       case 'salary':
       case 'income':
-        return Icons.account_balance_wallet;
-      case 'investment':
-        return Icons.trending_up;
+        return Icons.account_balance_wallet_rounded;
       default:
-        return Icons.receipt_long;
+        return Icons.credit_card_rounded;
     }
   }
 
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Food & Dining':
-        return const Color(0xFF34D399); // Emerald
-      case 'Transportation':
-        return const Color(0xFF38BDF8); // Sky
-      case 'Shopping':
-        return const Color(0xFFA78BFA); // Violet
-      case 'Bills & Utilities':
-        return const Color(0xFFFBBF24); // Amber
-      case 'Services & Subscriptions':
-        return const Color(0xFF818CF8); // Indigo
-      case 'Entertainment':
-        return const Color(0xFFF472B6); // Pink
-      case 'Health & Fitness':
-        return const Color(0xFFFB923C); // Orange
-      case 'Miscellaneous':
+  double _getVatPercentage(String category) {
+    switch (category.toLowerCase()) {
+      case 'food':
+      case 'food & dining':
+        return 0.5;
+      case 'uber':
+      case 'transport':
+        return 0.8;
+      case 'shopping':
+        return 1.0;
+      case 'rent':
+        return 0.08;
+      case 'bill':
+        return 0.19;
+      case 'movie':
+        return 0.12;
       default:
-        return const Color(0xFF94A3B8); // Slate
+        return 0.5;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isIncome = expense.type == 'income';
-    final categoryColor = _getCategoryColor(expense.category);
-    final currencyFormatter = NumberFormat.currency(symbol: '₹', locale: 'en_IN', decimalDigits: 2);
-    final dateStr = DateFormat('MMM dd, yyyy').format(expense.date);
+    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+    final currencyFormatter = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 0);
+    final dateStr = DateFormat('dd MMM yyyy').format(expense.date);
+    final vat = _getVatPercentage(expense.category);
 
     return Dismissible(
-      key: Key(expense.id ?? DateTime.now().toIso8601String()),
+      key: Key(expense.id ?? '${expense.title}_${expense.date.toIso8601String()}'),
       direction: DismissDirection.endToStart,
       onDismissed: (_) => onDelete?.call(),
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: AppTheme.dangerRed.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(Icons.delete_outline, color: Colors.white, size: 24),
-      ),
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         margin: const EdgeInsets.only(bottom: 12),
-        borderRadius: 16,
+        decoration: BoxDecoration(
+          color: AppTheme.dangerRed.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Icon(Icons.delete_outline_rounded, color: AppTheme.dangerRed, size: 24),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFF1F3F9), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF101828).withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           child: Row(
             children: [
-              // Icon Badge
+              // Monex Soft Rounded Gray Icon Container
               Container(
-                width: 48,
-                height: 48,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
-                  color: categoryColor.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: categoryColor.withOpacity(0.4), width: 1.5),
+                  color: const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   _getCategoryIcon(expense.category),
-                  color: categoryColor,
+                  color: const Color(0xFF1E293B),
                   size: 22,
                 ),
               ),
@@ -123,74 +137,46 @@ class ExpenseTile extends StatelessWidget {
                   children: [
                     Text(
                       expense.title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            expense.category,
-                            style: TextStyle(
-                              color: categoryColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const Text(' • ', style: TextStyle(color: Colors.white38)),
-                        Text(
-                          dateStr,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontSize: 12,
-                                color: AppTheme.textMuted,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
+                    const SizedBox(height: 3),
+                    Text(
+                      dateStr,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: const Color(0xFF98A2B3),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
 
-              // Amount
+              // Amount & Subtitle (Vat + Payment Method)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '${isIncome ? "+" : "-"}${currencyFormatter.format(expense.amount)}',
-                      style: TextStyle(
-                        fontFamily: 'IBM Plex Mono',
-                        color: isIncome ? AppTheme.successGreen : AppTheme.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                      ),
+                  Text(
+                    '${isIncome ? "+ " : "- "}${currencyFormatter.format(expense.amount)} • Vat $vat%',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: isIncome ? AppTheme.successGreen : AppTheme.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white10,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      expense.paymentMethod,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: AppTheme.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  const SizedBox(height: 3),
+                  Text(
+                    expense.paymentMethod.isNotEmpty ? expense.paymentMethod : 'Google Pay',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: const Color(0xFF98A2B3),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],

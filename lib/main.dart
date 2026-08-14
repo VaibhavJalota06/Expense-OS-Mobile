@@ -2,33 +2,37 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/auth_screen.dart';
 import 'screens/main_navigation_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'services/biometric_service.dart';
+import 'services/currency_service.dart';
+import 'services/notification_service.dart';
 import 'services/supabase_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Configure Transparent Dark System Status Bar & Navigation Bar
+  // Configure Transparent System Status Bar & Navigation Bar
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
       systemNavigationBarColor: AppTheme.background,
-      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
 
-  // Render App UI instantly (0.1s startup)
-  runApp(const ExpenseOSApp());
+  try {
+    await SupabaseService.initialize();
+  } catch (e) {
+    debugPrint('Supabase initialization error: $e');
+  }
 
-  // Initialize Supabase Client asynchronously in background
-  SupabaseService.initialize().catchError((e) {
-    debugPrint('Supabase background initialization error: $e');
-  });
+  runApp(const ExpenseOSApp());
 }
 
 class ExpenseOSApp extends StatefulWidget {
@@ -38,29 +42,38 @@ class ExpenseOSApp extends StatefulWidget {
   State<ExpenseOSApp> createState() => _ExpenseOSAppState();
 }
 
-class _ExpenseOSAppState extends State<ExpenseOSApp> {
+class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver {
   final SupabaseService _supabaseService = SupabaseService();
   final BiometricService _biometricService = BiometricService();
-  
-  bool _isGuestOrLoggedIn = false;
+  final CurrencyService _currencyService = CurrencyService();
+
+  bool _hasSeenOnboarding = false;
+  bool _isAuthenticated = false;
   bool _isAppLocked = false;
+  bool _isInitialized = false;
   StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
-    _checkAppLockAndAuth();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeAppState();
     if (_supabaseService.safeClient != null) {
-      _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) {
+      _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) async {
         final AuthChangeEvent event = data.event;
+        final prefs = await SharedPreferences.getInstance();
         if (event == AuthChangeEvent.signedIn) {
+          await prefs.setBool('persistent_user_logged_in', true);
           setState(() {
-            _isGuestOrLoggedIn = true;
+            _isAuthenticated = true;
           });
         } else if (event == AuthChangeEvent.signedOut) {
-          setState(() {
-            _isGuestOrLoggedIn = false;
-          });
+          final isExplicitSignOut = !(prefs.getBool('persistent_user_logged_in') ?? false);
+          if (isExplicitSignOut) {
+            setState(() {
+              _isAuthenticated = false;
+            });
+          }
         }
       });
     }
@@ -68,57 +81,109 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _authSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> _checkAppLockAndAuth() async {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkAndLockOnResume();
+    }
+  }
+
+  Future<void> _checkAndLockOnResume() async {
     final lockEnabled = await _biometricService.isAppLockEnabled();
-    final authed = _supabaseService.isAuthenticated;
+    if (lockEnabled && _isAuthenticated && !_isAppLocked) {
+      setState(() {
+        _isAppLocked = true;
+      });
+    }
+  }
+
+  Future<void> _initializeAppState() async {
+    // 1. Auto-detect & initialize local currency
+    await _currencyService.initialize();
+
+    // 2. Initialize automatic background device notifications
+    NotificationService().initialize().catchError((e) {
+      debugPrint('Notification init error: $e');
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+    final lockEnabled = await _biometricService.isAppLockEnabled();
+    final persistentLoggedIn = prefs.getBool('persistent_user_logged_in') ?? false;
+    final authed = _supabaseService.isAuthenticated || persistentLoggedIn || (_supabaseService.safeClient?.auth.currentSession != null);
+
     if (mounted) {
       setState(() {
-        _isGuestOrLoggedIn = authed;
+        _hasSeenOnboarding = hasSeenOnboarding;
+        _isAuthenticated = authed;
         _isAppLocked = lockEnabled;
+        _isInitialized = true;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget initialScreen;
-    if (_isAppLocked) {
-      initialScreen = BiometricLockScreen(
-        onUnlocked: () {
-          setState(() {
-            _isAppLocked = false;
-          });
-        },
-      );
-    } else if (_isGuestOrLoggedIn) {
-      initialScreen = MainNavigationScreen(
-        onSignOut: () {
-          setState(() {
-            _isGuestOrLoggedIn = false;
-          });
-        },
-      );
-    } else {
-      initialScreen = AuthScreen(
-        onAuthSuccess: () async {
-          final lockEnabled = await _biometricService.isAppLockEnabled();
-          setState(() {
-            _isGuestOrLoggedIn = true;
-            _isAppLocked = lockEnabled;
-          });
-        },
-      );
-    }
+    return ValueListenableBuilder<String>(
+      valueListenable: CurrencyService.currencySymbolNotifier,
+      builder: (context, currentCurrencySymbol, _) {
+        if (!_isInitialized) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            home: const ExpenseOSSplashLoadingScreen(),
+          );
+        }
 
-    return MaterialApp(
-      title: 'Expense OS Mobile',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: initialScreen,
+        Widget initialScreen;
+        if (!_hasSeenOnboarding) {
+          initialScreen = OnboardingScreen(
+            onFinish: () {
+              setState(() {
+                _hasSeenOnboarding = true;
+              });
+            },
+          );
+        } else if (_isAppLocked) {
+          initialScreen = BiometricLockScreen(
+            onUnlocked: () {
+              setState(() {
+                _isAppLocked = false;
+              });
+            },
+          );
+        } else if (_isAuthenticated) {
+          initialScreen = MainNavigationScreen(
+            onSignOut: () {
+              setState(() {
+                _isAuthenticated = false;
+              });
+            },
+          );
+        } else {
+          initialScreen = AuthScreen(
+            onAuthSuccess: () async {
+              final lockEnabled = await _biometricService.isAppLockEnabled();
+              setState(() {
+                _isAuthenticated = true;
+                _isAppLocked = lockEnabled;
+              });
+            },
+          );
+        }
+
+        return MaterialApp(
+          title: 'Expense OS',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          home: initialScreen,
+        );
+      },
     );
   }
 }
@@ -144,11 +209,9 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
   Future<void> _authenticate() async {
     setState(() => _isAuthenticating = true);
     final authenticated = await _biometricService.authenticate(
-      reason: 'Authenticate to unlock Expense OS Command Center',
+      reason: 'Scan fingerprint or Face to unlock Expense OS',
     );
-    if (mounted) {
-      setState(() => _isAuthenticating = false);
-    }
+    setState(() => _isAuthenticating = false);
 
     if (authenticated) {
       widget.onUnlocked();
@@ -161,46 +224,123 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
       backgroundColor: AppTheme.background,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(24),
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
-                  color: AppTheme.accentCyan.withOpacity(0.1),
+                  color: AppTheme.monexBlue.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.accentCyan.withOpacity(0.3), width: 2),
                 ),
-                child: const Icon(Icons.fingerprint, size: 72, color: AppTheme.accentCyan),
+                child: const Icon(
+                  Icons.fingerprint_rounded,
+                  size: 44,
+                  color: AppTheme.monexBlue,
+                ),
               ),
               const SizedBox(height: 24),
               Text(
-                'Expense OS Locked',
-                style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                'Expense OS is Locked',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Biometric App Lock is active. Scan fingerprint or Face ID to continue.',
+                'Unlock with Biometrics to access your financial records',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(color: AppTheme.textSecondary, fontSize: 13),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               const SizedBox(height: 36),
-              ElevatedButton.icon(
-                onPressed: _isAuthenticating ? null : _authenticate,
-                icon: const Icon(Icons.lock_open, color: Colors.black),
-                label: Text(
-                  _isAuthenticating ? 'Authenticating...' : 'Unlock App',
-                  style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accentCyan,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _isAuthenticating ? null : _authenticate,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.monexBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: _isAuthenticating
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(
+                          'UNLOCK NOW',
+                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14),
+                        ),
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class ExpenseOSSplashLoadingScreen extends StatelessWidget {
+  const ExpenseOSSplashLoadingScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF101828).withValues(alpha: 0.08),
+                    blurRadius: 28,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 140,
+                  height: 140,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Expense OS',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textPrimary,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 36),
+            const SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                color: AppTheme.monexBlue,
+                strokeWidth: 2.8,
+              ),
+            ),
+          ],
         ),
       ),
     );
