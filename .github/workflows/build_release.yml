@@ -8,6 +8,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     name: Build Android APK
@@ -19,7 +22,7 @@ jobs:
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Flutter SDK
@@ -27,6 +30,9 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+
+      - name: Make Gradle Executable
+        run: chmod +x android/gradlew
 
       - name: Get Dependencies
         run: flutter pub get
@@ -53,15 +59,19 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Get Dependencies
-        run: flutter pub get
+      - name: Install CocoaPods & Dependencies
+        run: |
+          flutter pub get
+          cd ios
+          pod install
+          cd ..
 
       - name: Build iOS App (Unsigned IPA)
         run: |
-          flutter build ios --release --no-codesign
+          flutter build ios --simulator --no-codesign --tree-shake-icons
           mkdir -p Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r ExpenseOS-iOS.ipa Payload
+          cp -r build/ios/iphonesimulator/Runner.app Payload/
+          zip -9 -r ExpenseOS-iOS.ipa Payload
 
       - name: Upload iOS IPA
         uses: actions/upload-artifact@v4
@@ -102,3 +112,4 @@ jobs:
             artifacts/ios/ExpenseOS-iOS.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
