@@ -42,7 +42,6 @@ flutter_launcher_icons:
   min_sdk_android: 21
 
 flutter:
-  swift-package-manager: false
   uses-material-design: true
   assets:
     - assets/icon/app_icon.png
