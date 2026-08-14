@@ -59,12 +59,8 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install CocoaPods & Dependencies
-        run: |
-          flutter pub get
-          cd ios
-          pod install
-          cd ..
+      - name: Get Dependencies
+        run: flutter pub get
 
       - name: Build iOS App (Unsigned IPA)
         run: |
