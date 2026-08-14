@@ -32,7 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final SupabaseService _supabaseService = SupabaseService();
   List<Expense> _expenses = [];
   bool _isLoading = true;
-  double _monthlyBudgetCap = 3380.0;
+  double _monthlyBudgetCap = 0.0;
   double _startingBalance = 0.0;
   String? _avatarUrl;
   String? _customAvatarPath;
@@ -92,7 +92,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 3380.0;
+      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
     });
   }
 

@@ -22,35 +22,7 @@ class SavingsGoalsScreen extends StatefulWidget {
 }
 
 class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
-  List<FinancialGoal> _goals = [
-    FinancialGoal(
-      id: '1',
-      title: 'New Bike',
-      targetAmount: 800,
-      currentAmount: 300,
-      contributionType: 'Monthly',
-      deadline: DateTime.now().add(const Duration(days: 90)),
-      icon: '🏍️',
-    ),
-    FinancialGoal(
-      id: '2',
-      title: 'iPhone 15 Pro',
-      targetAmount: 1000,
-      currentAmount: 700,
-      contributionType: 'Monthly',
-      deadline: DateTime.now().add(const Duration(days: 60)),
-      icon: '📱',
-    ),
-    FinancialGoal(
-      id: '3',
-      title: 'House',
-      targetAmount: 188000,
-      currentAmount: 25000,
-      contributionType: 'Yearly',
-      deadline: DateTime(2026, 4, 3),
-      icon: '🏠',
-    ),
-  ];
+  List<FinancialGoal> _goals = [];
 
   @override
   void initState() {

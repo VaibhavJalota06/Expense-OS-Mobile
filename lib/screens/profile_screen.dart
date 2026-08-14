@@ -654,8 +654,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // 6. ACCOUNT SECURITY & LOGOUT
             // ------------------------------------------------------------
             _buildSectionCard(
-              title: 'Account Security',
+              title: 'Account Security & Data',
               children: [
+                ListTile(
+                  leading: const Icon(Icons.cleaning_services_rounded, color: Color(0xFFF79009)),
+                  title: Text(
+                    'Clear All Local App Data',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFFB54708)),
+                  ),
+                  subtitle: Text('Reset local goals, bills, and cached records', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  onTap: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        title: Text('Clear All Local Data?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
+                        content: Text('This will clear all locally saved goals, recurring bills, and budget caps.', style: GoogleFonts.plusJakartaSans(fontSize: 14)),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.dangerRed, foregroundColor: Colors.white),
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Clear Data'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.remove('user_saved_subscriptions');
+                      await prefs.remove('monex_goals');
+                      await prefs.remove('monthly_budget_cap');
+                      await prefs.remove('user_starting_balance');
+                      SupabaseService.refreshNotifier.value++;
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('✨ All dummy data & local cache cleared!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                            backgroundColor: AppTheme.successGreen,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F3F9)),
                 ListTile(
                   leading: const Icon(Icons.logout_rounded, color: AppTheme.dangerRed),
                   title: Text(

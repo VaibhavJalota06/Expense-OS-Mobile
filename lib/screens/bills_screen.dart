@@ -34,15 +34,12 @@ class _BillsScreenState extends State<BillsScreen> {
         final List<dynamic> decoded = jsonDecode(raw);
         _subscriptions = decoded.map((e) => SubscriptionItem.fromJson(e)).toList();
       } catch (_) {
-        _setDefaults();
+        _subscriptions = [];
       }
     } else {
-      _setDefaults();
+      _subscriptions = [];
     }
 
-    // Process paid cycle roll-over:
-    // Once paid, a bill stays paid until its due date passes.
-    // When the due date has passed, advance to the next cycle and reset to pending!
     _processCycleRollovers();
 
     setState(() => _isLoading = false);
@@ -50,35 +47,7 @@ class _BillsScreenState extends State<BillsScreen> {
   }
 
   void _setDefaults() {
-    _subscriptions = [
-      SubscriptionItem(
-        id: '1',
-        title: 'Netflix Premium',
-        amount: 19.99,
-        category: 'Entertainment',
-        cycle: 'monthly',
-        dueDate: DateTime.now().add(const Duration(days: 4)),
-        remindOnDueDate: true,
-      ),
-      SubscriptionItem(
-        id: '2',
-        title: 'Amazon Prime',
-        amount: 14.99,
-        category: 'Services & Subscriptions',
-        cycle: 'monthly',
-        dueDate: DateTime.now().add(const Duration(days: 12)),
-        remindOnDueDate: true,
-      ),
-      SubscriptionItem(
-        id: '3',
-        title: 'Gym Membership',
-        amount: 49.00,
-        category: 'Health & Fitness',
-        cycle: 'monthly',
-        dueDate: DateTime.now().add(const Duration(days: 18)),
-        remindOnDueDate: true,
-      ),
-    ];
+    _subscriptions = [];
     _saveSubscriptions();
   }
 

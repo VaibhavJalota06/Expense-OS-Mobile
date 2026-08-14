@@ -12,12 +12,12 @@ class SplitBillScreen extends StatefulWidget {
 }
 
 class _SplitBillScreenState extends State<SplitBillScreen> {
-  final TextEditingController _titleController = TextEditingController(text: 'Group Dinner');
-  final TextEditingController _totalAmountController = TextEditingController(text: '120.00');
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _totalAmountController = TextEditingController();
   final TextEditingController _payerController = TextEditingController(text: 'You');
   final TextEditingController _newMemberController = TextEditingController();
 
-  final List<String> _members = ['You', 'Alex', 'Sarah', 'Mike'];
+  final List<String> _members = ['You'];
 
   @override
   void dispose() {
