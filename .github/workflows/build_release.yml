@@ -64,7 +64,7 @@ jobs:
 
       - name: Build iOS App (Unsigned IPA)
         run: |
-          flutter build ios --simulator --no-codesign
+          flutter build ios --simulator --no-codesign --no-swift-package-manager
           mkdir -p Payload
           cp -r build/ios/iphonesimulator/Runner.app Payload/
           zip -9 -r ExpenseOS-iOS.ipa Payload
