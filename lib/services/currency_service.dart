@@ -45,12 +45,36 @@ class CurrencyService {
 
     // Auto-detect from device system locale
     try {
-      final Locale locale = PlatformDispatcher.instance.locale;
-      final countryCode = locale.countryCode?.toUpperCase() ?? '';
+      final List<Locale> locales = PlatformDispatcher.instance.locales;
+      final Locale primaryLocale = PlatformDispatcher.instance.locale;
+      
+      String rawCountry = (primaryLocale.countryCode ?? '').toUpperCase();
+      final primaryStr = primaryLocale.toString().toUpperCase();
+
+      if (rawCountry.isEmpty) {
+        if (primaryStr.contains('IN') || primaryStr.contains('HI')) rawCountry = 'IN';
+        else if (primaryStr.contains('GB') || primaryStr.contains('UK')) rawCountry = 'GB';
+        else if (primaryStr.contains('CA')) rawCountry = 'CA';
+        else if (primaryStr.contains('AU')) rawCountry = 'AU';
+        else if (primaryStr.contains('JP')) rawCountry = 'JP';
+        else if (primaryStr.contains('SG')) rawCountry = 'SG';
+        else if (primaryStr.contains('AE')) rawCountry = 'AE';
+        else if (primaryStr.contains('US')) rawCountry = 'US';
+      }
+
+      if (rawCountry.isEmpty) {
+        for (final loc in locales) {
+          final c = (loc.countryCode ?? '').toUpperCase();
+          if (c.isNotEmpty) {
+            rawCountry = c;
+            break;
+          }
+        }
+      }
 
       Map<String, String>? detected;
 
-      switch (countryCode) {
+      switch (rawCountry) {
         case 'IN':
           detected = supportedCurrencies.firstWhere((c) => c['code'] == 'INR');
           break;
@@ -80,19 +104,20 @@ class CurrencyService {
           detected = supportedCurrencies.firstWhere((c) => c['code'] == 'AED');
           break;
         default:
-          final format = NumberFormat.simpleCurrency(locale: locale.toString());
-          final symbol = format.currencySymbol;
+          final isIndia = primaryStr.contains('IN') || primaryStr.contains('HI') ||
+                          locales.any((l) => l.toString().toUpperCase().contains('IN'));
+          final chosenCode = isIndia ? 'INR' : 'USD';
           detected = supportedCurrencies.firstWhere(
-            (c) => c['symbol'] == symbol || c['code'] == format.currencyName,
-            orElse: () => supportedCurrencies.firstWhere((c) => c['code'] == 'INR', orElse: () => supportedCurrencies[0]),
+            (c) => c['code'] == chosenCode,
+            orElse: () => supportedCurrencies[0],
           );
       }
 
       final chosen = detected;
       await setCurrency(chosen['code']!, chosen['symbol']!, chosen['name']!);
     } catch (_) {
-      // Default to INR if in Indian locale or USD
-      final isIndia = PlatformDispatcher.instance.locale.countryCode == 'IN';
+      final primaryStr = PlatformDispatcher.instance.locale.toString().toUpperCase();
+      final isIndia = primaryStr.contains('IN') || primaryStr.contains('HI');
       final chosen = isIndia
           ? supportedCurrencies.firstWhere((c) => c['code'] == 'INR')
           : supportedCurrencies.firstWhere((c) => c['code'] == 'USD');

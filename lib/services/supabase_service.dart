@@ -43,20 +43,39 @@ class SupabaseService {
   }
   bool get isAuthenticated => currentUser != null;
 
+  // Helper to persist user details in SharedPreferences
+  static Future<void> cacheUserData(User? user) async {
+    if (user == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('persistent_user_logged_in', true);
+    if (user.email != null && user.email!.isNotEmpty) {
+      await prefs.setString('google_user_email', user.email!);
+    }
+    final meta = user.userMetadata;
+    if (meta != null) {
+      final String? name = meta['full_name'] ?? meta['name'] ?? meta['display_name'];
+      if (name != null && name.isNotEmpty) {
+        await prefs.setString('custom_user_name', name);
+      }
+      final String? avatar = meta['avatar_url'] ?? meta['picture'];
+      if (avatar != null && avatar.isNotEmpty) {
+        await prefs.setString('google_user_avatar', avatar);
+      }
+    }
+  }
+
   Future<AuthResponse> signUp({required String email, required String password}) async {
     final res = await client.auth.signUp(email: email, password: password);
-    if (res.user != null || res.session != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('persistent_user_logged_in', true);
+    if (res.user != null) {
+      await cacheUserData(res.user);
     }
     return res;
   }
 
   Future<AuthResponse> signIn({required String email, required String password}) async {
     final res = await client.auth.signInWithPassword(email: email, password: password);
-    if (res.user != null || res.session != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('persistent_user_logged_in', true);
+    if (res.user != null) {
+      await cacheUserData(res.user);
     }
     return res;
   }

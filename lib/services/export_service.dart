@@ -1,4 +1,5 @@
 import '../models/expense_model.dart';
+import 'currency_service.dart';
 
 class ExportService {
   static final ExportService _instance = ExportService._internal();
@@ -20,7 +21,8 @@ class ExportService {
   }
 
   /// Formats transactions into executive text report for PDF export/sharing
-  String generateExecutiveStatementText(List<Expense> expenses, {String currencySymbol = '\$'}) {
+  String generateExecutiveStatementText(List<Expense> expenses, {String? currencySymbol}) {
+    final symbol = currencySymbol ?? CurrencyService.currencySymbolNotifier.value;
     final now = DateTime.now();
     final StringBuffer sb = StringBuffer();
     
@@ -43,9 +45,9 @@ class ExportService {
     sb.writeln('Generated: ${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour}:${now.minute}');
     sb.writeln('Total Transactions Logged: ${expenses.length}');
     sb.writeln('----------------------------------------------------');
-    sb.writeln('Total Income:   $currencySymbol${totalIncome.toStringAsFixed(2)}');
-    sb.writeln('Total Expenses: $currencySymbol${totalExpense.toStringAsFixed(2)}');
-    sb.writeln('Net Balance:    $currencySymbol${netSavings.toStringAsFixed(2)}');
+    sb.writeln('Total Income:   $symbol${totalIncome.toStringAsFixed(2)}');
+    sb.writeln('Total Expenses: $symbol${totalExpense.toStringAsFixed(2)}');
+    sb.writeln('Net Balance:    $symbol${netSavings.toStringAsFixed(2)}');
     sb.writeln('----------------------------------------------------');
     sb.writeln('DETAILED LEDGER:');
     sb.writeln('----------------------------------------------------');
@@ -53,7 +55,7 @@ class ExportService {
     for (var e in expenses) {
       final sign = e.type.toLowerCase() == 'income' ? '+' : '-';
       final dateStr = e.date.toIso8601String().split('T').first;
-      sb.writeln('[$dateStr] ${e.title.padRight(20)} | ${e.category.padRight(12)} | $sign$currencySymbol${e.amount.toStringAsFixed(2)}');
+      sb.writeln('[$dateStr] ${e.title.padRight(20)} | ${e.category.padRight(12)} | $sign$symbol${e.amount.toStringAsFixed(2)}');
     }
 
     sb.writeln('====================================================');

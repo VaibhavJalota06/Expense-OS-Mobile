@@ -42,6 +42,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Expense> get _filteredEntries =>
       _expenses.where((e) => e.type == _activeEntryType).toList();
 
+  StreamSubscription<AuthState>? _authSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -50,21 +52,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadBudgetCap();
     _loadStartingBalance();
     _loadExpenses();
+    if (_supabaseService.safeClient != null) {
+      _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) {
+        if (mounted) {
+          _loadUserData();
+        }
+      });
+    }
   }
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final user = _supabaseService.currentUser;
-    final googleAvatar = prefs.getString('google_user_avatar');
-    final customAvatar = prefs.getString('custom_avatar_path');
-    String? photoUrl = googleAvatar;
 
     if (user != null) {
-      final meta = user.userMetadata;
-      if (meta != null) {
-        photoUrl = photoUrl ?? meta['avatar_url'] ?? meta['picture'];
-      }
+      await SupabaseService.cacheUserData(user);
     }
+
+    final googleAvatar = prefs.getString('google_user_avatar');
+    final customAvatar = prefs.getString('custom_avatar_path');
+    String? photoUrl = googleAvatar ?? user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
 
     if (mounted) {
       setState(() {
@@ -76,6 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     SupabaseService.refreshNotifier.removeListener(_loadExpenses);
     super.dispose();
   }

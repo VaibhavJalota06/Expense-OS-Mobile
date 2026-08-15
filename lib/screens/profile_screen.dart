@@ -47,40 +47,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     {'code': 'AED', 'symbol': 'AED', 'name': 'AED (UAE Dirham)'},
   ];
 
+  StreamSubscription<AuthState>? _authSubscription;
+
   @override
   void initState() {
     super.initState();
     _loadUserData();
     _loadUserStatistics();
     _loadAppLockState();
+    if (_supabaseService.safeClient != null) {
+      _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) {
+        if (mounted) {
+          _loadUserData();
+          _loadUserStatistics();
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final user = _supabaseService.currentUser;
+
+    if (user != null) {
+      await SupabaseService.cacheUserData(user);
+    }
+
     final googleEmail = prefs.getString('google_user_email');
     final googleAvatar = prefs.getString('google_user_avatar');
     final customName = prefs.getString('custom_user_name');
     final customAvatar = prefs.getString('custom_avatar_path');
 
-    String name = customName ?? 'Expense User';
-    String email = googleEmail ?? 'user@gmail.com';
-    String? photoUrl = googleAvatar;
+    String email = user?.email ?? googleEmail ?? 'Member';
+    String name = customName ?? (user?.userMetadata?['full_name'] ?? user?.userMetadata?['name'] ?? (email.contains('@') ? email.split('@').first : 'Expense User'));
+    String? photoUrl = googleAvatar ?? user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
 
-    if (user != null) {
-      if (user.email != null && user.email!.isNotEmpty) {
-        email = user.email!;
-      }
-      final meta = user.userMetadata;
-      if (meta != null) {
-        if (customName == null) {
-          name = meta['full_name'] ?? meta['name'] ?? email.split('@').first;
-        }
-        photoUrl = photoUrl ?? meta['avatar_url'] ?? meta['picture'];
-      }
-    }
-
-    final savedSymbol = prefs.getString('app_currency_symbol') ?? '\$';
+    final savedSymbol = prefs.getString('app_currency_symbol') ?? CurrencyService.currencySymbolNotifier.value;
 
     if (mounted) {
       setState(() {

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../services/currency_service.dart';
 import '../theme/app_theme.dart';
 
 class Interactive3DCard extends StatefulWidget {
@@ -63,7 +64,8 @@ class _Interactive3DCardState extends State<Interactive3DCard>
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.currency(symbol: '\$', locale: 'en_US', decimalDigits: 2);
+    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+    final currency = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 2);
 
     return AnimatedBuilder(
       animation: _idleController,

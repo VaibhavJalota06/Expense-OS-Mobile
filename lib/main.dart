@@ -62,14 +62,17 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
       _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) async {
         final AuthChangeEvent event = data.event;
         final prefs = await SharedPreferences.getInstance();
-        if (event == AuthChangeEvent.signedIn) {
+        if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.tokenRefreshed || event == AuthChangeEvent.initialSession) {
+          await SupabaseService.cacheUserData(data.session?.user ?? _supabaseService.currentUser);
           await prefs.setBool('persistent_user_logged_in', true);
-          setState(() {
-            _isAuthenticated = true;
-          });
+          if (mounted) {
+            setState(() {
+              _isAuthenticated = true;
+            });
+          }
         } else if (event == AuthChangeEvent.signedOut) {
           final isExplicitSignOut = !(prefs.getBool('persistent_user_logged_in') ?? false);
-          if (isExplicitSignOut) {
+          if (isExplicitSignOut && mounted) {
             setState(() {
               _isAuthenticated = false;
             });
