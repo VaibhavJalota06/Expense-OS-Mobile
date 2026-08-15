@@ -127,23 +127,171 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+  double get _totalTargetSavings => _goals.fold(0.0, (sum, g) => sum + g.targetAmount);
+  double get _overallProgress => _totalTargetSavings > 0 ? (_totalCurrentSavings / _totalTargetSavings).clamp(0.0, 1.0) : 0.0;
+
+  void _showQuickDepositDialog(FinancialGoal goal) {
+    final controller = TextEditingController();
+    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(goal.icon, style: const TextStyle(fontSize: 24)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Deposit to ${goal.title}',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16, color: AppTheme.textPrimary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Quick Deposit Presets:',
+              style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [500, 1000, 5000, 10000].map((amt) {
+                return ActionChip(
+                  label: Text('+$currencySymbol$amt'),
+                  labelStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.monexBlue),
+                  backgroundColor: AppTheme.monexBlue.withValues(alpha: 0.1),
+                  onPressed: () {
+                    controller.text = amt.toString();
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+              ],
+              decoration: InputDecoration(
+                labelText: 'Deposit Amount ($currencySymbol)',
+                hintText: 'Enter amount to add',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.monexBlue,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: () {
+                  final added = double.tryParse(controller.text.trim()) ?? 0.0;
+                  if (added > 0) {
+                    setState(() {
+                      final idx = _goals.indexWhere((g) => g.id == goal.id);
+                      if (idx != -1) {
+                        _goals[idx] = goal.copyWith(currentAmount: goal.currentAmount + added);
+                      }
+                    });
+                    _saveGoals();
+                    Navigator.pop(ctx);
+                  }
+                },
+                child: Text('Confirm Deposit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _addPresetGoal(String title, double target, String icon) {
+    final newGoal = FinancialGoal(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
+      targetAmount: target,
+      currentAmount: 0.0,
+      contributionType: 'Monthly',
+      deadline: DateTime.now().add(const Duration(days: 365)),
+      icon: icon,
+    );
+    setState(() {
+      _goals.add(newGoal);
+    });
+    _saveGoals();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+    final currency = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 0);
+    final canPop = widget.showBackButton ?? (ModalRoute.of(context)?.canPop ?? false);
+
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: canPop
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textPrimary, size: 20),
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
+              )
+            : null,
+        title: Text(
+          'Savings & Financial Goals',
+          style: GoogleFonts.plusJakartaSans(
+            color: AppTheme.textPrimary,
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
         child: Column(
           children: [
-            // "Current Savings" Subtitle
+            // "Current Savings" Subtitle & Circular Card
             Text(
-              'Current Savings',
+              'Total Accumulated Savings',
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF667085),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
-            // Hero Royal Blue Circular Badge
+            // Hero Circular Badge Card
             Container(
-              width: 140,
-              height: 140,
+              width: 150,
+              height: 150,
               decoration: BoxDecoration(
                 color: AppTheme.monexBlue,
                 shape: BoxShape.circle,
@@ -155,26 +303,73 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                   ),
                 ],
               ),
-              child: Center(
-                child: Text(
-                  currency.format(_totalCurrentSavings),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    currency.format(_totalCurrentSavings),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
+                  if (_totalTargetSavings > 0) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '${(_overallProgress * 100).toInt()}% of Target',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
 
-            const SizedBox(height: 28),
+            if (_totalTargetSavings > 0) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFF1F3F9)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Overall Savings Progress', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
+                        Text('${currency.format(_totalCurrentSavings)} / ${currency.format(_totalTargetSavings)}', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.monexBlue)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: _overallProgress,
+                        backgroundColor: const Color(0xFFF3F4F6),
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.monexBlue),
+                        minHeight: 8,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 24),
 
             // "Your Goals" Header Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Your Goals',
+                  'Your Savings Goals',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -191,15 +386,65 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
 
-            // Goal Progress Items (Editable)
+            // Goal Items or Starter Presets Card
             if (_goals.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24.0),
-                child: Text(
-                  'No savings goals created yet.',
-                  style: GoogleFonts.plusJakartaSans(color: const Color(0xFF98A2B3)),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFF1F3F9)),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.savings_outlined, size: 44, color: AppTheme.monexBlue),
+                    const SizedBox(height: 10),
+                    Text(
+                      'No Savings Goals Created Yet',
+                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppTheme.textPrimary),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tap a quick starter preset below to create your first goal instantly:',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        ActionChip(
+                          avatar: const Text('🏖️'),
+                          label: Text('Emergency Fund ($currencySymbol 50k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
+                          backgroundColor: const Color(0xFFF0F5FF),
+                          onPressed: () => _addPresetGoal('Emergency Fund', 50000, '🏖️'),
+                        ),
+                        ActionChip(
+                          avatar: const Text('💻'),
+                          label: Text('New Laptop ($currencySymbol 80k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
+                          backgroundColor: const Color(0xFFF0F5FF),
+                          onPressed: () => _addPresetGoal('New Laptop', 80000, '💻'),
+                        ),
+                        ActionChip(
+                          avatar: const Text('✈️'),
+                          label: Text('Vacation Trip ($currencySymbol 30k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
+                          backgroundColor: const Color(0xFFF0F5FF),
+                          onPressed: () => _addPresetGoal('Vacation Trip', 30000, '✈️'),
+                        ),
+                        ActionChip(
+                          avatar: const Text('🏠'),
+                          label: Text('House Deposit ($currencySymbol 200k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
+                          backgroundColor: const Color(0xFFF0F5FF),
+                          onPressed: () => _addPresetGoal('House Deposit', 200000, '🏠'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               )
             else
@@ -215,7 +460,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                 onPressed: _showAddGoalScreen,
                 icon: const Icon(Icons.add_rounded, size: 20),
                 label: Text(
-                  'Add New Goal',
+                  'Add New Custom Goal',
                   style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -236,96 +481,142 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
     final currency = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 0);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => _showEditGoalScreen(goal),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFF1F3F9), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF101828).withValues(alpha: 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Icon Container
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Center(
-                child: Text(goal.icon, style: const TextStyle(fontSize: 22)),
-              ),
-            ),
-            const SizedBox(width: 14),
+    final isAchieved = goal.currentAmount >= goal.targetAmount;
+    final isAlmost = goal.percentage >= 80 && !isAchieved;
 
-            // Title & Progress Bar
-            Expanded(
-              child: Column(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isAchieved ? AppTheme.successGreen.withValues(alpha: 0.4) : const Color(0xFFF1F3F9), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF101828).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Icon Badge
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isAchieved ? const Color(0xFFECFDF3) : const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(goal.icon, style: const TextStyle(fontSize: 24)),
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Title & Deadline
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            goal.title,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (isAchieved)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(color: const Color(0xFFECFDF3), borderRadius: BorderRadius.circular(8)),
+                            child: Text('🎉 Achieved!', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.successGreen)),
+                          )
+                        else if (isAlmost)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(color: const Color(0xFFFEF0C7), borderRadius: BorderRadius.circular(8)),
+                            child: Text('🔥 80%+ Done', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFDC6803))),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Target Date: ${DateFormat('MMM d, yyyy').format(goal.deadline)} • ${goal.contributionType}',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF667085)),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.monexBlue),
+                onPressed: () => _showEditGoalScreen(goal),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Progress Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: goal.progress.clamp(0.0, 1.0),
+              backgroundColor: const Color(0xFFEAECF0),
+              valueColor: AlwaysStoppedAnimation<Color>(isAchieved ? AppTheme.successGreen : AppTheme.monexBlue),
+              minHeight: 8,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Progress Row + Quick Deposit Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        goal.title,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const Icon(Icons.edit_rounded, size: 14, color: Color(0xFF98A2B3)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: goal.progress.clamp(0.0, 1.0),
-                      backgroundColor: const Color(0xFFEAECF0),
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.monexBlue),
-                      minHeight: 6,
+                  Text(
+                    '${goal.percentage}% Saved (${currency.format(goal.currentAmount)})',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: isAchieved ? AppTheme.successGreen : AppTheme.monexBlue,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Saved: ${currency.format(goal.currentAmount)}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.monexBlue,
-                        ),
-                      ),
-                      Text(
-                        'Target: ${currency.format(goal.targetAmount)}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF98A2B3),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'Goal: ${currency.format(goal.targetAmount)}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF98A2B3),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
+              ElevatedButton.icon(
+                onPressed: () => _showQuickDepositDialog(goal),
+                icon: const Icon(Icons.add, size: 14),
+                label: Text('+ Deposit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.monexBlue.withValues(alpha: 0.1),
+                  foregroundColor: AppTheme.monexBlue,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
