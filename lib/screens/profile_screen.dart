@@ -325,6 +325,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
+    );
+  }
+
   Future<void> _showEditBudgetDialog() async {
     final prefs = await SharedPreferences.getInstance();
     final currentCap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
