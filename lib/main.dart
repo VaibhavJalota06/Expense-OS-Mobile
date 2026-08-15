@@ -89,19 +89,37 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
     super.dispose();
   }
 
+  DateTime? _pausedTimestamp;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.paused) {
+      _pausedTimestamp = DateTime.now();
+    } else if (state == AppLifecycleState.resumed) {
       _checkAndLockOnResume();
     }
   }
 
   Future<void> _checkAndLockOnResume() async {
+    // If resume was triggered by dismissing the Face ID / Touch ID system dialog, do not re-lock!
+    if (BiometricService.isAuthenticating) return;
+
     final lockEnabled = await _biometricService.isAppLockEnabled();
     if (lockEnabled && _isAuthenticated && !_isAppLocked) {
-      setState(() {
-        _isAppLocked = true;
-      });
+      if (_pausedTimestamp != null) {
+        final elapsed = DateTime.now().difference(_pausedTimestamp!).inSeconds;
+        // Require at least 2 seconds in background to trigger app lock on return
+        if (elapsed < 2) {
+          _pausedTimestamp = null;
+          return;
+        }
+      }
+      _pausedTimestamp = null;
+      if (mounted) {
+        setState(() {
+          _isAppLocked = true;
+        });
+      }
     }
   }
 

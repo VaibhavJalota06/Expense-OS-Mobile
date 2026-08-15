@@ -34,8 +34,12 @@ class BiometricService {
     }
   }
 
+  static bool isAuthenticating = false;
+
   /// Prompt native biometric authentication dialog
   Future<bool> authenticate({String reason = 'Authenticate to access Expense OS Command Center'}) async {
+    if (isAuthenticating) return false;
+    isAuthenticating = true;
     try {
       final bool isAvailable = await isBiometricAvailable();
       if (!isAvailable) {
@@ -57,6 +61,10 @@ class BiometricService {
     } catch (e) {
       debugPrint('Biometric authentication error: $e');
       return false;
+    } finally {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        isAuthenticating = false;
+      });
     }
   }
 
