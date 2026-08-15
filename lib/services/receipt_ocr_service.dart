@@ -157,7 +157,7 @@ class ReceiptOCRService {
 
     // Fallback total = sum of extracted line items or largest number
     if (amount == null && items.isNotEmpty) {
-      amount = items.fold(0.0, (sum, item) => sum + item.price);
+      amount = items.fold<double>(0.0, (sum, item) => sum + item.price);
     } else if (amount == null) {
       final RegExp priceRegex = RegExp(r'(?:[\$₹€£]|\bEUR|\bUSD|\bINR)?\s*(\d+[.,]\d{2})\b');
       final matches = priceRegex.allMatches(text);
