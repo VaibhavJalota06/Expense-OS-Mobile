@@ -324,6 +324,7 @@ class SupabaseService {
           final List<Map<String, dynamic>> cloudSubs = [];
           final List<Map<String, dynamic>> cloudGoals = [];
           final List<Map<String, dynamic>> cloudGroup = [];
+          bool foundMeta = false;
 
           for (var item in response['subscriptions']) {
             if (item is Map) {
@@ -334,21 +335,31 @@ class SupabaseService {
               } else if (type == 'split_bill') {
                 cloudGroup.add(map);
               } else if (type == 'system_financial_meta') {
-                if (map['starting_balance'] != null) {
-                  final b = (map['starting_balance'] as num).toDouble();
-                  await prefs.setDouble('user_starting_balance', b);
-                }
+                foundMeta = true;
+                final b = (map['starting_balance'] as num?)?.toDouble() ?? 0.0;
+                await prefs.setDouble('user_starting_balance', b);
               } else {
                 cloudSubs.add(map);
               }
             }
           }
 
+          if (!foundMeta) {
+            await prefs.setDouble('user_starting_balance', 0.0);
+          }
+
           await prefs.setString('user_saved_subscriptions', jsonEncode(cloudSubs));
           await prefs.setString('monex_goals', jsonEncode(cloudGoals));
           if (cloudGroup.isNotEmpty) {
             await prefs.setString('saved_group_expenses', jsonEncode(cloudGroup));
+          } else {
+            await prefs.remove('saved_group_expenses');
           }
+        } else {
+          await prefs.setDouble('user_starting_balance', 0.0);
+          await prefs.remove('user_saved_subscriptions');
+          await prefs.remove('monex_goals');
+          await prefs.remove('saved_group_expenses');
         }
 
         _localExpenses.clear();
@@ -576,14 +587,6 @@ class SupabaseService {
         final meta = user.userMetadata!;
         final prefs = await SharedPreferences.getInstance();
 
-        if (meta['monthly_budget_cap'] != null) {
-          final cap = (meta['monthly_budget_cap'] as num).toDouble();
-          await prefs.setDouble('monthly_budget_cap', cap);
-        }
-        if (meta['user_starting_balance'] != null) {
-          final bal = (meta['user_starting_balance'] as num).toDouble();
-          await prefs.setDouble('user_starting_balance', bal);
-        }
         if (meta['app_currency_symbol'] != null) {
           await prefs.setString('app_currency_symbol', meta['app_currency_symbol'].toString());
         }

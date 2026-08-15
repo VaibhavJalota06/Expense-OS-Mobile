@@ -116,13 +116,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _refreshDashboard() async {
-    await SupabaseService.loadFinancialProfileFromCloud();
-    await Future.wait([
-      _loadUserData(),
-      _loadBudgetCap(),
-      _loadStartingBalance(),
-      _loadExpenses(),
-    ]);
+    await _loadExpenses();
+    await _loadUserData();
+    await _loadBudgetCap();
+    await _loadStartingBalance();
   }
 
   Future<void> _loadUserData() async {
