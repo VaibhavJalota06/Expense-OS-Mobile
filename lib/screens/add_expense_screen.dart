@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/expense_model.dart';
@@ -576,6 +577,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: (keyboardType?.toString().contains('number') ?? false)
+            ? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))]
+            : null,
         style: GoogleFonts.plusJakartaSans(
           fontSize: 14,
           fontWeight: FontWeight.w600,

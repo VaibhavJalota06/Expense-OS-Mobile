@@ -558,6 +558,8 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _titleController,
+                    keyboardType: TextInputType.text,
+                    textCapitalization: TextCapitalization.words,
                     style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                     decoration: InputDecoration(
                       labelText: 'Event / Bill Title',
@@ -570,11 +572,12 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                   TextField(
                     controller: _totalAmountController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
                     onChanged: (_) => setState(() {}),
                     style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.monexBlue),
                     decoration: InputDecoration(
                       prefixText: '$currencySymbol ',
-                      labelText: 'Total Bill Amount',
+                      labelText: 'Total Bill Amount (Numbers Only)',
                       filled: true,
                       fillColor: const Color(0xFFF9FAFB),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE4E7EC))),
@@ -648,9 +651,12 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                       Expanded(
                         child: TextField(
                           controller: _newMemberController,
+                          keyboardType: TextInputType.name,
+                          textCapitalization: TextCapitalization.words,
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z\s\-\.]"))],
                           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                           decoration: InputDecoration(
-                            hintText: 'Add friend name',
+                            hintText: 'Add friend name (Text Only)',
                             filled: true,
                             fillColor: const Color(0xFFF9FAFB),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE4E7EC))),
@@ -707,6 +713,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                               child: TextField(
                                 controller: _customShareControllers[member] ??= TextEditingController(text: share.toStringAsFixed(2)),
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
                                 onChanged: (_) => setState(() {}),
                                 style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
                                 decoration: InputDecoration(

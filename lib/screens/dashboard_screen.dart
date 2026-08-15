@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -702,6 +703,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               controller: controller,
               autofocus: true,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
               style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.monexBlue),
               decoration: InputDecoration(
                 prefixText: '$currencySymbol ',
@@ -778,6 +780,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 controller: controller,
                 autofocus: true,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
                 onChanged: (text) {
                   final val = double.tryParse(text.trim()) ?? 0.0;
                   if (val > _totalIncome) {

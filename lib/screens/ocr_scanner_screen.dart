@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/currency_service.dart';
@@ -79,13 +80,16 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
           children: [
             TextField(
               controller: titleController,
+              keyboardType: TextInputType.text,
+              textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(labelText: 'Item Name'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: priceController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Price'),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+              decoration: const InputDecoration(labelText: 'Price (Numbers Only)'),
             ),
           ],
         ),

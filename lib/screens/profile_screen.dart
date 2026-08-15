@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -189,6 +190,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: nameController,
                 autofocus: true,
+                keyboardType: TextInputType.name,
+                textCapitalization: TextCapitalization.words,
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z\s\-\.]"))],
                 style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'e.g. Vaibhav Jalota',

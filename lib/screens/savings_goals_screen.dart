@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -767,6 +768,9 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: (keyboardType?.toString().contains('number') ?? false)
+            ? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))]
+            : null,
         style: GoogleFonts.plusJakartaSans(
           fontSize: 14,
           fontWeight: FontWeight.w600,

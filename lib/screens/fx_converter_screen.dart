@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
@@ -129,7 +130,8 @@ class _FXConverterScreenState extends State<FXConverterScreen> {
                       Expanded(
                         child: TextField(
                           controller: _amountController,
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
                           onChanged: (_) => setState(() {}),
                           style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700),
                           decoration: InputDecoration(

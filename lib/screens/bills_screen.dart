@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -201,6 +202,8 @@ class _BillsScreenState extends State<BillsScreen> {
                       // Title input
                       TextField(
                         controller: titleController,
+                        keyboardType: TextInputType.text,
+                        textCapitalization: TextCapitalization.words,
                         style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                         decoration: InputDecoration(
                           hintText: 'e.g. Netflix, Rent, Internet, Gym',
@@ -219,11 +222,12 @@ class _BillsScreenState extends State<BillsScreen> {
                       TextField(
                         controller: amountController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
                         style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                         decoration: InputDecoration(
                           prefixText: '$currencySymbol ',
                           hintText: '0.00',
-                          labelText: 'Amount Due',
+                          labelText: 'Amount Due (Numbers Only)',
                           filled: true,
                           fillColor: const Color(0xFFF9FAFB),
                           border: OutlineInputBorder(
