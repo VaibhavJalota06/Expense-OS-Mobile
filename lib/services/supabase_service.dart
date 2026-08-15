@@ -275,4 +275,137 @@ class SupabaseService {
       refreshNotifier.value++;
     }
   }
+
+  // --- CROSS-PLATFORM (MOBILE, WEB, DESKTOP) GROUP EXPENSES CLOUD SYNC ---
+
+  Future<List<Map<String, dynamic>>> getGroupExpenses() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('saved_group_expenses');
+    List<Map<String, dynamic>> localList = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final List decoded = jsonDecode(raw);
+        localList = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {}
+    }
+
+    try {
+      final response = await client
+          .from('group_expenses')
+          .select()
+          .order('date', ascending: false);
+      final List<dynamic> data = response as List<dynamic>;
+      final cloudList = data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      if (cloudList.isNotEmpty) {
+        // Cache to local storage
+        await prefs.setString('saved_group_expenses', jsonEncode(cloudList));
+        return cloudList;
+      }
+      return localList;
+    } catch (_) {
+      return localList;
+    }
+  }
+
+  Future<void> saveGroupExpense(Map<String, dynamic> itemJson) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('saved_group_expenses');
+    List<Map<String, dynamic>> list = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final List decoded = jsonDecode(raw);
+        list = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {}
+    }
+
+    final id = itemJson['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString();
+    itemJson['id'] = id;
+    if (currentUser != null) {
+      itemJson['user_id'] = currentUser!.id;
+    }
+
+    final existingIndex = list.indexWhere((e) => e['id'] == id);
+    if (existingIndex != -1) {
+      list[existingIndex] = itemJson;
+    } else {
+      list.insert(0, itemJson);
+    }
+    await prefs.setString('saved_group_expenses', jsonEncode(list));
+
+    try {
+      await client.from('group_expenses').upsert(itemJson);
+    } catch (_) {}
+  }
+
+  Future<void> removeGroupExpense(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('saved_group_expenses');
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final List decoded = jsonDecode(raw);
+        final list = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        list.removeWhere((e) => e['id'] == id);
+        await prefs.setString('saved_group_expenses', jsonEncode(list));
+      } catch (_) {}
+    }
+
+    try {
+      await client.from('group_expenses').delete().eq('id', id);
+    } catch (_) {}
+  }
+
+  // --- CROSS-PLATFORM USER PROFILE & FINANCIAL SETTINGS CLOUD SYNC ---
+
+  static Future<void> syncFinancialProfileToCloud({
+    double? budgetCap,
+    double? startingBalance,
+    String? currencySymbol,
+    String? customName,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (budgetCap != null) await prefs.setDouble('monthly_budget_cap', budgetCap);
+    if (startingBalance != null) await prefs.setDouble('user_starting_balance', startingBalance);
+    if (currencySymbol != null) await prefs.setString('app_currency_symbol', currencySymbol);
+    if (customName != null) await prefs.setString('custom_user_name', customName);
+
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final Map<String, dynamic> meta = Map.from(user.userMetadata ?? {});
+        if (budgetCap != null) meta['monthly_budget_cap'] = budgetCap;
+        if (startingBalance != null) meta['user_starting_balance'] = startingBalance;
+        if (currencySymbol != null) meta['app_currency_symbol'] = currencySymbol;
+        if (customName != null) meta['custom_user_name'] = customName;
+
+        await Supabase.instance.client.auth.updateUser(
+          UserAttributes(data: meta),
+        );
+      }
+    } catch (_) {}
+  }
+
+  static Future<void> loadFinancialProfileFromCloud() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null && user.userMetadata != null) {
+        final meta = user.userMetadata!;
+        final prefs = await SharedPreferences.getInstance();
+
+        if (meta['monthly_budget_cap'] != null) {
+          final cap = (meta['monthly_budget_cap'] as num).toDouble();
+          await prefs.setDouble('monthly_budget_cap', cap);
+        }
+        if (meta['user_starting_balance'] != null) {
+          final bal = (meta['user_starting_balance'] as num).toDouble();
+          await prefs.setDouble('user_starting_balance', bal);
+        }
+        if (meta['app_currency_symbol'] != null) {
+          await prefs.setString('app_currency_symbol', meta['app_currency_symbol'].toString());
+        }
+        if (meta['custom_user_name'] != null) {
+          await prefs.setString('custom_user_name', meta['custom_user_name'].toString());
+        }
+      }
+    } catch (_) {}
+  }
 }

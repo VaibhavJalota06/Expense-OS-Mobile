@@ -103,24 +103,28 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
   }
 
   Future<void> _loadGroupExpenses() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('saved_group_expenses');
-    if (raw != null && raw.isNotEmpty) {
-      try {
-        final List decoded = jsonDecode(raw);
-        if (mounted) {
-          setState(() {
-            _savedGroupExpenses = decoded.map((e) => GroupExpenseItem.fromJson(e)).toList();
-          });
-        }
-      } catch (_) {}
-    }
+    try {
+      final rawList = await _supabaseService.getGroupExpenses();
+      if (mounted) {
+        setState(() {
+          _savedGroupExpenses = rawList.map((e) => GroupExpenseItem.fromJson(e)).toList();
+        });
+      }
+    } catch (_) {}
   }
 
-  Future<void> _saveGroupExpenses() async {
+  Future<void> _saveGroupExpenses([GroupExpenseItem? specificItem]) async {
     final prefs = await SharedPreferences.getInstance();
     final encoded = jsonEncode(_savedGroupExpenses.map((e) => e.toJson()).toList());
     await prefs.setString('saved_group_expenses', encoded);
+
+    if (specificItem != null) {
+      await _supabaseService.saveGroupExpense(specificItem.toJson());
+    } else {
+      for (var item in _savedGroupExpenses) {
+        _supabaseService.saveGroupExpense(item.toJson());
+      }
+    }
   }
 
   void _addMember() {
@@ -375,6 +379,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
       _savedGroupExpenses.removeAt(index);
     });
     await _saveGroupExpenses();
+    await _supabaseService.removeGroupExpense(id);
 
     if (mounted) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -389,7 +394,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
               setState(() {
                 _savedGroupExpenses.insert(index, removed);
               });
-              await _saveGroupExpenses();
+              await _saveGroupExpenses(removed);
             },
           ),
         ),
