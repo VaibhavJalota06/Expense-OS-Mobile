@@ -59,6 +59,7 @@ class AppTheme {
   static const Color accentPink = dangerRed;
   static const Color accentCyan = monexBlue;
   static const Color accentRed = dangerRed;
+  static const Color expenseRed = dangerRed;
   static const Color accentGreen = successGreen;
 
   // Modern Soft Ambient Shadows

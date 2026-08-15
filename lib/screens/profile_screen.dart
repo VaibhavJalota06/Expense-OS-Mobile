@@ -439,7 +439,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'User Profile & Settings',
+          'App Settings & Financial Controls',
           style: GoogleFonts.plusJakartaSans(
             color: AppTheme.textPrimary,
             fontWeight: FontWeight.w800,

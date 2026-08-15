@@ -18,6 +18,7 @@ import 'profile_screen.dart';
 import 'savings_goals_screen.dart';
 import 'split_bill_screen.dart';
 import 'tools_hub_screen.dart';
+import '../widgets/user_profile_modal.dart';
 import '../services/budget_rules_engine.dart';
 import '../services/currency_service.dart';
 import '../services/notification_service.dart';
@@ -251,14 +252,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ProfileScreen(
-                                    onSignOut: () {
-                                      Navigator.pop(context);
-                                    },
-                                  ),
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (_) => UserProfileModal(
+                                  onSignOut: () {
+                                    if (mounted) setState(() {});
+                                  },
                                 ),
                               ).then((_) {
                                 if (mounted) setState(() {});
