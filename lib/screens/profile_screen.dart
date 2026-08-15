@@ -13,6 +13,7 @@ import '../services/biometric_service.dart';
 import '../services/currency_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/user_profile_modal.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -452,7 +453,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           children: [
             // ------------------------------------------------------------
-            // 1. DYNAMIC USER PROFILE CARD
+            // 1. APP SETTINGS HEADER BANNER
             // ------------------------------------------------------------
             Container(
               padding: const EdgeInsets.all(20),
@@ -470,118 +471,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Row(
                 children: [
-                  // User Avatar
-                  Stack(
-                    children: [
-                      GestureDetector(
-                        onTap: () => _pickImage(ImageSource.gallery),
-                        child: Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppTheme.monexBlue,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.monexBlue.withValues(alpha: 0.25),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: _customAvatarPath != null && !kIsWeb
-                              ? ClipOval(
-                                  child: Image.file(
-                                    File(_customAvatarPath!),
-                                    width: 64,
-                                    height: 64,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : _avatarUrl != null
-                                  ? ClipOval(
-                                      child: Image.network(
-                                        _avatarUrl!,
-                                        width: 64,
-                                        height: 64,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => _buildInitials(),
-                                      ),
-                                    )
-                                  : _buildInitials(),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: AppTheme.monexBlue,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 12),
-                        ),
-                      ),
-                    ],
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: AppTheme.monexBlue.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.settings_suggest_rounded, color: AppTheme.monexBlue, size: 28),
                   ),
-                  const SizedBox(width: 16),
-
-                  // Display Name & Email
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                _displayName,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppTheme.textPrimary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            GestureDetector(
-                              onTap: _showEditNameDialog,
-                              child: const Icon(Icons.edit_rounded, color: AppTheme.monexBlue, size: 16),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
                         Text(
-                          _email,
+                          'App Settings & Preferences',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Configure currency, budget limits & security',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
                             color: const Color(0xFF667085),
                             fontWeight: FontWeight.w500,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFECFDF3),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'Authenticated Member',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF027A48),
-                            ),
-                          ),
                         ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => UserProfileModal(
+                          onSignOut: widget.onSignOut,
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.monexBlue.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.monexBlue),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Profile',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.monexBlue,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
