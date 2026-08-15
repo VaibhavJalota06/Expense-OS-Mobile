@@ -353,6 +353,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         clipBehavior: Clip.none,
                         child: Row(
                           children: [
+                            // All Time Pill (Placed at front)
+                            FilterChip(
+                              label: Text('All Time', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
+                              selected: !_filterDashboardByDate,
+                              selectedColor: AppTheme.monexBlue.withValues(alpha: 0.15),
+                              checkmarkColor: AppTheme.monexBlue,
+                              labelStyle: TextStyle(
+                                color: !_filterDashboardByDate ? AppTheme.monexBlue : AppTheme.textPrimary,
+                              ),
+                              onSelected: (_) => setState(() {
+                                _filterDashboardByDate = false;
+                              }),
+                            ),
+                            const SizedBox(width: 8),
+
                             // Today Pill
                             FilterChip(
                               label: Text('Today', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
@@ -407,21 +422,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     : const Color(0xFFD0D5DD),
                               ),
                               onPressed: _pickDashboardDate,
-                            ),
-                            const SizedBox(width: 8),
-
-                            // All Time Pill
-                            FilterChip(
-                              label: Text('All Time', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
-                              selected: !_filterDashboardByDate,
-                              selectedColor: AppTheme.monexBlue.withValues(alpha: 0.15),
-                              checkmarkColor: AppTheme.monexBlue,
-                              labelStyle: TextStyle(
-                                color: !_filterDashboardByDate ? AppTheme.monexBlue : AppTheme.textPrimary,
-                              ),
-                              onSelected: (_) => setState(() {
-                                _filterDashboardByDate = false;
-                              }),
                             ),
                           ],
                         ),
