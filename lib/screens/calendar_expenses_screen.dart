@@ -195,12 +195,6 @@ class _CalendarExpensesScreenState extends State<CalendarExpensesScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddExpenseSheet,
-        backgroundColor: AppTheme.monexBlue,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: Text('Log Expense', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: Colors.white)),
-      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.monexBlue))
           : SingleChildScrollView(
@@ -407,7 +401,7 @@ class _CalendarExpensesScreenState extends State<CalendarExpensesScreen> {
                             ElevatedButton.icon(
                               onPressed: _openAddExpenseSheet,
                               icon: const Icon(Icons.add_rounded, size: 18),
-                              label: Text('+ Log Expense for ${DateFormat('MMM d').format(_selectedDate)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 12)),
+                              label: Text('Log Expense for ${DateFormat('MMM d').format(_selectedDate)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 12)),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.monexBlue,
                                 foregroundColor: Colors.white,
