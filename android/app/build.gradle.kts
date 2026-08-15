@@ -8,7 +8,6 @@ android {
     namespace = "com.expensecalculator.expense_os_mobile"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
-    buildToolsVersion = "35.0.0"
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true

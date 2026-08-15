@@ -34,8 +34,10 @@ jobs:
       - name: Make Gradle Executable
         run: chmod +x android/gradlew
 
-      - name: Get Dependencies
-        run: flutter pub get
+      - name: Precache & Dependencies
+        run: |
+          flutter precache --android
+          flutter pub get
 
       - name: Build Release APK
         run: flutter build apk --release --no-tree-shake-icons
@@ -59,13 +61,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Get Dependencies
-        run: flutter pub get
-
-      - name: Install CocoaPods
+      - name: Precache & Dependencies
         run: |
-          cd ios
-          pod install || pod install --repo-update
+          flutter precache --ios
+          flutter pub get
 
       - name: Build iOS App (Unsigned IPA)
         run: |
