@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/app_update_service.dart';
 import '../services/biometric_service.dart';
 import '../services/currency_service.dart';
@@ -324,7 +326,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat.currency(symbol: _selectedCurrencySymbol, locale: 'en_US', decimalDigits: 0);
+    final activeSymbol = CurrencyService.currencySymbolNotifier.value;
+    final currencyFormatter = NumberFormat.currency(symbol: activeSymbol, locale: 'en_US', decimalDigits: 0);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -576,7 +579,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        _selectedCurrencySymbol,
+                        activeSymbol,
                         style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.monexBlue, fontSize: 16),
                       ),
                       const SizedBox(width: 6),
