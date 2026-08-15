@@ -263,6 +263,11 @@ class SupabaseService {
         _localExpenses.sort((a, b) => b.date.compareTo(a.date));
         await _persistLocalExpenses();
 
+        // If cloud was completely reset (no budget, no expenses, no incomes), sync total money to 0.0
+        if (_localExpenses.isEmpty && (response['budget'] == 0 || response['budget'] == 0.0 || response['budget'] == null)) {
+          await prefs.setDouble('user_starting_balance', 0.0);
+        }
+
         return List.unmodifiable(_localExpenses);
       }
     } catch (e) {
