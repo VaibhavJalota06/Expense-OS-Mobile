@@ -622,49 +622,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            const SizedBox(height: 20),
 
-            // ------------------------------------------------------------
-            // 3. BUDGET & FINANCIAL SETUP
-            // ------------------------------------------------------------
-            _buildSectionCard(
-              title: 'Budget & Financial Controls',
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.account_balance_wallet_rounded, color: AppTheme.monexBlue),
-                  title: Text('Monthly Budget Limit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-                  subtitle: FutureBuilder<double>(
-                    future: SharedPreferences.getInstance().then((p) => p.getDouble('monthly_budget_cap') ?? 0.0),
-                    builder: (context, snapshot) {
-                      final cap = snapshot.data ?? 0.0;
-                      return Text(
-                        cap > 0 ? '${currencyFormatter.format(cap)} / month' : 'No limit set (Tap to configure)',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 12, color: cap > 0 ? AppTheme.monexBlue : AppTheme.dangerRed, fontWeight: FontWeight.w600),
-                      );
-                    },
-                  ),
-                  trailing: const Icon(Icons.edit_rounded, size: 18, color: AppTheme.monexBlue),
-                  onTap: _showEditBudgetDialog,
-                ),
-                const Divider(height: 1, color: Color(0xFFF1F3F9)),
-                ListTile(
-                  leading: const Icon(Icons.account_balance_rounded, color: AppTheme.monexBlue),
-                  title: Text('Starting Bank Balance', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-                  subtitle: FutureBuilder<double>(
-                    future: SharedPreferences.getInstance().then((p) => p.getDouble('user_starting_balance') ?? 0.0),
-                    builder: (context, snapshot) {
-                      final bal = snapshot.data ?? 0.0;
-                      return Text(
-                        bal != 0 ? currencyFormatter.format(bal) : 'Set starting balance for net worth calculation',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF667085)),
-                      );
-                    },
-                  ),
-                  trailing: const Icon(Icons.edit_rounded, size: 18, color: AppTheme.monexBlue),
-                  onTap: _showEditStartingBalanceDialog,
-                ),
-              ],
-            ),
 
             const SizedBox(height: 20),
 
