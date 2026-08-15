@@ -48,7 +48,9 @@ class SupabaseService {
   static Future<void> cacheUserData(User? user) async {
     if (user == null) return;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('persistent_user_logged_in', true);
+    if (user.id.isNotEmpty) {
+      await prefs.setString('supabase_user_id', user.id);
+    }
     if (user.email != null && user.email!.isNotEmpty) {
       await prefs.setString('google_user_email', user.email!);
     }
@@ -58,7 +60,7 @@ class SupabaseService {
       if (name != null && name.isNotEmpty) {
         await prefs.setString('custom_user_name', name);
       }
-      final String? avatar = meta['avatar_url'] ?? meta['picture'];
+      final String? avatar = meta['avatar_url'] ?? meta['picture'] ?? meta['avatar'];
       if (avatar != null && avatar.isNotEmpty) {
         await prefs.setString('google_user_avatar', avatar);
       }
@@ -83,70 +85,34 @@ class SupabaseService {
 
   Future<bool> signInWithGoogle() async {
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        scopes: ['email', 'profile'],
-      );
-
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        return false;
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('persistent_user_logged_in', true);
-      if (googleUser.displayName != null && googleUser.displayName!.isNotEmpty) {
-        await prefs.setString('custom_user_name', googleUser.displayName!);
-      }
-      await prefs.setString('google_user_email', googleUser.email);
-      if (googleUser.photoUrl != null && googleUser.photoUrl!.isNotEmpty) {
-        await prefs.setString('google_user_avatar', googleUser.photoUrl!);
-      }
-
-      final googleAuth = await googleUser.authentication;
-      final accessToken = googleAuth.accessToken;
-      final idToken = googleAuth.idToken;
-
       final String redirectUrl = kIsWeb 
           ? Uri.base.origin 
           : 'com.expensecalculator.expenseosmobile://login-callback';
 
-      if (idToken != null) {
-        final response = await client.auth.signInWithIdToken(
-          provider: OAuthProvider.google,
-          idToken: idToken,
-          accessToken: accessToken,
-        );
-        return response.user != null;
-      } else {
-        await client.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: redirectUrl,
-          queryParams: {'prompt': 'select_account'},
-        );
-        return true;
-      }
-    } catch (e) {
-      debugPrint('Google Native Sign-In Exception: $e');
-      final String redirectUrl = kIsWeb 
-          ? Uri.base.origin 
-          : 'com.expensecalculator.expenseosmobile://login-callback';
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('persistent_user_logged_in', true);
-
-      await client.auth.signInWithOAuth(
+      final success = await client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: redirectUrl,
+        authScreenLaunchMode: LaunchMode.externalApplication,
         queryParams: {'prompt': 'select_account'},
       );
-      return true;
+      return success;
+    } catch (e) {
+      debugPrint('Google OAuth Sign-In Exception: $e');
+      rethrow;
     }
   }
 
   Future<void> signOut() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('persistent_user_logged_in', false);
-    await client.auth.signOut();
+    await prefs.remove('persistent_user_logged_in');
+    await prefs.remove('google_user_email');
+    await prefs.remove('custom_user_name');
+    await prefs.remove('google_user_avatar');
+    await prefs.remove('custom_avatar_path');
+    await prefs.remove('supabase_user_id');
+    try {
+      await client.auth.signOut();
+    } catch (_) {}
   }
 
   // --- EXPENSE CRUD OPERATIONS ---
@@ -187,7 +153,7 @@ class SupabaseService {
     final prefs = await SharedPreferences.getInstance();
     final cached = prefs.getString('supabase_user_id');
     if (cached != null && cached.isNotEmpty) return cached;
-    return 'b9290592-fbb4-4c33-b0bb-f35e2d8226d4';
+    return 'local_device_user';
   }
 
   Future<void> _pushUserDataToCloud() async {

@@ -61,18 +61,18 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
     if (_supabaseService.safeClient != null) {
       _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) async {
         final AuthChangeEvent event = data.event;
-        final prefs = await SharedPreferences.getInstance();
         if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.tokenRefreshed || event == AuthChangeEvent.initialSession) {
-          await SupabaseService.cacheUserData(data.session?.user ?? _supabaseService.currentUser);
-          await prefs.setBool('persistent_user_logged_in', true);
-          if (mounted) {
-            setState(() {
-              _isAuthenticated = true;
-            });
+          final user = data.session?.user ?? _supabaseService.currentUser;
+          if (user != null) {
+            await SupabaseService.cacheUserData(user);
+            if (mounted) {
+              setState(() {
+                _isAuthenticated = true;
+              });
+            }
           }
         } else if (event == AuthChangeEvent.signedOut) {
-          final isExplicitSignOut = !(prefs.getBool('persistent_user_logged_in') ?? false);
-          if (isExplicitSignOut && mounted) {
+          if (mounted) {
             setState(() {
               _isAuthenticated = false;
             });
@@ -117,8 +117,7 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
     final prefs = await SharedPreferences.getInstance();
     final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
     final lockEnabled = await _biometricService.isAppLockEnabled();
-    final persistentLoggedIn = prefs.getBool('persistent_user_logged_in') ?? false;
-    final authed = _supabaseService.isAuthenticated || persistentLoggedIn || (_supabaseService.safeClient?.auth.currentSession != null);
+    final authed = _supabaseService.isAuthenticated && (_supabaseService.safeClient?.auth.currentSession != null);
 
     if (mounted) {
       setState(() {
