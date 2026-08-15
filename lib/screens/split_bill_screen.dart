@@ -724,25 +724,33 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                           keyboardType: TextInputType.name,
                           textCapitalization: TextCapitalization.words,
                           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z\s\-\.]"))],
-                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14),
                           decoration: InputDecoration(
                             hintText: 'Add friend name (Text Only)',
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             filled: true,
                             fillColor: const Color(0xFFF9FAFB),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE4E7EC))),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE4E7EC))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.monexBlue, width: 1.5)),
                           ),
                         ),
                       ),
                       const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: _addMember,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.monexBlue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: _addMember,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.monexBlue,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.zero,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: const Icon(Icons.add, size: 22),
                         ),
-                        child: const Icon(Icons.add, size: 20),
                       ),
                     ],
                   ),
@@ -811,50 +819,69 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
 
-            Row(
-              children: [
-                Checkbox(
-                  value: _logToTransactions,
-                  onChanged: (val) => setState(() => _logToTransactions = val ?? false),
-                  activeColor: AppTheme.monexBlue,
-                ),
-                Expanded(
-                  child: Text(
-                    'Also log my share to personal transactions',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+            // Checkbox Row with Proper Vertical Alignment & Tap Area
+            GestureDetector(
+              onTap: () => setState(() => _logToTransactions = !_logToTransactions),
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      value: _logToTransactions,
+                      onChanged: (val) => setState(() => _logToTransactions = val ?? true),
+                      activeColor: AppTheme.monexBlue,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Also log my share to personal transactions',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            // Action Buttons: Save Group Expense & Share Summary
+            // Action Buttons: Save Group Expense & Share Summary (Matched 52px height)
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _saveAndLogGroupExpense,
-                    icon: const Icon(Icons.check_circle_rounded),
-                    label: Text('SAVE GROUP BILL', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.monexBlue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 2,
+                  child: SizedBox(
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _saveAndLogGroupExpense,
+                      icon: const Icon(Icons.check_circle_rounded, size: 18),
+                      label: Text('SAVE GROUP BILL', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13, letterSpacing: 0.3)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.monexBlue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
-                IconButton(
-                  onPressed: () => _openShareModal(),
-                  icon: const Icon(Icons.share_rounded, color: AppTheme.monexBlue),
-                  style: IconButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
-                    side: const BorderSide(color: AppTheme.monexBlue, width: 1.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                SizedBox(
+                  height: 52,
+                  width: 52,
+                  child: OutlinedButton(
+                    onPressed: () => _openShareModal(),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      side: const BorderSide(color: Color(0xFFD0D5DD), width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      foregroundColor: AppTheme.monexBlue,
+                    ),
+                    child: const Icon(Icons.share_rounded, size: 20, color: AppTheme.monexBlue),
                   ),
                 ),
               ],
