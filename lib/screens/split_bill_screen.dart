@@ -188,6 +188,22 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
     }
 
     final shares = _calculateFinalShares();
+    final customSum = shares.values.fold<double>(0.0, (sum, val) => sum + val);
+    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+
+    if (_isUnequalSplit && customSum > _totalAmount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Custom shares sum ($currencySymbol${customSum.toStringAsFixed(2)}) cannot exceed Total Bill Amount ($currencySymbol${_totalAmount.toStringAsFixed(2)})!',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: AppTheme.dangerRed,
+        ),
+      );
+      return;
+    }
+
     final Map<String, bool> settled = {};
     for (var m in _members) {
       settled[m] = (m == _selectedPayer);
