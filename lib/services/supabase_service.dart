@@ -189,7 +189,8 @@ class SupabaseService {
     try {
       final userId = await _getEffectiveUserId();
       final prefs = await SharedPreferences.getInstance();
-      final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+      final budget = prefs.getDouble('monthly_budget_cap') ?? 20000.0;
+      final balance = prefs.getDouble('user_starting_balance') ?? 100000.0;
       final currency = prefs.getString('app_currency_symbol') == '\$' ? 'USD' : 'INR';
 
       final webExpenses = _localExpenses
@@ -205,6 +206,7 @@ class SupabaseService {
       await client.from('user_data').upsert({
         'user_id': userId,
         'budget': budget,
+        'account_balance': balance,
         'expenses': webExpenses,
         'incomes': webIncomes,
         'currency': currency,
@@ -231,6 +233,13 @@ class SupabaseService {
           final cloudBudget = (response['budget'] as num).toDouble();
           if (cloudBudget > 0) {
             await prefs.setDouble('monthly_budget_cap', cloudBudget);
+          }
+        }
+
+        if (response['account_balance'] != null) {
+          final cloudBalance = (response['account_balance'] as num).toDouble();
+          if (cloudBalance > 0) {
+            await prefs.setDouble('user_starting_balance', cloudBalance);
           }
         }
 
