@@ -204,16 +204,9 @@ class SupabaseService {
           .toList();
 
       final webIncomes = _localExpenses
-          .where((e) => e.type == 'income')
+          .where((e) => e.type == 'income' && e.id != 'initial_account_balance' && e.title != 'Total Account Money')
           .map((e) => e.toIncomeJson())
           .toList();
-      webIncomes.add({
-        'id': 'initial_account_balance',
-        'amount': balance,
-        'source': 'Total Account Money',
-        'is_system_balance': true,
-        'date': DateTime.now().toIso8601String().split('T').first,
-      });
 
       await client.from('user_data').upsert({
         'user_id': userId,
@@ -233,7 +226,7 @@ class SupabaseService {
       final userId = await _getEffectiveUserId();
       final response = await client
           .from('user_data')
-          .select('*')
+          .select()
           .eq('user_id', userId)
           .maybeSingle();
 
@@ -259,34 +252,18 @@ class SupabaseService {
         if (response['incomes'] is List) {
           for (var inc in response['incomes']) {
             if (inc is Map) {
-              if (inc['id'] == 'initial_account_balance' || inc['is_system_balance'] == true) {
-                if (inc['amount'] != null) {
-                  final cloudBalance = (inc['amount'] as num).toDouble();
-                  await prefs.setDouble('user_starting_balance', cloudBalance);
-                }
-              } else {
+              if (inc['id'] != 'initial_account_balance' && inc['is_system_balance'] != true) {
                 cloudItems.add(Expense.fromJson(Map<String, dynamic>.from(inc)));
               }
             }
           }
         }
 
-        final Map<String, Expense> mergedMap = {};
-        for (var item in cloudItems) {
-          if (item.id != null) mergedMap[item.id!] = item;
-        }
-        for (var local in _localExpenses) {
-          if (local.id != null && !mergedMap.containsKey(local.id)) {
-            mergedMap[local.id!] = local;
-          }
-        }
-
         _localExpenses.clear();
-        _localExpenses.addAll(mergedMap.values);
+        _localExpenses.addAll(cloudItems);
         _localExpenses.removeWhere((e) => e.id == 'initial_account_balance' || e.title == 'Total Account Money' || e.title == 'Initial Account Balance');
         _localExpenses.sort((a, b) => b.date.compareTo(a.date));
         await _persistLocalExpenses();
-        _pushUserDataToCloud();
 
         return List.unmodifiable(_localExpenses);
       }
