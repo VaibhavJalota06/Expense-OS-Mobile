@@ -78,7 +78,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
   final TextEditingController _newMemberController = TextEditingController();
 
   final List<String> _members = ['You'];
-  bool _logToTransactions = false;
+  bool _logToTransactions = true;
   String _selectedPayer = 'You';
   bool _isUnequalSplit = false;
   final Map<String, TextEditingController> _customShareControllers = {};
@@ -237,7 +237,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
         return;
       }
       final expense = Expense(
-        title: '$title (Group Share)',
+        title: '$title (My Split Share)',
         amount: myShare,
         category: 'Food & Dining',
         type: 'expense',
@@ -245,12 +245,13 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
         paymentMethod: 'Card',
       );
       await _supabaseService.addExpense(expense);
+      SupabaseService.refreshNotifier.value++;
     }
 
     if (mounted) {
       final symbol = CurrencyService.currencySymbolNotifier.value;
       final msg = _logToTransactions && myShare > 0
-          ? 'Group bill saved & your share ($symbol${myShare.toStringAsFixed(2)}) logged to transactions!'
+          ? 'Group bill saved & your share ($symbol${myShare.toStringAsFixed(2)}) logged to Expenses!'
           : 'Group bill saved successfully!';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -277,7 +278,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
     });
     await _saveGroupExpenses();
 
-    // If friend paid back (now settled) and "You" paid the original bill:
+    // Case 1: Friend paid back to "You" -> Log as Extra Income
     if (nowSettled && item.paidBy == 'You' && member != 'You') {
       final share = item.customShares[member] ?? (item.totalAmount / item.members.length);
       if (share > 0) {
@@ -290,17 +291,78 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
           paymentMethod: 'UPI / Cash',
         );
         await _supabaseService.addExpense(incomeExpense);
+        SupabaseService.refreshNotifier.value++;
 
         if (mounted) {
           final symbol = CurrencyService.currencySymbolNotifier.value;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Logged $symbol${share.toStringAsFixed(2)} reimbursement from $member as Income!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+              content: Text('Logged $symbol${share.toStringAsFixed(2)} reimbursement from $member as Extra Income!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
               backgroundColor: AppTheme.successGreen,
             ),
           );
         }
       }
+    }
+
+    // Case 2: "You" paid your share to a friend who paid upfront -> Log as Expense
+    if (nowSettled && item.paidBy != 'You' && member == 'You') {
+      final myShare = item.customShares['You'] ?? (item.totalAmount / item.members.length);
+      if (myShare > 0) {
+        final expense = Expense(
+          title: 'Paid ${item.paidBy} for ${item.title} (Settled Share)',
+          amount: myShare,
+          category: 'Food & Dining',
+          type: 'expense',
+          date: DateTime.now(),
+          paymentMethod: 'UPI / Cash',
+        );
+        await _supabaseService.addExpense(expense);
+        SupabaseService.refreshNotifier.value++;
+
+        if (mounted) {
+          final symbol = CurrencyService.currencySymbolNotifier.value;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Logged $symbol${myShare.toStringAsFixed(2)} settled share as Expense!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+              backgroundColor: AppTheme.successGreen,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _logManualShareExpense(GroupExpenseItem item) async {
+    final myShare = item.customShares['You'] ?? (item.totalAmount / item.members.length);
+    if (myShare <= 0) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final cap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+    if (cap <= 0) {
+      if (mounted) _showSetBudgetRequiredDialog(context);
+      return;
+    }
+
+    final expense = Expense(
+      title: '${item.title} (My Split Share)',
+      amount: myShare,
+      category: 'Food & Dining',
+      type: 'expense',
+      date: item.date,
+      paymentMethod: 'Card',
+    );
+    await _supabaseService.addExpense(expense);
+    SupabaseService.refreshNotifier.value++;
+
+    if (mounted) {
+      final symbol = CurrencyService.currencySymbolNotifier.value;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logged $symbol${myShare.toStringAsFixed(2)} to personal Expenses!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+          backgroundColor: AppTheme.successGreen,
+        ),
+      );
     }
   }
 
@@ -942,6 +1004,36 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                           ),
                         );
                       }),
+
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => _logManualShareExpense(group),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.monexBlue.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.monexBlue.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.receipt_long_rounded, size: 15, color: AppTheme.monexBlue),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Log My Share (${currency.format(group.customShares['You'] ?? (group.totalAmount / group.members.length))}) to Personal Expenses',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.monexBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 );
