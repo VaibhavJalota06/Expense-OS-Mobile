@@ -115,6 +115,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _refreshDashboard() async {
+    await SupabaseService.loadFinancialProfileFromCloud();
     await Future.wait([
       _loadUserData(),
       _loadBudgetCap(),
@@ -129,6 +130,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (user != null) {
       await SupabaseService.cacheUserData(user);
+      await SupabaseService.loadFinancialProfileFromCloud();
     }
 
     final googleAvatar = prefs.getString('google_user_avatar');

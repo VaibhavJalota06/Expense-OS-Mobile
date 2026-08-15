@@ -175,7 +175,7 @@ class SupabaseService {
     } catch (_) {}
   }
 
-  // Fetch expenses with graceful fallback
+  // Fetch expenses with seamless bidirectional cloud sync
   Future<List<Expense>> getExpenses() async {
     await _loadLocalExpenses();
     try {
@@ -186,9 +186,28 @@ class SupabaseService {
       
       final List<dynamic> data = response as List<dynamic>;
       final cloudList = data.map((json) => Expense.fromJson(json)).toList();
-      if (cloudList.isNotEmpty) {
-        return cloudList;
+
+      final Map<String, Expense> mergedMap = {};
+      for (var exp in cloudList) {
+        if (exp.id != null) mergedMap[exp.id!] = exp;
       }
+
+      // Sync any unsynced local expenses to Supabase cloud
+      for (var local in _localExpenses) {
+        if (local.id != null && !mergedMap.containsKey(local.id)) {
+          mergedMap[local.id!] = local;
+          try {
+            final json = local.toJson();
+            if (currentUser != null) json['user_id'] = currentUser!.id;
+            await client.from('expenses').upsert(json);
+          } catch (_) {}
+        }
+      }
+
+      _localExpenses.clear();
+      _localExpenses.addAll(mergedMap.values);
+      _localExpenses.sort((a, b) => b.date.compareTo(a.date));
+      await _persistLocalExpenses();
       return List.unmodifiable(_localExpenses);
     } catch (e) {
       return List.unmodifiable(_localExpenses);
