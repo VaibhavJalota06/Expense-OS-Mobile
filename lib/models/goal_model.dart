@@ -42,21 +42,29 @@ class FinancialGoal {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'type': 'savings_goal',
         'title': title,
+        'name': title,
         'targetAmount': targetAmount,
         'currentAmount': currentAmount,
+        'savedAmount': currentAmount,
         'contributionType': contributionType,
         'deadline': deadline.toIso8601String(),
+        'targetDate': deadline.toIso8601String(),
         'icon': icon,
       };
 
   factory FinancialGoal.fromJson(Map<String, dynamic> json) => FinancialGoal(
-        id: json['id'] ?? '',
-        title: json['title'] ?? '',
-        targetAmount: (json['targetAmount'] as num?)?.toDouble() ?? 0.0,
-        currentAmount: (json['currentAmount'] as num?)?.toDouble() ?? 0.0,
-        contributionType: json['contributionType'] ?? 'Monthly',
-        deadline: json['deadline'] != null ? DateTime.parse(json['deadline']) : DateTime.now(),
-        icon: json['icon'] ?? '🎯',
+        id: json['id']?.toString() ?? '',
+        title: json['title']?.toString() ?? json['name']?.toString() ?? '',
+        targetAmount: (json['targetAmount'] as num?)?.toDouble() ?? (json['target'] as num?)?.toDouble() ?? 0.0,
+        currentAmount: (json['currentAmount'] as num?)?.toDouble() ?? (json['savedAmount'] as num?)?.toDouble() ?? 0.0,
+        contributionType: json['contributionType']?.toString() ?? 'Monthly',
+        deadline: json['deadline'] != null
+            ? (DateTime.tryParse(json['deadline'].toString()) ?? DateTime.now())
+            : (json['targetDate'] != null
+                ? (DateTime.tryParse(json['targetDate'].toString()) ?? DateTime.now())
+                : DateTime.now()),
+        icon: json['icon']?.toString() ?? '🎯',
       );
 }
