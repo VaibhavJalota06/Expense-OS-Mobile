@@ -7,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/auth_screen.dart';
 import 'screens/main_navigation_screen.dart';
 import 'screens/onboarding_screen.dart';
-import 'services/biometric_service.dart';
 import 'services/currency_service.dart';
 import 'services/notification_service.dart';
 import 'services/supabase_service.dart';
@@ -42,21 +41,18 @@ class ExpenseOSApp extends StatefulWidget {
   State<ExpenseOSApp> createState() => _ExpenseOSAppState();
 }
 
-class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver {
+class _ExpenseOSAppState extends State<ExpenseOSApp> {
   final SupabaseService _supabaseService = SupabaseService();
-  final BiometricService _biometricService = BiometricService();
   final CurrencyService _currencyService = CurrencyService();
 
   bool _hasSeenOnboarding = false;
   bool _isAuthenticated = false;
-  bool _isAppLocked = false;
   bool _isInitialized = false;
   StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _initializeAppState();
     if (_supabaseService.safeClient != null) {
       _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) async {
@@ -84,43 +80,8 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _authSubscription?.cancel();
     super.dispose();
-  }
-
-  DateTime? _pausedTimestamp;
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      _pausedTimestamp = DateTime.now();
-    } else if (state == AppLifecycleState.resumed) {
-      _checkAndLockOnResume();
-    }
-  }
-
-  Future<void> _checkAndLockOnResume() async {
-    // If resume was triggered by dismissing the Face ID / Touch ID system dialog, do not re-lock!
-    if (BiometricService.isAuthenticating) return;
-
-    final lockEnabled = await _biometricService.isAppLockEnabled();
-    if (lockEnabled && _isAuthenticated && !_isAppLocked) {
-      if (_pausedTimestamp != null) {
-        final elapsed = DateTime.now().difference(_pausedTimestamp!).inSeconds;
-        // Require at least 2 seconds in background to trigger app lock on return
-        if (elapsed < 2) {
-          _pausedTimestamp = null;
-          return;
-        }
-      }
-      _pausedTimestamp = null;
-      if (mounted) {
-        setState(() {
-          _isAppLocked = true;
-        });
-      }
-    }
   }
 
   Future<void> _initializeAppState() async {
@@ -134,14 +95,12 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
 
     final prefs = await SharedPreferences.getInstance();
     final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
-    final lockEnabled = await _biometricService.isAppLockEnabled();
     final authed = _supabaseService.isAuthenticated && (_supabaseService.safeClient?.auth.currentSession != null);
 
     if (mounted) {
       setState(() {
         _hasSeenOnboarding = hasSeenOnboarding;
         _isAuthenticated = authed;
-        _isAppLocked = authed && lockEnabled;
         _isInitialized = true;
       });
     }
@@ -169,37 +128,19 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
               });
             },
           );
-        } else if (!_isAuthenticated) {
-          initialScreen = AuthScreen(
-            onAuthSuccess: () async {
-              final lockEnabled = await _biometricService.isAppLockEnabled();
-              setState(() {
-                _isAuthenticated = true;
-                _isAppLocked = lockEnabled;
-              });
-            },
-          );
-        } else if (_isAppLocked) {
-          initialScreen = BiometricLockScreen(
-            onUnlocked: () {
-              setState(() {
-                _isAppLocked = false;
-              });
-            },
-            onSignOut: () async {
-              await _supabaseService.signOut();
-              await _biometricService.setAppLockEnabled(false);
-              setState(() {
-                _isAuthenticated = false;
-                _isAppLocked = false;
-              });
-            },
-          );
-        } else {
+        } else if (_isAuthenticated) {
           initialScreen = MainNavigationScreen(
             onSignOut: () {
               setState(() {
                 _isAuthenticated = false;
+              });
+            },
+          );
+        } else {
+          initialScreen = AuthScreen(
+            onAuthSuccess: () {
+              setState(() {
+                _isAuthenticated = true;
               });
             },
           );
@@ -212,133 +153,6 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
           home: initialScreen,
         );
       },
-    );
-  }
-}
-
-class BiometricLockScreen extends StatefulWidget {
-  final VoidCallback onUnlocked;
-  final VoidCallback onSignOut;
-  const BiometricLockScreen({super.key, required this.onUnlocked, required this.onSignOut});
-
-  @override
-  State<BiometricLockScreen> createState() => _BiometricLockScreenState();
-}
-
-class _BiometricLockScreenState extends State<BiometricLockScreen> {
-  final BiometricService _biometricService = BiometricService();
-  bool _isAuthenticating = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 400), () {
-        if (mounted) _authenticate();
-      });
-    });
-  }
-
-  Future<void> _authenticate() async {
-    if (_isAuthenticating) return;
-    setState(() => _isAuthenticating = true);
-    final authenticated = await _biometricService.authenticate(
-      reason: 'Scan Face ID or Touch ID to unlock Expense OS',
-    );
-    if (mounted) {
-      setState(() => _isAuthenticating = false);
-    }
-
-    if (authenticated && mounted) {
-      widget.onUnlocked();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 84,
-                  height: 84,
-                  decoration: BoxDecoration(
-                    color: AppTheme.monexBlue.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.face_retouching_natural_rounded,
-                    size: 46,
-                    color: AppTheme.monexBlue,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Expense OS is Locked',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Unlock using Face ID, Touch ID or Passcode to continue',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 36),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    onPressed: _isAuthenticating ? null : _authenticate,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.monexBlue,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    icon: _isAuthenticating
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Icon(Icons.lock_open_rounded, size: 20),
-                    label: Text(
-                      _isAuthenticating ? 'Authenticating...' : 'Unlock with Face ID',
-                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: widget.onSignOut,
-                  child: Text(
-                    'Sign Out / Switch Account',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

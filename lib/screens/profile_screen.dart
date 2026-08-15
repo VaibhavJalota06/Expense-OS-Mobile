@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/expense_model.dart';
 import '../services/app_update_service.dart';
-import '../services/biometric_service.dart';
 import '../services/currency_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
@@ -26,14 +23,12 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final SupabaseService _supabaseService = SupabaseService();
-  final BiometricService _biometricService = BiometricService();
 
   String _displayName = 'User';
   String _email = 'user@gmail.com';
   String? _avatarUrl;
   String? _customAvatarPath;
   String _selectedCurrencySymbol = '\$';
-  bool _isAppLockEnabled = false;
 
   int _totalTransactions = 0;
   double _totalIncome = 0.0;
@@ -59,7 +54,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _loadUserData();
     _loadUserStatistics();
-    _loadAppLockState();
 
     SupabaseService.refreshNotifier.addListener(_loadUserStatistics);
 
@@ -139,13 +133,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _totalExpense = expense;
       _savingsRate = rate;
     });
-  }
-
-  Future<void> _loadAppLockState() async {
-    final enabled = await _biometricService.isAppLockEnabled();
-    if (mounted) {
-      setState(() => _isAppLockEnabled = enabled);
-    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -654,38 +641,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   onTap: _showCurrencySelector,
-                ),
-                const Divider(height: 1, color: Color(0xFFF1F3F9)),
-                SwitchListTile(
-                  secondary: const Icon(Icons.fingerprint_rounded, color: AppTheme.monexBlue),
-                  title: Text('Biometric App Lock', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-                  subtitle: Text(
-                    _isAppLockEnabled ? 'Fingerprint / PIN required on open' : 'Require biometrics to access app',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF667085)),
-                  ),
-                  value: _isAppLockEnabled,
-                  activeTrackColor: AppTheme.monexBlue,
-                  onChanged: (val) async {
-                    if (val) {
-                      final authed = await _biometricService.authenticate(
-                        reason: 'Confirm your Fingerprint or PIN to enable App Lock',
-                      );
-                      if (!authed) return;
-                    }
-                    await _biometricService.setAppLockEnabled(val);
-                    setState(() => _isAppLockEnabled = val);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            val ? '🔒 Biometric App Lock enabled' : '🔓 Biometric App Lock disabled',
-                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-                          ),
-                          backgroundColor: val ? AppTheme.monexBlue : const Color(0xFF344054),
-                        ),
-                      );
-                    }
-                  },
                 ),
               ],
             ),
