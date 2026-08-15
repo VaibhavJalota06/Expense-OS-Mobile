@@ -366,6 +366,37 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
     }
   }
 
+  Future<void> _deleteGroupExpense(String id) async {
+    final index = _savedGroupExpenses.indexWhere((e) => e.id == id);
+    if (index == -1) return;
+
+    final removed = _savedGroupExpenses[index];
+    setState(() {
+      _savedGroupExpenses.removeAt(index);
+    });
+    await _saveGroupExpenses();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Split bill "${removed.title}" deleted', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+          backgroundColor: AppTheme.dangerRed,
+          action: SnackBarAction(
+            label: 'UNDO',
+            textColor: Colors.white,
+            onPressed: () async {
+              setState(() {
+                _savedGroupExpenses.insert(index, removed);
+              });
+              await _saveGroupExpenses();
+            },
+          ),
+        ),
+      );
+    }
+  }
+
   String _formatWhatsAppSummary({GroupExpenseItem? item}) {
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
     final StringBuffer sb = StringBuffer();
@@ -962,9 +993,18 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                                 currency.format(group.totalAmount),
                                 style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppTheme.monexBlue),
                               ),
+                              const SizedBox(width: 2),
                               IconButton(
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(6),
                                 icon: const Icon(Icons.share_rounded, size: 18, color: AppTheme.monexBlue),
                                 onPressed: () => _openShareModal(item: group),
+                              ),
+                              IconButton(
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(6),
+                                icon: const Icon(Icons.delete_outline_rounded, size: 18, color: AppTheme.dangerRed),
+                                onPressed: () => _deleteGroupExpense(group.id),
                               ),
                             ],
                           ),
