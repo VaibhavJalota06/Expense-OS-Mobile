@@ -51,34 +51,12 @@ class ExpenseTile extends StatelessWidget {
     }
   }
 
-  double _getVatPercentage(String category) {
-    switch (category.toLowerCase()) {
-      case 'food':
-      case 'food & dining':
-        return 0.5;
-      case 'uber':
-      case 'transport':
-        return 0.8;
-      case 'shopping':
-        return 1.0;
-      case 'rent':
-        return 0.08;
-      case 'bill':
-        return 0.19;
-      case 'movie':
-        return 0.12;
-      default:
-        return 0.5;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isIncome = expense.type == 'income';
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
     final currencyFormatter = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 0);
     final dateStr = DateFormat('dd MMM yyyy').format(expense.date);
-    final vat = _getVatPercentage(expense.category);
 
     return Dismissible(
       key: Key(expense.id ?? '${expense.title}_${expense.date.toIso8601String()}'),
@@ -119,12 +97,12 @@ class ExpenseTile extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
+                  color: isIncome ? const Color(0xFFECFDF3) : const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   _getCategoryIcon(expense.category),
-                  color: const Color(0xFF1E293B),
+                  color: isIncome ? AppTheme.successGreen : const Color(0xFF1E293B),
                   size: 22,
                 ),
               ),
@@ -158,21 +136,21 @@ class ExpenseTile extends StatelessWidget {
                 ),
               ),
 
-              // Amount & Subtitle (Vat + Payment Method)
+              // Amount & Subtitle (Payment Method)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${isIncome ? "+ " : "- "}${currencyFormatter.format(expense.amount)} • Vat $vat%',
+                    '${isIncome ? "+ " : "- "}${currencyFormatter.format(expense.amount)}',
                     style: GoogleFonts.plusJakartaSans(
-                      color: isIncome ? AppTheme.successGreen : AppTheme.textPrimary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
+                      color: isIncome ? AppTheme.successGreen : AppTheme.dangerRed,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    expense.paymentMethod.isNotEmpty ? expense.paymentMethod : 'Google Pay',
+                    expense.paymentMethod.isNotEmpty ? expense.paymentMethod : (isIncome ? 'Income' : 'Card'),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       color: const Color(0xFF98A2B3),

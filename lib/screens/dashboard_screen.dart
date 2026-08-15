@@ -103,11 +103,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    SupabaseService.refreshNotifier.addListener(_loadExpenses);
-    _loadUserData();
-    _loadBudgetCap();
-    _loadStartingBalance();
-    _loadExpenses();
+    SupabaseService.refreshNotifier.addListener(_refreshDashboard);
+    _refreshDashboard();
     if (_supabaseService.safeClient != null) {
       _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) {
         if (mounted) {
@@ -115,6 +112,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       });
     }
+  }
+
+  Future<void> _refreshDashboard() async {
+    await Future.wait([
+      _loadUserData(),
+      _loadBudgetCap(),
+      _loadStartingBalance(),
+      _loadExpenses(),
+    ]);
   }
 
   Future<void> _loadUserData() async {
@@ -140,7 +146,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void dispose() {
     _authSubscription?.cancel();
-    SupabaseService.refreshNotifier.removeListener(_loadExpenses);
+    SupabaseService.refreshNotifier.removeListener(_refreshDashboard);
     super.dispose();
   }
 
