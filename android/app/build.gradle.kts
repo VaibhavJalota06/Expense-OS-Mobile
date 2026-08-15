@@ -8,6 +8,7 @@ android {
     namespace = "com.expensecalculator.expense_os_mobile"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+    buildToolsVersion = "35.0.0"
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
@@ -20,7 +21,7 @@ android {
         applicationId = "com.expensecalculator.expense_os_mobile"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 21
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
