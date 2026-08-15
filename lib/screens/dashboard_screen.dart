@@ -199,6 +199,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return _startingBalance + loggedIncome;
   }
 
+  double get _currentMonthExpenses {
+    final now = DateTime.now();
+    return _expenses
+        .where((e) => e.type == 'expense' && e.date.year == now.year && e.date.month == now.month)
+        .fold(0.0, (sum, e) => sum + e.amount);
+  }
+
+  double get _remainingMonthlyBudget {
+    if (_monthlyBudgetCap <= 0) return 0.0;
+    return _monthlyBudgetCap - _currentMonthExpenses;
+  }
+
   double get _totalExpenses {
     return _expenses.where((e) => e.type == 'expense').fold(0.0, (sum, e) => sum + e.amount);
   }
@@ -324,11 +336,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           scrollDirection: Axis.horizontal,
                           clipBehavior: Clip.none,
                           children: [
-                            // Card 1: Total Money (Net Available Funds = Initial Balance + Income - Expenses)
+                            // Card 1: Total Money (Bank Funds = Initial Starting Balance + Incomes)
                             _buildStatCard(
                               index: 0,
                               title: 'Total Money',
-                              amount: currency.format(_netBalance),
+                              amount: currency.format(_totalIncome),
                               icon: Icons.account_balance_wallet_outlined,
                               isHighlighted: _activeStatIndex == 0,
                             ),
@@ -344,11 +356,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             const SizedBox(width: 14),
 
-                            // Card 3: Monthly Budget
+                            // Card 3: Remaining Monthly Budget (Budget Cap - Expenses Spent)
                             _buildStatCard(
                               index: 2,
-                              title: 'Monthly Budget',
-                              amount: currency.format(_monthlyBudgetCap),
+                              title: 'Remaining Budget',
+                              amount: currency.format(_remainingMonthlyBudget),
+                              subtitle: _monthlyBudgetCap > 0 ? 'Cap: ${currency.format(_monthlyBudgetCap)}' : 'Tap to set cap',
                               icon: Icons.pie_chart_outline_rounded,
                               isHighlighted: _activeStatIndex == 2,
                             ),
@@ -1065,6 +1078,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required int index,
     required String title,
     required String amount,
+    String? subtitle,
     required IconData icon,
     required bool isHighlighted,
   }) {
@@ -1144,6 +1158,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     letterSpacing: -0.3,
                   ),
                 ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isHighlighted ? Colors.white.withValues(alpha: 0.8) : const Color(0xFF98A2B3),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
             ),
           ],
