@@ -66,6 +66,12 @@ jobs:
           flutter precache --ios
           flutter pub get
 
+      - name: Install CocoaPods Dependencies
+        run: |
+          cd ios
+          pod install --repo-update
+          cd ..
+
       - name: Build iOS App (Unsigned IPA)
         run: |
           flutter build ipa --no-codesign --no-tree-shake-icons -v > build_ios.log 2>&1 || (tail -n 100 build_ios.log && exit 1)
