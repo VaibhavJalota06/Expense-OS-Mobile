@@ -306,13 +306,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => OCRScannerScreen(
-                                    onParsedResult: (amount, title, category) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Scanned receipt: $title • \$$amount', style: GoogleFonts.plusJakartaSans()),
-                                          backgroundColor: AppTheme.monexBlue,
-                                        ),
+                                    onParsedResult: (amount, title, category) async {
+                                      final scannedExpense = Expense(
+                                        title: title.isNotEmpty ? title : 'Scanned Receipt',
+                                        amount: amount > 0 ? amount : 0.0,
+                                        category: category.isNotEmpty ? category : 'General',
+                                        type: 'expense',
+                                        date: DateTime.now(),
+                                        paymentMethod: 'Card',
                                       );
+                                      await _supabaseService.addExpense(scannedExpense);
+                                      _loadExpenses();
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Receipt saved: $title • $currencySymbol${amount.toStringAsFixed(2)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                                            backgroundColor: AppTheme.successGreen,
+                                          ),
+                                        );
+                                      }
                                     },
                                   ),
                                 ),

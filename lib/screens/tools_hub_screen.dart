@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/expense_model.dart';
+import '../services/currency_service.dart';
 import '../services/export_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
@@ -24,21 +26,31 @@ class ToolsHubScreen extends StatelessWidget {
 
     final List<Map<String, dynamic>> tools = [
       {
-        'title': 'Receipt OCR Scanner',
-        'subtitle': 'Scan & extract amounts, merchant & category with camera',
+        'title': 'AI Receipt Scanner',
+        'subtitle': 'Scan paper receipts to extract amount & category automatically',
         'icon': Icons.document_scanner_rounded,
         'color': AppTheme.monexBlue,
         'badge': 'AI',
         'action': (BuildContext ctx) {
+          final symbol = CurrencyService.currencySymbolNotifier.value;
           Navigator.push(
             ctx,
             MaterialPageRoute(
               builder: (_) => OCRScannerScreen(
-                onParsedResult: (amount, title, category) {
+                onParsedResult: (amount, title, category) async {
+                  final scannedExpense = Expense(
+                    title: title.isNotEmpty ? title : 'Scanned Receipt',
+                    amount: amount > 0 ? amount : 0.0,
+                    category: category.isNotEmpty ? category : 'General',
+                    type: 'expense',
+                    date: DateTime.now(),
+                    paymentMethod: 'Card',
+                  );
+                  await supabase.addExpense(scannedExpense);
                   ScaffoldMessenger.of(ctx).showSnackBar(
                     SnackBar(
-                      content: Text('Scanned receipt: $title • \$$amount', style: GoogleFonts.plusJakartaSans()),
-                      backgroundColor: AppTheme.monexBlue,
+                      content: Text('Receipt saved: $title • $symbol${amount.toStringAsFixed(2)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                      backgroundColor: AppTheme.successGreen,
                     ),
                   );
                 },
