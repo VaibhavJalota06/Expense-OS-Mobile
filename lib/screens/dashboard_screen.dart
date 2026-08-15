@@ -42,8 +42,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _activeStatIndex = 1; // Default highlighted card: 1 = Total Expense
   String _activeEntryType = 'expense'; // 'expense' or 'income'
 
-  List<Expense> get _filteredEntries =>
-      _expenses.where((e) => e.type == _activeEntryType).toList();
+  DateTime _selectedDashboardDate = DateTime.now();
+  bool _filterDashboardByDate = true;
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  List<Expense> get _filteredEntries {
+    final list = _expenses.where((e) => e.type == _activeEntryType).toList();
+    if (!_filterDashboardByDate) return list;
+    return list.where((e) => _isSameDay(e.date, _selectedDashboardDate)).toList();
+  }
+
+  double get _displayTotalExpenses {
+    final list = _expenses.where((e) => e.type == 'expense');
+    if (!_filterDashboardByDate) {
+      return list.fold(0.0, (sum, e) => sum + e.amount);
+    }
+    return list.where((e) => _isSameDay(e.date, _selectedDashboardDate)).fold(0.0, (sum, e) => sum + e.amount);
+  }
+
+  String get _expenseCardTitle {
+    if (!_filterDashboardByDate) return 'All-Time Expense';
+    if (_isSameDay(_selectedDashboardDate, DateTime.now())) return "Today's Expense";
+    if (_isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1)))) return "Yesterday's Expense";
+    return "${DateFormat('MMM d').format(_selectedDashboardDate)} Expense";
+  }
+
+  Future<void> _pickDashboardDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDashboardDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppTheme.monexBlue,
+              onPrimary: Colors.white,
+              onSurface: AppTheme.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDashboardDate = picked;
+        _filterDashboardByDate = true;
+      });
+    }
+  }
 
   StreamSubscription<AuthState>? _authSubscription;
 
@@ -271,11 +323,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             const SizedBox(width: 14),
 
-                            // Card 2: Total Expense (Hero Royal Blue Card)
+                            // Card 2: Total Expense (Hero Royal Blue Card with dynamic date filtering)
                             _buildStatCard(
                               index: 1,
-                              title: 'Total Expense',
-                              amount: currency.format(_totalExpenses),
+                              title: _expenseCardTitle,
+                              amount: currency.format(_displayTotalExpenses),
                               icon: Icons.credit_card_rounded,
                               isHighlighted: _activeStatIndex == 1,
                             ),
@@ -293,7 +345,91 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 20),
+
+                      // Interactive Date Selector Filter Bar for Dashboard
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        clipBehavior: Clip.none,
+                        child: Row(
+                          children: [
+                            // Today Pill
+                            FilterChip(
+                              label: Text('Today', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
+                              selected: _filterDashboardByDate && _isSameDay(_selectedDashboardDate, DateTime.now()),
+                              selectedColor: AppTheme.monexBlue.withValues(alpha: 0.15),
+                              checkmarkColor: AppTheme.monexBlue,
+                              labelStyle: TextStyle(
+                                color: (_filterDashboardByDate && _isSameDay(_selectedDashboardDate, DateTime.now())) ? AppTheme.monexBlue : AppTheme.textPrimary,
+                              ),
+                              onSelected: (_) => setState(() {
+                                _filterDashboardByDate = true;
+                                _selectedDashboardDate = DateTime.now();
+                              }),
+                            ),
+                            const SizedBox(width: 8),
+
+                            // Yesterday Pill
+                            FilterChip(
+                              label: Text('Yesterday', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
+                              selected: _filterDashboardByDate && _isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1))),
+                              selectedColor: AppTheme.monexBlue.withValues(alpha: 0.15),
+                              checkmarkColor: AppTheme.monexBlue,
+                              labelStyle: TextStyle(
+                                color: (_filterDashboardByDate && _isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1)))) ? AppTheme.monexBlue : AppTheme.textPrimary,
+                              ),
+                              onSelected: (_) => setState(() {
+                                _filterDashboardByDate = true;
+                                _selectedDashboardDate = DateTime.now().subtract(const Duration(days: 1));
+                              }),
+                            ),
+                            const SizedBox(width: 8),
+
+                            // Custom Calendar Date Picker Pill
+                            ActionChip(
+                              avatar: const Icon(Icons.calendar_month_rounded, size: 14, color: AppTheme.monexBlue),
+                              label: Text(
+                                _filterDashboardByDate && !_isSameDay(_selectedDashboardDate, DateTime.now()) && !_isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1)))
+                                    ? DateFormat('MMM d, yyyy').format(_selectedDashboardDate)
+                                    : 'Pick Date 🗓️',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: (_filterDashboardByDate && !_isSameDay(_selectedDashboardDate, DateTime.now()) && !_isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1))))
+                                      ? AppTheme.monexBlue
+                                      : AppTheme.textPrimary,
+                                ),
+                              ),
+                              backgroundColor: Colors.white,
+                              side: BorderSide(
+                                color: (_filterDashboardByDate && !_isSameDay(_selectedDashboardDate, DateTime.now()) && !_isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1))))
+                                    ? AppTheme.monexBlue
+                                    : const Color(0xFFD0D5DD),
+                              ),
+                              onPressed: _pickDashboardDate,
+                            ),
+                            const SizedBox(width: 8),
+
+                            // All Time Pill
+                            FilterChip(
+                              label: Text('All Time', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
+                              selected: !_filterDashboardByDate,
+                              selectedColor: AppTheme.monexBlue.withValues(alpha: 0.15),
+                              checkmarkColor: AppTheme.monexBlue,
+                              labelStyle: TextStyle(
+                                color: !_filterDashboardByDate ? AppTheme.monexBlue : AppTheme.textPrimary,
+                              ),
+                              onSelected: (_) => setState(() {
+                                _filterDashboardByDate = false;
+                              }),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Category Filter Capsule Switcher: [💸 Expenses] & [💰 Extra Income Logs]
 
                       // Quick Intelligence Tools Bar
                       Row(
