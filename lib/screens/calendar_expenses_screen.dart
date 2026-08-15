@@ -29,11 +29,20 @@ class _CalendarExpensesScreenState extends State<CalendarExpensesScreen> {
   @override
   void initState() {
     super.initState();
+    SupabaseService.refreshNotifier.addListener(_loadExpenses);
     _loadExpenses();
   }
 
+  @override
+  void dispose() {
+    SupabaseService.refreshNotifier.removeListener(_loadExpenses);
+    super.dispose();
+  }
+
   Future<void> _loadExpenses() async {
-    setState(() => _isLoading = true);
+    if (_allExpenses.isEmpty) {
+      setState(() => _isLoading = true);
+    }
     final prefs = await SharedPreferences.getInstance();
     final cap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
 

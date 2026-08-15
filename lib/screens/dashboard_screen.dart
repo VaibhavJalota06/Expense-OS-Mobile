@@ -108,8 +108,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadExpenses() async {
-    if (!mounted) return;
-    setState(() => _isLoading = true);
+    if (_expenses.isEmpty) {
+      setState(() => _isLoading = true);
+    }
     try {
       final list = await _supabaseService.getExpenses();
       if (!mounted) return;
