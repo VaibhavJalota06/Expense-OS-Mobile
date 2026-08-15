@@ -360,6 +360,33 @@ class SupabaseService {
     refreshNotifier.value++;
   }
 
+  // Complete clean reset of local and Supabase cloud financial data
+  Future<void> resetAllFinancialData() async {
+    _localExpenses.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('local_offline_expenses');
+    await prefs.remove('user_saved_subscriptions');
+    await prefs.remove('monex_goals');
+    await prefs.remove('monthly_budget_cap');
+    await prefs.remove('user_starting_balance');
+    await prefs.remove('saved_group_expenses');
+    
+    try {
+      final userId = await _getEffectiveUserId();
+      await client.from('user_data').upsert({
+        'user_id': userId,
+        'budget': 0.0,
+        'expenses': [],
+        'incomes': [],
+        'subscriptions': [],
+        'currency': 'INR',
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'user_id');
+    } catch (_) {}
+
+    refreshNotifier.value++;
+  }
+
   // --- CROSS-PLATFORM (MOBILE, WEB, DESKTOP) GROUP EXPENSES CLOUD SYNC ---
 
   Future<List<Map<String, dynamic>>> getGroupExpenses() async {

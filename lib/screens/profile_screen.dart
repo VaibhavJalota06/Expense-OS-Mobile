@@ -822,16 +822,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
 
                     if (confirm == true) {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.remove('user_saved_subscriptions');
-                      await prefs.remove('monex_goals');
-                      await prefs.remove('monthly_budget_cap');
-                      await prefs.remove('user_starting_balance');
-                      SupabaseService.refreshNotifier.value++;
+                      await _supabaseService.resetAllFinancialData();
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('✨ All local goals, bills, and cached records cleared!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                            content: Text('✨ All financial records, expenses, and balances reset cleanly!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
                             backgroundColor: AppTheme.successGreen,
                           ),
                         );
