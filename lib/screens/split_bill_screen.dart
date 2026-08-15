@@ -256,15 +256,44 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
     }
   }
 
-  void _toggleSettled(String groupExpenseId, String member) {
+  void _toggleSettled(String groupExpenseId, String member) async {
+    final index = _savedGroupExpenses.indexWhere((e) => e.id == groupExpenseId);
+    if (index == -1) return;
+
+    final item = _savedGroupExpenses[index];
+    final wasSettled = item.settledStatus[member] ?? false;
+    final nowSettled = !wasSettled;
+
     setState(() {
-      final index = _savedGroupExpenses.indexWhere((e) => e.id == groupExpenseId);
-      if (index != -1) {
-        final item = _savedGroupExpenses[index];
-        item.settledStatus[member] = !(item.settledStatus[member] ?? false);
-      }
+      item.settledStatus[member] = nowSettled;
     });
-    _saveGroupExpenses();
+    await _saveGroupExpenses();
+
+    // If friend paid back (now settled) and "You" paid the original bill:
+    if (nowSettled && item.paidBy == 'You' && member != 'You') {
+      final share = item.customShares[member] ?? (item.totalAmount / item.members.length);
+      if (share > 0) {
+        final incomeExpense = Expense(
+          title: 'Reimbursement from $member (${item.title})',
+          amount: share,
+          category: 'Income',
+          type: 'income',
+          date: DateTime.now(),
+          paymentMethod: 'UPI / Cash',
+        );
+        await _supabaseService.addExpense(incomeExpense);
+
+        if (mounted) {
+          final symbol = CurrencyService.currencySymbolNotifier.value;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Logged $symbol${share.toStringAsFixed(2)} reimbursement from $member as Income!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+              backgroundColor: AppTheme.successGreen,
+            ),
+          );
+        }
+      }
+    }
   }
 
   String _formatWhatsAppSummary({GroupExpenseItem? item}) {
