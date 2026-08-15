@@ -194,8 +194,8 @@ class SupabaseService {
     try {
       final userId = await _getEffectiveUserId();
       final prefs = await SharedPreferences.getInstance();
-      final budget = prefs.getDouble('monthly_budget_cap') ?? 20000.0;
-      final balance = prefs.getDouble('user_starting_balance') ?? 100000.0;
+      final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+      final balance = prefs.getDouble('user_starting_balance') ?? 0.0;
       final currency = prefs.getString('app_currency_symbol') == '\$' ? 'USD' : 'INR';
 
       final webExpenses = _localExpenses
@@ -235,9 +235,7 @@ class SupabaseService {
         
         if (response['budget'] != null) {
           final cloudBudget = (response['budget'] as num).toDouble();
-          if (cloudBudget > 0) {
-            await prefs.setDouble('monthly_budget_cap', cloudBudget);
-          }
+          await prefs.setDouble('monthly_budget_cap', cloudBudget);
         }
 
         final List<Expense> cloudItems = [];

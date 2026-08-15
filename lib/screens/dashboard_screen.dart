@@ -156,13 +156,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadStartingBalance() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
-    double? bal = prefs.getDouble('user_starting_balance');
-    if (bal == null || bal == 0.0) {
-      bal = 100000.0;
-      await prefs.setDouble('user_starting_balance', bal);
-    }
+    final bal = prefs.getDouble('user_starting_balance') ?? 0.0;
     setState(() {
-      _startingBalance = bal!;
+      _startingBalance = bal;
     });
   }
 
