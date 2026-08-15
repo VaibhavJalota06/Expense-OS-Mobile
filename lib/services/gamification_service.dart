@@ -10,12 +10,12 @@ class GamificationService {
   FinancialHealth calculateHealthScore(List<Expense> expenses, {double monthlyBudget = 2500.0}) {
     if (expenses.isEmpty) {
       return FinancialHealth(
-        score: 75,
-        grade: 'On Track',
-        summary: 'Log your transactions daily to build your financial score.',
-        noSpendStreakDays: 1,
+        score: 0,
+        grade: 'Getting Started',
+        summary: 'Log your transactions daily to build your financial health score.',
+        noSpendStreakDays: 0,
         budgetUtilizationRatio: 0.0,
-        badges: _getDefaultBadges(0, 1, 0.0),
+        badges: _getDefaultBadges(0, 0, 0.0),
       );
     }
 
@@ -120,8 +120,8 @@ class GamificationService {
         title: 'OCR Pioneer',
         description: 'Scanned smart receipt images using AI OCR Engine',
         icon: '📷',
-        isUnlocked: true,
-        unlockedAt: DateTime.now(),
+        isUnlocked: totalLogs >= 1,
+        unlockedAt: totalLogs >= 1 ? DateTime.now() : null,
       ),
       AchievementBadge(
         id: 'financial_titan',

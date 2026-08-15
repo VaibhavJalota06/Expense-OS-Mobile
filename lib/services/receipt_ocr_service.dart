@@ -47,11 +47,11 @@ class ReceiptOCRService {
     }
 
     return ReceiptParseResult(
-      amount: detectedAmount ?? 42.50,
-      merchant: detectedMerchant ?? 'Merchant Store',
+      amount: detectedAmount,
+      merchant: detectedMerchant ?? 'Scanned Store',
       category: category,
       date: date,
-      rawText: 'RECEIPT SCAN COMPLETE\nTOTAL: \$${detectedAmount ?? 42.50}\nTHANK YOU FOR SHOPPING',
+      rawText: 'RECEIPT SCAN COMPLETE',
     );
   }
 
@@ -98,7 +98,7 @@ class ReceiptOCRService {
     }
 
     return ReceiptParseResult(
-      amount: amount ?? 29.99,
+      amount: amount,
       merchant: merchant ?? 'Scanned Merchant',
       category: category,
       date: DateTime.now(),
