@@ -105,6 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     SupabaseService.refreshNotifier.addListener(_refreshDashboard);
     _refreshDashboard();
+    _supabaseService.startRealtimeSync();
     if (_supabaseService.safeClient != null) {
       _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) {
         if (mounted) {

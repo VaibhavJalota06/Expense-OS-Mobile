@@ -279,6 +279,31 @@ class SupabaseService {
 
   // Static global refresh notifier for real-time automatic screen updates
   static final ValueNotifier<int> refreshNotifier = ValueNotifier<int>(0);
+  static RealtimeChannel? _userDataChannel;
+
+  Future<void> startRealtimeSync() async {
+    final userId = await _getEffectiveUserId();
+    if (_userDataChannel != null) {
+      client.removeChannel(_userDataChannel!);
+    }
+    _userDataChannel = client
+        .channel('public:user_data:$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'user_data',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (payload) async {
+            await getExpenses();
+            refreshNotifier.value++;
+          },
+        )
+        .subscribe();
+  }
 
   // Add new expense with instant cloud sync to Web App
   Future<Expense> addExpense(Expense expense) async {
