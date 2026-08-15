@@ -246,28 +246,170 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
     _saveGroupExpenses();
   }
 
-  String _formatWhatsAppSummary() {
+  String _formatWhatsAppSummary({GroupExpenseItem? item}) {
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
-    final shares = _calculateFinalShares();
     final StringBuffer sb = StringBuffer();
-    sb.writeln('🧾 *EXPENSE OS GROUP BILL SPLIT* 🧾');
-    sb.writeln('-----------------------------------');
-    sb.writeln('Event: *${_titleController.text.isEmpty ? 'Group Bill' : _titleController.text}*');
-    sb.writeln('Total Amount: *$currencySymbol${_totalAmount.toStringAsFixed(2)}*');
-    sb.writeln('Paid by: *$_selectedPayer*');
-    sb.writeln('Split among ${_members.length} people:');
-    sb.writeln('-----------------------------------');
-    for (var m in _members) {
-      final share = shares[m] ?? 0.0;
-      if (m.toLowerCase() == _selectedPayer.toLowerCase()) {
-        sb.writeln('• $m (Payer • $currencySymbol${share.toStringAsFixed(2)})');
-      } else {
-        sb.writeln('• $m owes *$currencySymbol${share.toStringAsFixed(2)}*');
+
+    if (item != null) {
+      sb.writeln('🧾 *EXPENSE OS GROUP BILL SPLIT* 🧾');
+      sb.writeln('-----------------------------------');
+      sb.writeln('Event: *${item.title}*');
+      sb.writeln('Total Amount: *$currencySymbol${item.totalAmount.toStringAsFixed(2)}*');
+      sb.writeln('Paid by: *${item.paidBy}*');
+      sb.writeln('Split among ${item.members.length} people:');
+      sb.writeln('-----------------------------------');
+      for (var m in item.members) {
+        final share = item.customShares[m] ?? (item.totalAmount / item.members.length);
+        final isSettled = item.settledStatus[m] ?? false;
+        if (m.toLowerCase() == item.paidBy.toLowerCase()) {
+          sb.writeln('• $m (Payer • $currencySymbol${share.toStringAsFixed(2)})');
+        } else if (isSettled) {
+          sb.writeln('• $m (Settled • $currencySymbol${share.toStringAsFixed(2)})');
+        } else {
+          sb.writeln('• $m owes *$currencySymbol${share.toStringAsFixed(2)}*');
+        }
+      }
+    } else {
+      final shares = _calculateFinalShares();
+      sb.writeln('🧾 *EXPENSE OS GROUP BILL SPLIT* 🧾');
+      sb.writeln('-----------------------------------');
+      sb.writeln('Event: *${_titleController.text.isEmpty ? 'Group Bill' : _titleController.text}*');
+      sb.writeln('Total Amount: *$currencySymbol${_totalAmount.toStringAsFixed(2)}*');
+      sb.writeln('Paid by: *$_selectedPayer*');
+      sb.writeln('Split among ${_members.length} people:');
+      sb.writeln('-----------------------------------');
+      for (var m in _members) {
+        final share = shares[m] ?? 0.0;
+        if (m.toLowerCase() == _selectedPayer.toLowerCase()) {
+          sb.writeln('• $m (Payer • $currencySymbol${share.toStringAsFixed(2)})');
+        } else {
+          sb.writeln('• $m owes *$currencySymbol${share.toStringAsFixed(2)}*');
+        }
       }
     }
+
     sb.writeln('-----------------------------------');
     sb.writeln('Sent via Expense OS Mobile Command Center 🚀');
     return sb.toString();
+  }
+
+  void _shareViaWhatsApp(String summary) async {
+    final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(summary)}');
+    try {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      _copyToClipboard(summary);
+    }
+  }
+
+  void _shareViaSMS(String summary) async {
+    final url = Uri.parse('sms:?body=${Uri.encodeComponent(summary)}');
+    try {
+      await launchUrl(url);
+    } catch (_) {
+      _copyToClipboard(summary);
+    }
+  }
+
+  void _shareViaEmail(String summary, {String? title}) async {
+    final subject = title != null && title.isNotEmpty ? 'Bill Split: $title' : 'Bill Split Summary';
+    final url = Uri.parse('mailto:?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(summary)}');
+    try {
+      await launchUrl(url);
+    } catch (_) {
+      _copyToClipboard(summary);
+    }
+  }
+
+  void _copyToClipboard(String summary) {
+    Clipboard.setData(ClipboardData(text: summary));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Bill summary copied to clipboard!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+        backgroundColor: AppTheme.successGreen,
+      ),
+    );
+  }
+
+  void _openShareModal({GroupExpenseItem? item}) {
+    final summary = _formatWhatsAppSummary(item: item);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Share Bill Split with Friends', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+            const SizedBox(height: 4),
+            Text('Send breakdown directly to group members:', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary)),
+            const SizedBox(height: 18),
+
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFF25D366),
+                child: Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 20),
+              ),
+              title: Text('Share on WhatsApp', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+              subtitle: Text('Open WhatsApp with pre-filled message', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _shareViaWhatsApp(summary);
+              },
+            ),
+            const Divider(height: 8),
+
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFF007AFF),
+                child: Icon(Icons.sms_rounded, color: Colors.white, size: 20),
+              ),
+              title: Text('Send via SMS / iMessage', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+              subtitle: Text('Open native messaging app', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _shareViaSMS(summary);
+              },
+            ),
+            const Divider(height: 8),
+
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: AppTheme.monexBlue,
+                child: Icon(Icons.copy_rounded, color: Colors.white, size: 20),
+              ),
+              title: Text('Copy to Clipboard', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+              subtitle: Text('Copy text format to paste anywhere', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _copyToClipboard(summary);
+              },
+            ),
+            const Divider(height: 8),
+
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFEA4335),
+                child: Icon(Icons.email_rounded, color: Colors.white, size: 20),
+              ),
+              title: Text('Send via Email', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+              subtitle: Text('Open mail client', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _shareViaEmail(summary, title: item?.title ?? _titleController.text);
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -563,25 +705,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                 ),
                 const SizedBox(width: 10),
                 IconButton(
-                  onPressed: () {
-                    final summary = _formatWhatsAppSummary();
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: Text('Share Bill Split Summary', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
-                        content: SingleChildScrollView(
-                          child: SelectableText(summary, style: GoogleFonts.ibmPlexMono(fontSize: 12)),
-                        ),
-                        actions: [
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.monexBlue, foregroundColor: Colors.white),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                  onPressed: () => _openShareModal(),
                   icon: const Icon(Icons.share_rounded, color: AppTheme.monexBlue),
                   style: IconButton.styleFrom(
                     padding: const EdgeInsets.all(16),
@@ -655,13 +779,23 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            group.title,
-                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppTheme.textPrimary),
+                          Expanded(
+                            child: Text(
+                              group.title,
+                              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppTheme.textPrimary),
+                            ),
                           ),
-                          Text(
-                            currency.format(group.totalAmount),
-                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppTheme.monexBlue),
+                          Row(
+                            children: [
+                              Text(
+                                currency.format(group.totalAmount),
+                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppTheme.monexBlue),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.share_rounded, size: 18, color: AppTheme.monexBlue),
+                                onPressed: () => _openShareModal(item: group),
+                              ),
+                            ],
                           ),
                         ],
                       ),
