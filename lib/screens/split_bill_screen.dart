@@ -78,6 +78,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
   final TextEditingController _newMemberController = TextEditingController();
 
   final List<String> _members = ['You'];
+  bool _logToTransactions = false;
   String _selectedPayer = 'You';
   bool _isUnequalSplit = false;
   final Map<String, TextEditingController> _customShareControllers = {};
@@ -225,9 +226,8 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
     });
     await _saveGroupExpenses();
 
-    // Automatically log "My Share" into Supabase Expenses if "You" paid or owe
     final myShare = shares['You'] ?? _perPersonEqual;
-    if (myShare > 0) {
+    if (_logToTransactions && myShare > 0) {
       final expense = Expense(
         title: '$title (Group Share)',
         amount: myShare,
@@ -241,9 +241,12 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
 
     if (mounted) {
       final symbol = CurrencyService.currencySymbolNotifier.value;
+      final msg = _logToTransactions && myShare > 0
+          ? 'Group bill saved & your share ($symbol${myShare.toStringAsFixed(2)}) logged to transactions!'
+          : 'Group bill saved successfully!';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Group expense saved & your share ($symbol${myShare.toStringAsFixed(2)}) logged to transactions!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+          content: Text(msg, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
           backgroundColor: AppTheme.successGreen,
         ),
       );
@@ -704,14 +707,31 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
 
             const SizedBox(height: 20),
 
-            // Action Buttons: Save to Database & Share Summary
+            Row(
+              children: [
+                Checkbox(
+                  value: _logToTransactions,
+                  onChanged: (val) => setState(() => _logToTransactions = val ?? false),
+                  activeColor: AppTheme.monexBlue,
+                ),
+                Expanded(
+                  child: Text(
+                    'Also log my share to personal transactions',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Action Buttons: Save Group Expense & Share Summary
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _saveAndLogGroupExpense,
                     icon: const Icon(Icons.check_circle_rounded),
-                    label: Text('SAVE & LOG EXPENSE', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 12)),
+                    label: Text('SAVE GROUP BILL', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.monexBlue,
                       foregroundColor: Colors.white,
