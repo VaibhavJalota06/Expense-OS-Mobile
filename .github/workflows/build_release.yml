@@ -31,16 +31,16 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Make Gradle Executable
-        run: chmod +x android/gradlew
-
-      - name: Precache & Dependencies
+      - name: Configure Android SDK & Gradle
         run: |
+          chmod +x android/gradlew
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           flutter precache --android
           flutter pub get
 
       - name: Build Release APK
-        run: flutter build apk --release --no-tree-shake-icons
+        run: |
+          flutter build apk --release --no-tree-shake-icons -v > build_apk.log 2>&1 || (tail -n 100 build_apk.log && exit 1)
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
@@ -68,14 +68,12 @@ jobs:
 
       - name: Build iOS App (Unsigned IPA)
         run: |
-          flutter build ios --release --no-codesign --no-tree-shake-icons
+          flutter build ipa --no-codesign --no-tree-shake-icons -v > build_ios.log 2>&1 || (tail -n 100 build_ios.log && exit 1)
           mkdir -p Payload
-          if [ -d "build/ios/iphoneos/Runner.app" ]; then
-            cp -r build/ios/iphoneos/Runner.app Payload/
-          elif [ -d "build/ios/Release-iphoneos/Runner.app" ]; then
-            cp -r build/ios/Release-iphoneos/Runner.app Payload/
-          elif [ -d "build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app" ]; then
+          if [ -d "build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app" ]; then
             cp -r build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app Payload/
+          elif [ -d "build/ios/iphoneos/Runner.app" ]; then
+            cp -r build/ios/iphoneos/Runner.app Payload/
           fi
           zip -9 -r ExpenseOS-iOS.ipa Payload
 
