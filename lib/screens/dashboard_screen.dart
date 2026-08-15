@@ -203,6 +203,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return _expenses.where((e) => e.type == 'expense').fold(0.0, (sum, e) => sum + e.amount);
   }
 
+  double get _netBalance {
+    return _totalIncome - _totalExpenses;
+  }
+
   void _openAddExpenseSheet([Expense? expenseToEdit]) {
     showModalBottomSheet(
       context: context,
@@ -320,11 +324,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           scrollDirection: Axis.horizontal,
                           clipBehavior: Clip.none,
                           children: [
-                            // Card 1: Total Money
+                            // Card 1: Total Money (Net Available Funds = Initial Balance + Income - Expenses)
                             _buildStatCard(
                               index: 0,
                               title: 'Total Money',
-                              amount: currency.format(_totalIncome),
+                              amount: currency.format(_netBalance),
                               icon: Icons.account_balance_wallet_outlined,
                               isHighlighted: _activeStatIndex == 0,
                             ),
@@ -1007,6 +1011,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setDouble('monthly_budget_cap', val);
                 setState(() => _monthlyBudgetCap = val);
+                SupabaseService.refreshNotifier.value++;
                 _evaluateBudgetRules();
                 Navigator.pop(ctx);
               },
