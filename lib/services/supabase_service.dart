@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -150,11 +151,33 @@ class SupabaseService {
 
   // --- EXPENSE CRUD OPERATIONS ---
   
-  // Memory fallback list if Supabase table is not yet created
+  // Memory and disk fallback list
   final List<Expense> _localExpenses = [];
+
+  Future<void> _persistLocalExpenses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = jsonEncode(_localExpenses.map((e) => e.toJson()).toList());
+      await prefs.setString('local_offline_expenses', encoded);
+    } catch (_) {}
+  }
+
+  Future<void> _loadLocalExpenses() async {
+    if (_localExpenses.isNotEmpty) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('local_offline_expenses');
+      if (raw != null && raw.isNotEmpty) {
+        final List decoded = jsonDecode(raw);
+        _localExpenses.clear();
+        _localExpenses.addAll(decoded.map((e) => Expense.fromJson(e)).toList());
+      }
+    } catch (_) {}
+  }
 
   // Fetch expenses with graceful fallback
   Future<List<Expense>> getExpenses() async {
+    await _loadLocalExpenses();
     try {
       final response = await client
           .from('expenses')
@@ -162,9 +185,12 @@ class SupabaseService {
           .order('date', ascending: false);
       
       final List<dynamic> data = response as List<dynamic>;
-      return data.map((json) => Expense.fromJson(json)).toList();
+      final cloudList = data.map((json) => Expense.fromJson(json)).toList();
+      if (cloudList.isNotEmpty) {
+        return cloudList;
+      }
+      return List.unmodifiable(_localExpenses);
     } catch (e) {
-      // Graceful fallback to local list if table 'expenses' does not exist yet
       return List.unmodifiable(_localExpenses);
     }
   }
@@ -176,6 +202,7 @@ class SupabaseService {
 
   // Add new expense with graceful fallback
   Future<Expense> addExpense(Expense expense) async {
+    await _loadLocalExpenses();
     final Map<String, dynamic> json = expense.toJson();
     if (currentUser != null) {
       json['user_id'] = currentUser!.id;
@@ -189,14 +216,17 @@ class SupabaseService {
           .single();
       
       final result = Expense.fromJson(response);
+      _localExpenses.insert(0, result);
+      await _persistLocalExpenses();
       refreshNotifier.value++;
       return result;
     } catch (e) {
-      // Fallback to local memory storage
+      // Fallback to local persistent storage
       final localItem = expense.copyWith(
         id: expense.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       );
       _localExpenses.insert(0, localItem);
+      await _persistLocalExpenses();
       refreshNotifier.value++;
       return localItem;
     }
@@ -215,6 +245,11 @@ class SupabaseService {
           .single();
 
       final result = Expense.fromJson(response);
+      final index = _localExpenses.indexWhere((e) => e.id == expense.id);
+      if (index != -1) {
+        _localExpenses[index] = result;
+      }
+      await _persistLocalExpenses();
       refreshNotifier.value++;
       return result;
     } catch (e) {
@@ -222,6 +257,7 @@ class SupabaseService {
       if (index != -1) {
         _localExpenses[index] = expense;
       }
+      await _persistLocalExpenses();
       refreshNotifier.value++;
       return expense;
     }
@@ -232,8 +268,10 @@ class SupabaseService {
     try {
       await client.from('expenses').delete().eq('id', id);
     } catch (e) {
-      _localExpenses.removeWhere((e) => e.id == id);
+      // ignore
     } finally {
+      _localExpenses.removeWhere((e) => e.id == id);
+      await _persistLocalExpenses();
       refreshNotifier.value++;
     }
   }
