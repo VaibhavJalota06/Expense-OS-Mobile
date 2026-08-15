@@ -306,21 +306,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => OCRScannerScreen(
-                                    onParsedResult: (amount, title, category) async {
-                                      final scannedExpense = Expense(
-                                        title: title.isNotEmpty ? title : 'Scanned Receipt',
-                                        amount: amount > 0 ? amount : 0.0,
-                                        category: category.isNotEmpty ? category : 'General',
-                                        type: 'expense',
-                                        date: DateTime.now(),
-                                        paymentMethod: 'Card',
-                                      );
-                                      await _supabaseService.addExpense(scannedExpense);
+                                    onParsedResult: (totalAmount, merchant, category, lineItems) async {
+                                      if (lineItems.isNotEmpty) {
+                                        for (var item in lineItems) {
+                                          final scannedExpense = Expense(
+                                            title: '${item.name} ($merchant)',
+                                            amount: item.price,
+                                            category: item.category.isNotEmpty ? item.category : category,
+                                            type: 'expense',
+                                            date: DateTime.now(),
+                                            paymentMethod: 'Card',
+                                          );
+                                          await _supabaseService.addExpense(scannedExpense);
+                                        }
+                                      } else {
+                                        final scannedExpense = Expense(
+                                          title: merchant,
+                                          amount: totalAmount,
+                                          category: category,
+                                          type: 'expense',
+                                          date: DateTime.now(),
+                                          paymentMethod: 'Card',
+                                        );
+                                        await _supabaseService.addExpense(scannedExpense);
+                                      }
                                       _loadExpenses();
                                       if (mounted) {
+                                        final count = lineItems.isNotEmpty ? lineItems.length : 1;
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('Receipt saved: $title • $currencySymbol${amount.toStringAsFixed(2)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                                            content: Text('$count scanned item(s) saved from $merchant • $currencySymbol${totalAmount.toStringAsFixed(2)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
                                             backgroundColor: AppTheme.successGreen,
                                           ),
                                         );

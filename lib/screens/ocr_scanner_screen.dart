@@ -7,7 +7,7 @@ import '../services/receipt_ocr_service.dart';
 import '../theme/app_theme.dart';
 
 class OCRScannerScreen extends StatefulWidget {
-  final Function(double amount, String title, String category) onParsedResult;
+  final Function(double amount, String title, String category, List<ReceiptLineItem> lineItems) onParsedResult;
 
   const OCRScannerScreen({super.key, required this.onParsedResult});
 
@@ -20,6 +20,7 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
   File? _selectedImage;
   bool _isProcessing = false;
   ReceiptParseResult? _parseResult;
+  List<ReceiptLineItem> _lineItems = [];
 
   final ImagePicker _picker = ImagePicker();
 
@@ -32,6 +33,7 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
         _selectedImage = File(photo.path);
         _isProcessing = true;
         _parseResult = null;
+        _lineItems = [];
       });
 
       final result = await _ocrService.processImage(_selectedImage!);
@@ -40,6 +42,7 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
         setState(() {
           _isProcessing = false;
           _parseResult = result;
+          _lineItems = List.from(result.lineItems);
         });
       }
     } catch (e) {
@@ -55,9 +58,63 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
     }
   }
 
+  double get _selectedTotal {
+    return _lineItems
+        .where((item) => item.isSelected)
+        .fold(0.0, (sum, item) => sum + item.price);
+  }
+
+  void _editLineItem(int index) {
+    final item = _lineItems[index];
+    final titleController = TextEditingController(text: item.name);
+    final priceController = TextEditingController(text: item.price.toStringAsFixed(2));
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Edit Bill Item', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'Item Name'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: priceController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Price'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: AppTheme.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newPrice = double.tryParse(priceController.text) ?? item.price;
+              setState(() {
+                _lineItems[index].name = titleController.text.trim();
+                _lineItems[index].price = newPrice;
+              });
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.monexBlue),
+            child: Text('Save', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+    final selectedCount = _lineItems.where((i) => i.isSelected).length;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -95,7 +152,7 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Snap or upload any paper receipt to automatically extract amount, merchant, and category.',
+                      'Scan any multi-line receipt to automatically extract all bill entries individually into your expenses.',
                       style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textPrimary, fontWeight: FontWeight.w500, height: 1.4),
                     ),
                   ),
@@ -107,7 +164,7 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
 
             // Image Preview or Placeholder
             Container(
-              height: 220,
+              height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -204,7 +261,7 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
                     const CircularProgressIndicator(color: AppTheme.monexBlue),
                     const SizedBox(height: 14),
                     Text(
-                      'Analyzing receipt with Optical OCR...',
+                      'Extracting line items with AI OCR Engine...',
                       style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 13, color: AppTheme.textSecondary),
                     ),
                   ],
@@ -231,7 +288,7 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Extracted Data', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+                        Text('Receipt Overview', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
@@ -239,37 +296,134 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            'AI READY',
+                            'AI PARSED',
                             style: GoogleFonts.plusJakartaSans(color: const Color(0xFF12B76A), fontWeight: FontWeight.w800, fontSize: 10),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildExtractedRow('Merchant / Title', _parseResult!.merchant ?? 'Receipt Merchant'),
-                    const Divider(height: 20, color: Color(0xFFF1F3F9)),
-                    _buildExtractedRow('Total Amount', '$currencySymbol${(_parseResult!.amount ?? 0.0).toStringAsFixed(2)}'),
+                    _buildExtractedRow('Merchant', _parseResult!.merchant ?? 'Receipt Store'),
                     const Divider(height: 20, color: Color(0xFFF1F3F9)),
                     _buildExtractedRow('Category', _parseResult!.category),
+                    const Divider(height: 20, color: Color(0xFFF1F3F9)),
+                    _buildExtractedRow('Selected Total', '$currencySymbol${_selectedTotal.toStringAsFixed(2)}'),
+                    
+                    const SizedBox(height: 24),
+
+                    // Itemized Line Items Checklist Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Bill Line Entries (${_lineItems.length})',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            final allSelected = _lineItems.every((i) => i.isSelected);
+                            setState(() {
+                              for (var i in _lineItems) {
+                                i.isSelected = !allSelected;
+                              }
+                            });
+                          },
+                          child: Text(
+                            _lineItems.every((i) => i.isSelected) ? 'Deselect All' : 'Select All',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.monexBlue),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    if (_lineItems.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text('No individual line items parsed.', style: GoogleFonts.plusJakartaSans(color: AppTheme.textSecondary, fontSize: 13)),
+                      )
+                    else
+                      ...List.generate(_lineItems.length, (index) {
+                        final item = _lineItems[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: item.isSelected ? const Color(0xFFF8FAFC) : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: item.isSelected ? AppTheme.monexBlue.withValues(alpha: 0.3) : const Color(0xFFF1F3F9)),
+                          ),
+                          child: Row(
+                            children: [
+                              Checkbox(
+                                value: item.isSelected,
+                                activeColor: AppTheme.monexBlue,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                                onChanged: (val) {
+                                  setState(() {
+                                    item.isSelected = val ?? false;
+                                  });
+                                },
+                              ),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => _editLineItem(index),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.name,
+                                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.textPrimary),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        item.category,
+                                        style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppTheme.textSecondary),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => _editLineItem(index),
+                                child: Text(
+                                  '$currencySymbol${item.price.toStringAsFixed(2)}',
+                                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 14, color: AppTheme.textPrimary),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.monexBlue),
+                                onPressed: () => _editLineItem(index),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+
                     const SizedBox(height: 20),
+
                     SizedBox(
                       width: double.infinity,
-                      height: 50,
+                      height: 52,
                       child: ElevatedButton(
-                        onPressed: () {
-                          widget.onParsedResult(
-                            _parseResult!.amount ?? 0.0,
-                            _parseResult!.merchant ?? 'Receipt Merchant',
-                            _parseResult!.category,
-                          );
-                          Navigator.pop(context);
-                        },
+                        onPressed: selectedCount == 0
+                            ? null
+                            : () {
+                                final selectedItems = _lineItems.where((i) => i.isSelected).toList();
+                                final merchant = _parseResult!.merchant ?? 'Scanned Receipt';
+                                final category = _parseResult!.category;
+                                widget.onParsedResult(_selectedTotal, merchant, category, selectedItems);
+                                Navigator.pop(context);
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.monexBlue,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
-                        child: Text('IMPORT TO EXPENSES', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13)),
+                        child: Text(
+                          'IMPORT $selectedCount SELECTED ITEMS TO EXPENSES',
+                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 12),
+                        ),
                       ),
                     ),
                   ],
