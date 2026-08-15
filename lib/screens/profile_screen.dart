@@ -570,6 +570,152 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 
 
+  Future<void> _showEditBudgetDialog() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentCap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+    final controller = TextEditingController(text: currentCap > 0 ? currentCap.toStringAsFixed(0) : '');
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Monthly Budget Limit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Set your total monthly spending cap:', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+              decoration: InputDecoration(
+                prefixText: '$_selectedCurrencySymbol ',
+                hintText: 'e.g. 50000',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.monexBlue, foregroundColor: Colors.white),
+            onPressed: () async {
+              final newCap = double.tryParse(controller.text.trim()) ?? 0.0;
+              await prefs.setDouble('monthly_budget_cap', newCap);
+              SupabaseService.refreshNotifier.value++;
+              if (mounted) setState(() {});
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save Limit'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showEditStartingBalanceDialog() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentBal = prefs.getDouble('user_starting_balance') ?? 0.0;
+    final controller = TextEditingController(text: currentBal != 0 ? currentBal.toStringAsFixed(0) : '');
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Starting Bank Balance', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Enter your initial bank / wallet balance:', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+              decoration: InputDecoration(
+                prefixText: '$_selectedCurrencySymbol ',
+                hintText: 'e.g. 25000',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.monexBlue, foregroundColor: Colors.white),
+            onPressed: () async {
+              final newBal = double.tryParse(controller.text.trim()) ?? 0.0;
+              await prefs.setDouble('user_starting_balance', newBal);
+              SupabaseService.refreshNotifier.value++;
+              if (mounted) setState(() {});
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save Balance'),
+          ),
+        ],
+      ),
+    );
+  }
+
+            const SizedBox(height: 20),
+
+            // ------------------------------------------------------------
+            // 3. BUDGET & FINANCIAL SETUP
+            // ------------------------------------------------------------
+            _buildSectionCard(
+              title: 'Budget & Financial Controls',
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.account_balance_wallet_rounded, color: AppTheme.monexBlue),
+                  title: Text('Monthly Budget Limit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                  subtitle: FutureBuilder<double>(
+                    future: SharedPreferences.getInstance().then((p) => p.getDouble('monthly_budget_cap') ?? 0.0),
+                    builder: (context, snapshot) {
+                      final cap = snapshot.data ?? 0.0;
+                      return Text(
+                        cap > 0 ? '${currencyFormatter.format(cap)} / month' : 'No limit set (Tap to configure)',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 12, color: cap > 0 ? AppTheme.monexBlue : AppTheme.dangerRed, fontWeight: FontWeight.w600),
+                      );
+                    },
+                  ),
+                  trailing: const Icon(Icons.edit_rounded, size: 18, color: AppTheme.monexBlue),
+                  onTap: _showEditBudgetDialog,
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F3F9)),
+                ListTile(
+                  leading: const Icon(Icons.account_balance_rounded, color: AppTheme.monexBlue),
+                  title: Text('Starting Bank Balance', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                  subtitle: FutureBuilder<double>(
+                    future: SharedPreferences.getInstance().then((p) => p.getDouble('user_starting_balance') ?? 0.0),
+                    builder: (context, snapshot) {
+                      final bal = snapshot.data ?? 0.0;
+                      return Text(
+                        bal != 0 ? currencyFormatter.format(bal) : 'Set starting balance for net worth calculation',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF667085)),
+                      );
+                    },
+                  ),
+                  trailing: const Icon(Icons.edit_rounded, size: 18, color: AppTheme.monexBlue),
+                  onTap: _showEditStartingBalanceDialog,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
             // ------------------------------------------------------------
             // 4. PREFERENCES & CURRENCY
             // ------------------------------------------------------------
@@ -666,11 +812,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 20),
 
             // ------------------------------------------------------------
-            // 6. ACCOUNT SECURITY & LOGOUT
+            // 6. ACCOUNT SECURITY & DATA
             // ------------------------------------------------------------
             _buildSectionCard(
               title: 'Account Security & Data',
               children: [
+                ListTile(
+                  leading: const Icon(Icons.download_rounded, color: AppTheme.monexBlue),
+                  title: Text('Export Expenses (CSV)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                  subtitle: Text('Generate downloadable CSV report of all expenses', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  onTap: () async {
+                    final list = await _supabaseService.getExpenses();
+                    final expenses = list.isNotEmpty ? list : _supabaseService.localExpenses;
+
+                    final StringBuffer csv = StringBuffer();
+                    csv.writeln('Date,Category,Title,Amount,Type,PaymentMethod,Notes');
+                    for (var e in expenses) {
+                      csv.writeln('${DateFormat('yyyy-MM-dd').format(e.date)},"${e.category}","${e.title}",${e.amount},"${e.type}","${e.paymentMethod}","${e.notes ?? ''}"');
+                    }
+
+                    await Clipboard.setData(ClipboardData(text: csv.toString()));
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('📋 ${expenses.length} expenses exported & copied to clipboard!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                          backgroundColor: AppTheme.monexBlue,
+                        ),
+                      );
+                    }
+                  },
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F3F9)),
                 ListTile(
                   leading: const Icon(Icons.cleaning_services_rounded, color: Color(0xFFF79009)),
                   title: Text(
@@ -706,7 +879,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('✨ All dummy data & local cache cleared!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                            content: Text('✨ All local goals, bills, and cached records cleared!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
                             backgroundColor: AppTheme.successGreen,
                           ),
                         );
