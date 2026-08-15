@@ -23,38 +23,49 @@ class Expense {
     this.createdAt,
   });
 
-  // Convert JSON from Supabase to Expense model
+  // Convert JSON from Supabase user_data to Expense model
   factory Expense.fromJson(Map<String, dynamic> json) {
     return Expense(
       id: json['id']?.toString(),
-      title: json['title'] ?? json['description'] ?? 'Untitled',
+      title: json['description'] ?? json['title'] ?? json['source'] ?? 'Untitled',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      category: json['category'] ?? 'Miscellaneous',
-      type: json['type'] ?? 'expense',
+      category: json['category'] ?? (json['type'] == 'income' || json['source'] != null ? 'Income' : 'Food & Dining'),
+      type: json['type'] ?? (json['source'] != null ? 'income' : 'expense'),
       date: json['date'] != null 
-          ? DateTime.parse(json['date'].toString()) 
+          ? DateTime.tryParse(json['date'].toString()) ?? DateTime.now()
           : DateTime.now(),
-      paymentMethod: json['payment_method'] ?? 'Card',
+      paymentMethod: json['payment'] ?? json['payment_method'] ?? 'UPI',
       notes: json['notes']?.toString(),
       userId: json['user_id']?.toString(),
       createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'].toString()) 
+          ? DateTime.tryParse(json['created_at'].toString()) 
           : null,
     );
   }
 
-  // Convert Expense model to JSON for Supabase insert/update
+  // Convert Expense model to JSON for Supabase user_data JSON array
   Map<String, dynamic> toJson() {
+    final dateStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     return {
-      if (id != null) 'id': id,
-      'title': title,
+      'id': id ?? 'exp_${DateTime.now().millisecondsSinceEpoch}',
+      'description': title,
       'amount': amount,
       'category': category,
+      'payment': paymentMethod,
+      'date': dateStr,
       'type': type,
-      'date': date.toIso8601String().split('T')[0], // YYYY-MM-DD format
-      'payment_method': paymentMethod,
       if (notes != null) 'notes': notes,
       if (userId != null) 'user_id': userId,
+    };
+  }
+
+  Map<String, dynamic> toIncomeJson() {
+    final dateStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    return {
+      'id': id ?? 'inc_${DateTime.now().millisecondsSinceEpoch}',
+      'source': title,
+      'amount': amount,
+      'date': dateStr,
     };
   }
 

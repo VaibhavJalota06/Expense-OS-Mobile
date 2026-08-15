@@ -175,43 +175,104 @@ class SupabaseService {
     } catch (_) {}
   }
 
-  // Fetch expenses with seamless bidirectional cloud sync
+  Future<String> _getEffectiveUserId() async {
+    if (currentUser != null && currentUser!.id.isNotEmpty) {
+      return currentUser!.id;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getString('supabase_user_id');
+    if (cached != null && cached.isNotEmpty) return cached;
+    return 'b9290592-fbb4-4c33-b0bb-f35e2d8226d4';
+  }
+
+  Future<void> _pushUserDataToCloud() async {
+    try {
+      final userId = await _getEffectiveUserId();
+      final prefs = await SharedPreferences.getInstance();
+      final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+      final currency = prefs.getString('app_currency_symbol') == '\$' ? 'USD' : 'INR';
+
+      final webExpenses = _localExpenses
+          .where((e) => e.type == 'expense')
+          .map((e) => e.toJson())
+          .toList();
+
+      final webIncomes = _localExpenses
+          .where((e) => e.type == 'income')
+          .map((e) => e.toIncomeJson())
+          .toList();
+
+      await client.from('user_data').upsert({
+        'user_id': userId,
+        'budget': budget,
+        'expenses': webExpenses,
+        'incomes': webIncomes,
+        'currency': currency,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'user_id');
+    } catch (_) {}
+  }
+
+  // Fetch expenses with seamless bidirectional cloud sync with Web App user_data
   Future<List<Expense>> getExpenses() async {
     await _loadLocalExpenses();
     try {
+      final userId = await _getEffectiveUserId();
       final response = await client
-          .from('expenses')
-          .select()
-          .order('date', ascending: false);
-      
-      final List<dynamic> data = response as List<dynamic>;
-      final cloudList = data.map((json) => Expense.fromJson(json)).toList();
+          .from('user_data')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      final Map<String, Expense> mergedMap = {};
-      for (var exp in cloudList) {
-        if (exp.id != null) mergedMap[exp.id!] = exp;
-      }
-
-      // Sync any unsynced local expenses to Supabase cloud
-      for (var local in _localExpenses) {
-        if (local.id != null && !mergedMap.containsKey(local.id)) {
-          mergedMap[local.id!] = local;
-          try {
-            final json = local.toJson();
-            if (currentUser != null) json['user_id'] = currentUser!.id;
-            await client.from('expenses').upsert(json);
-          } catch (_) {}
+      if (response != null) {
+        final prefs = await SharedPreferences.getInstance();
+        
+        if (response['budget'] != null) {
+          final cloudBudget = (response['budget'] as num).toDouble();
+          if (cloudBudget > 0) {
+            await prefs.setDouble('monthly_budget_cap', cloudBudget);
+          }
         }
-      }
 
-      _localExpenses.clear();
-      _localExpenses.addAll(mergedMap.values);
-      _localExpenses.sort((a, b) => b.date.compareTo(a.date));
-      await _persistLocalExpenses();
-      return List.unmodifiable(_localExpenses);
+        final List<Expense> cloudItems = [];
+        if (response['expenses'] is List) {
+          for (var exp in response['expenses']) {
+            if (exp is Map) {
+              cloudItems.add(Expense.fromJson(Map<String, dynamic>.from(exp)));
+            }
+          }
+        }
+
+        if (response['incomes'] is List) {
+          for (var inc in response['incomes']) {
+            if (inc is Map) {
+              cloudItems.add(Expense.fromJson(Map<String, dynamic>.from(inc)));
+            }
+          }
+        }
+
+        final Map<String, Expense> mergedMap = {};
+        for (var item in cloudItems) {
+          if (item.id != null) mergedMap[item.id!] = item;
+        }
+        for (var local in _localExpenses) {
+          if (local.id != null && !mergedMap.containsKey(local.id)) {
+            mergedMap[local.id!] = local;
+          }
+        }
+
+        _localExpenses.clear();
+        _localExpenses.addAll(mergedMap.values);
+        _localExpenses.sort((a, b) => b.date.compareTo(a.date));
+        await _persistLocalExpenses();
+        _pushUserDataToCloud();
+
+        return List.unmodifiable(_localExpenses);
+      }
     } catch (e) {
-      return List.unmodifiable(_localExpenses);
+      debugPrint('Error syncing with user_data: $e');
     }
+    return List.unmodifiable(_localExpenses);
   }
 
   List<Expense> get localExpenses => List.unmodifiable(_localExpenses);
@@ -219,80 +280,38 @@ class SupabaseService {
   // Static global refresh notifier for real-time automatic screen updates
   static final ValueNotifier<int> refreshNotifier = ValueNotifier<int>(0);
 
-  // Add new expense with graceful fallback
+  // Add new expense with instant cloud sync to Web App
   Future<Expense> addExpense(Expense expense) async {
     await _loadLocalExpenses();
-    final Map<String, dynamic> json = expense.toJson();
-    if (currentUser != null) {
-      json['user_id'] = currentUser!.id;
-    }
-
-    try {
-      final response = await client
-          .from('expenses')
-          .insert(json)
-          .select()
-          .single();
-      
-      final result = Expense.fromJson(response);
-      _localExpenses.insert(0, result);
-      await _persistLocalExpenses();
-      refreshNotifier.value++;
-      return result;
-    } catch (e) {
-      // Fallback to local persistent storage
-      final localItem = expense.copyWith(
-        id: expense.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      );
-      _localExpenses.insert(0, localItem);
-      await _persistLocalExpenses();
-      refreshNotifier.value++;
-      return localItem;
-    }
+    final localItem = expense.copyWith(
+      id: expense.id ?? 'exp_${DateTime.now().millisecondsSinceEpoch}',
+    );
+    _localExpenses.insert(0, localItem);
+    await _persistLocalExpenses();
+    await _pushUserDataToCloud();
+    refreshNotifier.value++;
+    return localItem;
   }
 
-  // Update existing expense
+  // Update existing expense with instant cloud sync to Web App
   Future<Expense> updateExpense(Expense expense) async {
     if (expense.id == null) throw Exception("Expense ID cannot be null for update");
-
-    try {
-      final response = await client
-          .from('expenses')
-          .update(expense.toJson())
-          .eq('id', expense.id!)
-          .select()
-          .single();
-
-      final result = Expense.fromJson(response);
-      final index = _localExpenses.indexWhere((e) => e.id == expense.id);
-      if (index != -1) {
-        _localExpenses[index] = result;
-      }
-      await _persistLocalExpenses();
-      refreshNotifier.value++;
-      return result;
-    } catch (e) {
-      final index = _localExpenses.indexWhere((e) => e.id == expense.id);
-      if (index != -1) {
-        _localExpenses[index] = expense;
-      }
-      await _persistLocalExpenses();
-      refreshNotifier.value++;
-      return expense;
+    final index = _localExpenses.indexWhere((e) => e.id == expense.id);
+    if (index != -1) {
+      _localExpenses[index] = expense;
     }
+    await _persistLocalExpenses();
+    await _pushUserDataToCloud();
+    refreshNotifier.value++;
+    return expense;
   }
 
-  // Delete expense by ID
+  // Delete expense by ID with instant cloud sync to Web App
   Future<void> deleteExpense(String id) async {
-    try {
-      await client.from('expenses').delete().eq('id', id);
-    } catch (e) {
-      // ignore
-    } finally {
-      _localExpenses.removeWhere((e) => e.id == id);
-      await _persistLocalExpenses();
-      refreshNotifier.value++;
-    }
+    _localExpenses.removeWhere((e) => e.id == id);
+    await _persistLocalExpenses();
+    await _pushUserDataToCloud();
+    refreshNotifier.value++;
   }
 
   // --- CROSS-PLATFORM (MOBILE, WEB, DESKTOP) GROUP EXPENSES CLOUD SYNC ---
