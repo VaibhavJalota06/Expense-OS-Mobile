@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/currency_service.dart';
 import '../services/receipt_ocr_service.dart';
 import '../theme/app_theme.dart';
@@ -412,7 +413,14 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
                       child: ElevatedButton(
                         onPressed: selectedCount == 0
                             ? null
-                            : () {
+                            : () async {
+                                final prefs = await SharedPreferences.getInstance();
+                                final cap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+                                if (cap <= 0) {
+                                  if (!context.mounted) return;
+                                  _showSetBudgetRequiredDialog(context);
+                                  return;
+                                }
                                 final selectedItems = _lineItems.where((i) => i.isSelected).toList();
                                 final merchant = _parseResult!.merchant ?? 'Scanned Receipt';
                                 final category = _parseResult!.category;
@@ -446,6 +454,77 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
         Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 13, color: const Color(0xFF667085), fontWeight: FontWeight.w500)),
         Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
       ],
+    );
+  }
+
+  void _showSetBudgetRequiredDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.account_balance_wallet_rounded, color: AppTheme.monexBlue, size: 24),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Set Monthly Budget First',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Please set your monthly budget limit before logging expenses so Expense OS can track your budget progress!',
+              style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+              ],
+              decoration: InputDecoration(
+                labelText: 'Monthly Budget Limit (${CurrencyService.currencySymbolNotifier.value})',
+                hintText: 'e.g. 10000',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: Colors.grey.shade600)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.monexBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              final val = double.tryParse(controller.text.trim()) ?? 0.0;
+              if (val > 0) {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setDouble('monthly_budget_cap', val);
+                if (ctx.mounted) Navigator.pop(ctx);
+                final selectedItems = _lineItems.where((i) => i.isSelected).toList();
+                final merchant = _parseResult!.merchant ?? 'Scanned Receipt';
+                final category = _parseResult!.category;
+                widget.onParsedResult(_selectedTotal, merchant, category, selectedItems);
+                if (context.mounted) Navigator.pop(context);
+              }
+            },
+            child: Text('Set Budget & Import', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 }
