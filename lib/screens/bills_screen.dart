@@ -269,11 +269,38 @@ class _BillsScreenState extends State<BillsScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          _buildCycleChip('monthly', 'Monthly', cycle, (val) => setSheetState(() => cycle = val)),
-                          _buildCycleChip('yearly', 'Yearly', cycle, (val) => setSheetState(() => cycle = val)),
-                          _buildCycleChip('weekly', 'Weekly', cycle, (val) => setSheetState(() => cycle = val)),
-                          _buildCycleChip('quarterly', 'Quarterly', cycle, (val) => setSheetState(() => cycle = val)),
-                          _buildCycleChip('custom', 'Custom Date', cycle, (val) => setSheetState(() => cycle = val)),
+                          _buildCycleChip('monthly', 'Monthly', cycle, (val) {
+                            setSheetState(() {
+                              cycle = val;
+                              final now = DateTime.now();
+                              selectedDueDate = DateTime(now.year, now.month + 1, now.day);
+                            });
+                          }),
+                          _buildCycleChip('yearly', 'Yearly', cycle, (val) {
+                            setSheetState(() {
+                              cycle = val;
+                              final now = DateTime.now();
+                              selectedDueDate = DateTime(now.year + 1, now.month, now.day);
+                            });
+                          }),
+                          _buildCycleChip('weekly', 'Weekly', cycle, (val) {
+                            setSheetState(() {
+                              cycle = val;
+                              selectedDueDate = DateTime.now().add(const Duration(days: 7));
+                            });
+                          }),
+                          _buildCycleChip('quarterly', 'Quarterly', cycle, (val) {
+                            setSheetState(() {
+                              cycle = val;
+                              final now = DateTime.now();
+                              selectedDueDate = DateTime(now.year, now.month + 3, now.day);
+                            });
+                          }),
+                          _buildCycleChip('custom', 'Custom Date', cycle, (val) {
+                            setSheetState(() {
+                              cycle = val;
+                            });
+                          }),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -293,7 +320,7 @@ class _BillsScreenState extends State<BillsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Due / Renewal Date',
+                                  cycle == 'custom' ? 'Custom Renewal Date' : 'Fixed Renewal Date ($cycle)',
                                   style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600),
                                 ),
                                 const SizedBox(height: 4),
@@ -303,25 +330,38 @@ class _BillsScreenState extends State<BillsScreen> {
                                 ),
                               ],
                             ),
-                            OutlinedButton.icon(
-                              onPressed: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: selectedDueDate,
-                                  firstDate: DateTime(2020),
-                                  lastDate: DateTime.now().add(const Duration(days: 3650)),
-                                );
-                                if (picked != null) {
-                                  setSheetState(() => selectedDueDate = picked);
-                                }
-                              },
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: AppTheme.monexBlue),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            if (cycle == 'custom')
+                              OutlinedButton.icon(
+                                onPressed: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: selectedDueDate,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime.now().add(const Duration(days: 3650)),
+                                  );
+                                  if (picked != null) {
+                                    setSheetState(() => selectedDueDate = picked);
+                                  }
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: AppTheme.monexBlue),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                icon: const Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.monexBlue),
+                                label: Text('Change', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.monexBlue)),
+                              )
+                            else
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.monexBlue.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Fixed Date',
+                                  style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.monexBlue),
+                                ),
                               ),
-                              icon: const Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.monexBlue),
-                              label: Text('Change', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.monexBlue)),
-                            ),
                           ],
                         ),
                       ),

@@ -1009,7 +1009,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setDouble('monthly_budget_cap', val);
                 if (ctx.mounted) Navigator.pop(ctx);
-                _saveBill();
+                _saveAndLogGroupExpense();
               }
             },
             child: Text('Set Budget & Save', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.bold)),
