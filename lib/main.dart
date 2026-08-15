@@ -141,7 +141,7 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
       setState(() {
         _hasSeenOnboarding = hasSeenOnboarding;
         _isAuthenticated = authed;
-        _isAppLocked = lockEnabled;
+        _isAppLocked = authed && lockEnabled;
         _isInitialized = true;
       });
     }
@@ -169,6 +169,16 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
               });
             },
           );
+        } else if (!_isAuthenticated) {
+          initialScreen = AuthScreen(
+            onAuthSuccess: () async {
+              final lockEnabled = await _biometricService.isAppLockEnabled();
+              setState(() {
+                _isAuthenticated = true;
+                _isAppLocked = lockEnabled;
+              });
+            },
+          );
         } else if (_isAppLocked) {
           initialScreen = BiometricLockScreen(
             onUnlocked: () {
@@ -176,22 +186,20 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
                 _isAppLocked = false;
               });
             },
-          );
-        } else if (_isAuthenticated) {
-          initialScreen = MainNavigationScreen(
-            onSignOut: () {
+            onSignOut: () async {
+              await _supabaseService.signOut();
+              await _biometricService.setAppLockEnabled(false);
               setState(() {
                 _isAuthenticated = false;
+                _isAppLocked = false;
               });
             },
           );
         } else {
-          initialScreen = AuthScreen(
-            onAuthSuccess: () async {
-              final lockEnabled = await _biometricService.isAppLockEnabled();
+          initialScreen = MainNavigationScreen(
+            onSignOut: () {
               setState(() {
-                _isAuthenticated = true;
-                _isAppLocked = lockEnabled;
+                _isAuthenticated = false;
               });
             },
           );
@@ -210,7 +218,8 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> with WidgetsBindingObserver
 
 class BiometricLockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
-  const BiometricLockScreen({super.key, required this.onUnlocked});
+  final VoidCallback onSignOut;
+  const BiometricLockScreen({super.key, required this.onUnlocked, required this.onSignOut});
 
   @override
   State<BiometricLockScreen> createState() => _BiometricLockScreenState();
@@ -223,17 +232,24 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
   @override
   void initState() {
     super.initState();
-    _authenticate();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (mounted) _authenticate();
+      });
+    });
   }
 
   Future<void> _authenticate() async {
+    if (_isAuthenticating) return;
     setState(() => _isAuthenticating = true);
     final authenticated = await _biometricService.authenticate(
-      reason: 'Scan fingerprint or Face to unlock Expense OS',
+      reason: 'Scan Face ID or Touch ID to unlock Expense OS',
     );
-    setState(() => _isAuthenticating = false);
+    if (mounted) {
+      setState(() => _isAuthenticating = false);
+    }
 
-    if (authenticated) {
+    if (authenticated && mounted) {
       widget.onUnlocked();
     }
   }
@@ -242,64 +258,84 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppTheme.monexBlue.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.fingerprint_rounded,
-                  size: 44,
-                  color: AppTheme.monexBlue,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Expense OS is Locked',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Unlock with Biometrics to access your financial records',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 36),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _isAuthenticating ? null : _authenticate,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.monexBlue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 84,
+                  height: 84,
+                  decoration: BoxDecoration(
+                    color: AppTheme.monexBlue.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
                   ),
-                  child: _isAuthenticating
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text(
-                          'UNLOCK NOW',
-                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14),
-                        ),
+                  child: const Icon(
+                    Icons.face_retouching_natural_rounded,
+                    size: 46,
+                    color: AppTheme.monexBlue,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                Text(
+                  'Expense OS is Locked',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Unlock using Face ID, Touch ID or Passcode to continue',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 36),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: _isAuthenticating ? null : _authenticate,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.monexBlue,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    icon: _isAuthenticating
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Icon(Icons.lock_open_rounded, size: 20),
+                    label: Text(
+                      _isAuthenticating ? 'Authenticating...' : 'Unlock with Face ID',
+                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: widget.onSignOut,
+                  child: Text(
+                    'Sign Out / Switch Account',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

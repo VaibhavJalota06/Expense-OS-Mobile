@@ -50,9 +50,10 @@ class BiometricService {
       return await _localAuth.authenticate(
         localizedReason: reason,
         options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: false, // Allows device PIN fallback if biometric fails
+          stickyAuth: false, // Must be false on iOS to prevent infinite evaluation loops
+          biometricOnly: false, // Allows device PIN/Passcode fallback if Face ID fails
           useErrorDialogs: true,
+          sensitiveTransaction: true,
         ),
       );
     } on PlatformException catch (e) {
@@ -62,9 +63,8 @@ class BiometricService {
       debugPrint('Biometric authentication error: $e');
       return false;
     } finally {
-      Future.delayed(const Duration(milliseconds: 800), () {
-        isAuthenticating = false;
-      });
+      await Future.delayed(const Duration(milliseconds: 1000));
+      isAuthenticating = false;
     }
   }
 
