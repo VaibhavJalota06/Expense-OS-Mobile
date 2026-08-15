@@ -72,6 +72,8 @@ jobs:
           mkdir -p Payload
           if [ -d "build/ios/iphoneos/Runner.app" ]; then
             cp -r build/ios/iphoneos/Runner.app Payload/
+          elif [ -d "build/ios/Release-iphoneos/Runner.app" ]; then
+            cp -r build/ios/Release-iphoneos/Runner.app Payload/
           elif [ -d "build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app" ]; then
             cp -r build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app Payload/
           fi
