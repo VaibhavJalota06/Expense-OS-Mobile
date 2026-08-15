@@ -51,6 +51,8 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
   }
 
   double get _totalCurrentSavings => _goals.fold(0.0, (sum, g) => sum + g.currentAmount);
+  double get _totalTargetSavings => _goals.fold(0.0, (sum, g) => sum + g.targetAmount);
+  double get _overallProgress => _totalTargetSavings > 0 ? (_totalCurrentSavings / _totalTargetSavings).clamp(0.0, 1.0) : 0.0;
 
   void _showAddGoalScreen() {
     Navigator.push(
@@ -94,41 +96,6 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
       ),
     );
   }
-
-  @override
-  Widget build(BuildContext context) {
-    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
-    final currency = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 0);
-    final canPop = widget.showBackButton ?? (ModalRoute.of(context)?.canPop ?? false);
-
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: canPop
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textPrimary, size: 20),
-                onPressed: () {
-                  if (Navigator.canPop(context)) {
-                    Navigator.pop(context);
-                  }
-                },
-              )
-            : null,
-        title: Text(
-          'Savings',
-          style: GoogleFonts.plusJakartaSans(
-            color: AppTheme.textPrimary,
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-  double get _totalTargetSavings => _goals.fold(0.0, (sum, g) => sum + g.targetAmount);
-  double get _overallProgress => _totalTargetSavings > 0 ? (_totalCurrentSavings / _totalTargetSavings).clamp(0.0, 1.0) : 0.0;
 
   void _showQuickDepositDialog(FinancialGoal goal) {
     final controller = TextEditingController();
@@ -945,7 +912,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF667085)),
+                    const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFF667085)),
                   ],
                 ),
               ),
@@ -953,9 +920,9 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
 
             const SizedBox(height: 20),
 
-            // Deadline
+            // Target Date
             Text(
-              'Target Deadline Date',
+              'Target Date',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -976,58 +943,52 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      DateFormat('dd MMM yyyy').format(_deadline),
+                      DateFormat('MMMM d, yyyy').format(_deadline),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    const Icon(Icons.calendar_today_outlined, color: Color(0xFF667085), size: 18),
+                    const Icon(Icons.calendar_today_rounded, size: 18, color: AppTheme.monexBlue),
                   ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 36),
+            const SizedBox(height: 32),
 
-            // Save / Add Goal Button
+            // Submit Button
             SizedBox(
               width: double.infinity,
-              height: 54,
+              height: 52,
               child: ElevatedButton(
                 onPressed: _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.monexBlue,
                   foregroundColor: Colors.white,
-                  elevation: 3,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 2,
                 ),
                 child: Text(
-                  isEditing ? 'SAVE CHANGES' : 'CREATE GOAL',
+                  isEditing ? 'UPDATE GOAL' : 'CREATE GOAL',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+                    fontSize: 14,
                   ),
                 ),
               ),
             ),
 
             if (isEditing) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
-                height: 50,
-                child: OutlinedButton(
+                height: 48,
+                child: TextButton(
                   onPressed: _confirmDelete,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.dangerRed,
-                    side: const BorderSide(color: Color(0xFFFECDCA)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
                   child: Text(
-                    'DELETE GOAL',
+                    'Delete Goal',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
