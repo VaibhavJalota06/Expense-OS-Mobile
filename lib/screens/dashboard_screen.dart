@@ -180,6 +180,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
     try {
       final list = await _supabaseService.getExpenses();
+      await _loadBudgetCap();
+      await _loadStartingBalance();
       if (!mounted) return;
       setState(() {
         _expenses = list;
