@@ -208,15 +208,78 @@ class SupabaseService {
           .map((e) => e.toIncomeJson())
           .toList();
 
+      final List<Map<String, dynamic>> bundledSubs = [];
+
+      // Subscriptions / Recurring Bills
+      final rawSubs = prefs.getString('user_saved_subscriptions');
+      if (rawSubs != null && rawSubs.isNotEmpty) {
+        try {
+          final List decoded = jsonDecode(rawSubs);
+          for (var item in decoded) {
+            if (item is Map) {
+              final m = Map<String, dynamic>.from(item);
+              m['type'] = 'subscription';
+              m['name'] = m['title'] ?? m['name'] ?? 'Subscription';
+              m['dueDay'] = m['dueDay'] ?? (m['due_date'] != null ? DateTime.tryParse(m['due_date'].toString())?.day : 15) ?? 15;
+              bundledSubs.add(m);
+            }
+          }
+        } catch (_) {}
+      }
+
+      // Savings Goals
+      final rawGoals = prefs.getString('monex_goals');
+      if (rawGoals != null && rawGoals.isNotEmpty) {
+        try {
+          final List decoded = jsonDecode(rawGoals);
+          for (var item in decoded) {
+            if (item is Map) {
+              final m = Map<String, dynamic>.from(item);
+              m['type'] = 'savings_goal';
+              m['name'] = m['title'] ?? m['name'] ?? 'Goal';
+              bundledSubs.add(m);
+            }
+          }
+        } catch (_) {}
+      }
+
+      // Group Expenses / Split Bills
+      final rawGroup = prefs.getString('saved_group_expenses');
+      if (rawGroup != null && rawGroup.isNotEmpty) {
+        try {
+          final List decoded = jsonDecode(rawGroup);
+          for (var item in decoded) {
+            if (item is Map) {
+              final m = Map<String, dynamic>.from(item);
+              m['type'] = 'split_bill';
+              bundledSubs.add(m);
+            }
+          }
+        } catch (_) {}
+      }
+
+      // System Financial Meta (Starting Balance / Total Money)
+      bundledSubs.add({
+        'id': 'system_financial_meta',
+        'type': 'system_financial_meta',
+        'starting_balance': balance,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
       await client.from('user_data').upsert({
         'user_id': userId,
         'budget': budget,
         'expenses': webExpenses,
         'incomes': webIncomes,
+        'subscriptions': bundledSubs,
         'currency': currency,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id');
     } catch (_) {}
+  }
+
+  Future<void> pushAllDataToCloud() async {
+    await _pushUserDataToCloud();
   }
 
   // Fetch expenses with seamless bidirectional cloud sync with Web App user_data
@@ -257,16 +320,42 @@ class SupabaseService {
           }
         }
 
+        if (response['subscriptions'] is List) {
+          final List<Map<String, dynamic>> cloudSubs = [];
+          final List<Map<String, dynamic>> cloudGoals = [];
+          final List<Map<String, dynamic>> cloudGroup = [];
+
+          for (var item in response['subscriptions']) {
+            if (item is Map) {
+              final map = Map<String, dynamic>.from(item);
+              final type = map['type']?.toString();
+              if (type == 'savings_goal') {
+                cloudGoals.add(map);
+              } else if (type == 'split_bill') {
+                cloudGroup.add(map);
+              } else if (type == 'system_financial_meta') {
+                if (map['starting_balance'] != null) {
+                  final b = (map['starting_balance'] as num).toDouble();
+                  await prefs.setDouble('user_starting_balance', b);
+                }
+              } else {
+                cloudSubs.add(map);
+              }
+            }
+          }
+
+          await prefs.setString('user_saved_subscriptions', jsonEncode(cloudSubs));
+          await prefs.setString('monex_goals', jsonEncode(cloudGoals));
+          if (cloudGroup.isNotEmpty) {
+            await prefs.setString('saved_group_expenses', jsonEncode(cloudGroup));
+          }
+        }
+
         _localExpenses.clear();
         _localExpenses.addAll(cloudItems);
         _localExpenses.removeWhere((e) => e.id == 'initial_account_balance' || e.title == 'Total Account Money' || e.title == 'Initial Account Balance');
         _localExpenses.sort((a, b) => b.date.compareTo(a.date));
         await _persistLocalExpenses();
-
-        // If cloud was completely reset (no budget, no expenses, no incomes), sync total money to 0.0
-        if (_localExpenses.isEmpty && (response['budget'] == 0 || response['budget'] == 0.0 || response['budget'] == null)) {
-          await prefs.setDouble('user_starting_balance', 0.0);
-        }
 
         return List.unmodifiable(_localExpenses);
       }

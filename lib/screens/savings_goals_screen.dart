@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/goal_model.dart';
 import '../services/currency_service.dart';
+import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 
 class SavingsGoalsScreen extends StatefulWidget {
@@ -29,6 +30,13 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
   void initState() {
     super.initState();
     _loadGoals();
+    SupabaseService.refreshNotifier.addListener(_loadGoals);
+  }
+
+  @override
+  void dispose() {
+    SupabaseService.refreshNotifier.removeListener(_loadGoals);
+    super.dispose();
   }
 
   Future<void> _loadGoals() async {
@@ -48,6 +56,9 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
     final prefs = await SharedPreferences.getInstance();
     final encoded = jsonEncode(_goals.map((g) => g.toJson()).toList());
     await prefs.setString('monex_goals', encoded);
+    try {
+      await SupabaseService().pushAllDataToCloud();
+    } catch (_) {}
   }
 
   double get _totalCurrentSavings => _goals.fold(0.0, (sum, g) => sum + g.currentAmount);

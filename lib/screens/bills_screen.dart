@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/subscription_model.dart';
 import '../services/currency_service.dart';
 import '../services/notification_service.dart';
+import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 
 class BillsScreen extends StatefulWidget {
@@ -25,6 +26,13 @@ class _BillsScreenState extends State<BillsScreen> {
   void initState() {
     super.initState();
     _loadSubscriptions();
+    SupabaseService.refreshNotifier.addListener(_loadSubscriptions);
+  }
+
+  @override
+  void dispose() {
+    SupabaseService.refreshNotifier.removeListener(_loadSubscriptions);
+    super.dispose();
   }
 
   Future<void> _loadSubscriptions() async {
@@ -43,7 +51,9 @@ class _BillsScreenState extends State<BillsScreen> {
 
     _processCycleRollovers();
 
-    setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
     _checkPendingBillAlerts();
   }
 
@@ -92,6 +102,9 @@ class _BillsScreenState extends State<BillsScreen> {
     final prefs = await SharedPreferences.getInstance();
     final encoded = jsonEncode(_subscriptions.map((s) => s.toJson()).toList());
     await prefs.setString('user_saved_subscriptions', encoded);
+    try {
+      await SupabaseService().pushAllDataToCloud();
+    } catch (_) {}
   }
 
   /// Automatically alerts user when a recurring bill renewal is pending or due

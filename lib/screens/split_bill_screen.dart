@@ -89,10 +89,12 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
   void initState() {
     super.initState();
     _loadGroupExpenses();
+    SupabaseService.refreshNotifier.addListener(_loadGroupExpenses);
   }
 
   @override
   void dispose() {
+    SupabaseService.refreshNotifier.removeListener(_loadGroupExpenses);
     _titleController.dispose();
     _totalAmountController.dispose();
     _newMemberController.dispose();
@@ -125,6 +127,9 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
         _supabaseService.saveGroupExpense(item.toJson());
       }
     }
+    try {
+      await _supabaseService.pushAllDataToCloud();
+    } catch (_) {}
   }
 
   void _addMember() {
