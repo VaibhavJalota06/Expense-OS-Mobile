@@ -374,37 +374,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                       const SizedBox(height: 20),
 
-                      // Interactive Date Selector Filter Bar for Dashboard
+                      // Interactive Date Selector Filter Bar for Dashboard (Sleek Monex Pill Design)
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         clipBehavior: Clip.none,
                         child: Row(
                           children: [
-                            // All Time Pill (Placed at front)
-                            FilterChip(
-                              label: Text('All Time', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
-                              selected: !_filterDashboardByDate,
-                              selectedColor: AppTheme.monexBlue.withValues(alpha: 0.15),
-                              checkmarkColor: AppTheme.monexBlue,
-                              labelStyle: TextStyle(
-                                color: !_filterDashboardByDate ? AppTheme.monexBlue : AppTheme.textPrimary,
-                              ),
-                              onSelected: (_) => setState(() {
+                            // All Time Pill
+                            _buildDateFilterPill(
+                              label: 'All Time',
+                              isSelected: !_filterDashboardByDate,
+                              showCheck: true,
+                              onTap: () => setState(() {
                                 _filterDashboardByDate = false;
                               }),
                             ),
                             const SizedBox(width: 8),
 
                             // Today Pill
-                            FilterChip(
-                              label: Text('Today', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
-                              selected: _filterDashboardByDate && _isSameDay(_selectedDashboardDate, DateTime.now()),
-                              selectedColor: AppTheme.monexBlue.withValues(alpha: 0.15),
-                              checkmarkColor: AppTheme.monexBlue,
-                              labelStyle: TextStyle(
-                                color: (_filterDashboardByDate && _isSameDay(_selectedDashboardDate, DateTime.now())) ? AppTheme.monexBlue : AppTheme.textPrimary,
-                              ),
-                              onSelected: (_) => setState(() {
+                            _buildDateFilterPill(
+                              label: 'Today',
+                              isSelected: _filterDashboardByDate && _isSameDay(_selectedDashboardDate, DateTime.now()),
+                              showCheck: true,
+                              onTap: () => setState(() {
                                 _filterDashboardByDate = true;
                                 _selectedDashboardDate = DateTime.now();
                               }),
@@ -412,51 +404,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const SizedBox(width: 8),
 
                             // Yesterday Pill
-                            FilterChip(
-                              label: Text('Yesterday', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
-                              selected: _filterDashboardByDate && _isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1))),
-                              selectedColor: AppTheme.monexBlue.withValues(alpha: 0.15),
-                              checkmarkColor: AppTheme.monexBlue,
-                              labelStyle: TextStyle(
-                                color: (_filterDashboardByDate && _isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1)))) ? AppTheme.monexBlue : AppTheme.textPrimary,
-                              ),
-                              onSelected: (_) => setState(() {
+                            _buildDateFilterPill(
+                              label: 'Yesterday',
+                              isSelected: _filterDashboardByDate && _isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1))),
+                              showCheck: true,
+                              onTap: () => setState(() {
                                 _filterDashboardByDate = true;
                                 _selectedDashboardDate = DateTime.now().subtract(const Duration(days: 1));
                               }),
                             ),
                             const SizedBox(width: 8),
-
                             // Custom Calendar Date Picker Pill
-                            ActionChip(
-                              avatar: const Icon(Icons.calendar_month_rounded, size: 14, color: AppTheme.monexBlue),
-                              label: Text(
-                                _filterDashboardByDate && !_isSameDay(_selectedDashboardDate, DateTime.now()) && !_isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1)))
-                                    ? DateFormat('MMM d, yyyy').format(_selectedDashboardDate)
-                                    : 'Pick Date 🗓️',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: (_filterDashboardByDate && !_isSameDay(_selectedDashboardDate, DateTime.now()) && !_isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1))))
-                                      ? AppTheme.monexBlue
-                                      : AppTheme.textPrimary,
-                                ),
-                              ),
-                              backgroundColor: Colors.white,
-                              side: BorderSide(
-                                color: (_filterDashboardByDate && !_isSameDay(_selectedDashboardDate, DateTime.now()) && !_isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1))))
-                                    ? AppTheme.monexBlue
-                                    : const Color(0xFFD0D5DD),
-                              ),
-                              onPressed: _pickDashboardDate,
+                            _buildDateFilterPill(
+                              label: _filterDashboardByDate && !_isSameDay(_selectedDashboardDate, DateTime.now()) && !_isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1)))
+                                  ? DateFormat('MMM d, yyyy').format(_selectedDashboardDate)
+                                  : 'Pick Date 🗓️',
+                              isSelected: _filterDashboardByDate && !_isSameDay(_selectedDashboardDate, DateTime.now()) && !_isSameDay(_selectedDashboardDate, DateTime.now().subtract(const Duration(days: 1))),
+                              icon: Icons.calendar_month_rounded,
+                              onTap: _pickDashboardDate,
                             ),
                           ],
                         ),
                       ),
 
                       const SizedBox(height: 20),
-
-                      // Category Filter Capsule Switcher: [💸 Expenses] & [💰 Extra Income Logs]
 
                       // Quick Intelligence Tools Bar
                       Row(
@@ -1262,6 +1233,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
           fontSize: 18,
           fontWeight: FontWeight.w800,
           color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateFilterPill({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    IconData? icon,
+    bool showCheck = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFFEFF4FF) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected ? AppTheme.monexBlue : const Color(0xFFE4E7EC),
+              width: isSelected ? 1.4 : 1.0,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppTheme.monexBlue.withValues(alpha: 0.12),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: const Color(0xFF101828).withValues(alpha: 0.02),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showCheck && isSelected) ...[
+                const Icon(Icons.check_rounded, size: 14, color: AppTheme.monexBlue),
+                const SizedBox(width: 5),
+              ] else if (icon != null) ...[
+                Icon(icon, size: 14, color: isSelected ? AppTheme.monexBlue : AppTheme.textSecondary),
+                const SizedBox(width: 5),
+              ],
+              Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  color: isSelected ? AppTheme.monexBlue : AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

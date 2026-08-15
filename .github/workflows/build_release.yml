@@ -2,6 +2,8 @@ name: Build & Release Mobile App (APK & IPA)
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
@@ -62,9 +64,13 @@ jobs:
 
       - name: Build iOS App (Unsigned IPA)
         run: |
-          flutter build ipa --no-codesign
+          flutter build ios --release --no-codesign
           mkdir -p Payload
-          cp -r build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app Payload/
+          if [ -d "build/ios/iphoneos/Runner.app" ]; then
+            cp -r build/ios/iphoneos/Runner.app Payload/
+          elif [ -d "build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app" ]; then
+            cp -r build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app Payload/
+          fi
           zip -9 -r ExpenseOS-iOS.ipa Payload
 
       - name: Upload iOS IPA

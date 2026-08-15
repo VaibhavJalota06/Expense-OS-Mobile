@@ -312,6 +312,16 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
           );
         }
       }
+    } else if (!nowSettled && item.paidBy == 'You' && member != 'You') {
+      // Un-settling: remove reimbursement income log
+      await _supabaseService.getExpenses();
+      final target = _supabaseService.localExpenses.firstWhere(
+        (e) => e.title == 'Reimbursement from $member (${item.title})',
+        orElse: () => Expense(title: '', amount: 0, category: '', type: '', date: DateTime.now()),
+      );
+      if (target.id != null) {
+        await _supabaseService.deleteExpense(target.id!);
+      }
     }
 
     // Case 2: "You" paid your share to a friend who paid upfront -> Log as Expense
@@ -338,6 +348,16 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
             ),
           );
         }
+      }
+    } else if (!nowSettled && item.paidBy != 'You' && member == 'You') {
+      // Un-settling: remove settled share expense log
+      await _supabaseService.getExpenses();
+      final target = _supabaseService.localExpenses.firstWhere(
+        (e) => e.title == 'Paid ${item.paidBy} for ${item.title} (Settled Share)',
+        orElse: () => Expense(title: '', amount: 0, category: '', type: '', date: DateTime.now()),
+      );
+      if (target.id != null) {
+        await _supabaseService.deleteExpense(target.id!);
       }
     }
   }
@@ -384,7 +404,8 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
       _savedGroupExpenses.removeAt(index);
     });
     await _saveGroupExpenses();
-    await _supabaseService.removeGroupExpense(id);
+    // Cascade delete any expense share and reimbursement income logs created for this split bill
+    await _supabaseService.cascadeDeleteGroupExpense(id, removed.title, removed.paidBy);
 
     if (mounted) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -392,16 +413,6 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
         SnackBar(
           content: Text('Split bill "${removed.title}" deleted', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
           backgroundColor: AppTheme.dangerRed,
-          action: SnackBarAction(
-            label: 'UNDO',
-            textColor: Colors.white,
-            onPressed: () async {
-              setState(() {
-                _savedGroupExpenses.insert(index, removed);
-              });
-              await _saveGroupExpenses(removed);
-            },
-          ),
         ),
       );
     }

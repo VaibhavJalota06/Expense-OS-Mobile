@@ -367,6 +367,7 @@ class SupabaseService {
         _localExpenses.removeWhere((e) => e.id == 'initial_account_balance' || e.title == 'Total Account Money' || e.title == 'Initial Account Balance');
         _localExpenses.sort((a, b) => b.date.compareTo(a.date));
         await _persistLocalExpenses();
+        await cleanOrphanedExpenses();
 
         return List.unmodifiable(_localExpenses);
       }
@@ -432,12 +433,147 @@ class SupabaseService {
     return expense;
   }
 
-  // Delete expense by ID with instant cloud sync to Web App
+  // Delete expense by ID with instant cloud sync to Web App & unmarking subscription if needed
   Future<void> deleteExpense(String id) async {
-    _localExpenses.removeWhere((e) => e.id == id);
+    await _loadLocalExpenses();
+    final index = _localExpenses.indexWhere((e) => e.id == id);
+    if (index != -1) {
+      final deleted = _localExpenses.removeAt(index);
+      await _persistLocalExpenses();
+
+      // If this was a bill payment expense, unmark the recurring bill as paid
+      final cleanTitle = deleted.title.trim();
+      if (cleanTitle.toLowerCase().startsWith('bill payment: ')) {
+        final billName = cleanTitle.substring(14).trim().toLowerCase();
+        final prefs = await SharedPreferences.getInstance();
+        final rawSubs = prefs.getString('user_saved_subscriptions');
+        if (rawSubs != null && rawSubs.isNotEmpty) {
+          try {
+            final List decoded = jsonDecode(rawSubs);
+            bool updated = false;
+            for (var item in decoded) {
+              if (item is Map) {
+                final t = (item['title'] ?? item['name'])?.toString().trim().toLowerCase();
+                if (t == billName) {
+                  item['is_paid'] = false;
+                  item['isPaid'] = false;
+                  item['lastPaidMonth'] = null;
+                  item['last_paid_date'] = null;
+                  item['lastPaidDate'] = null;
+                  updated = true;
+                }
+              }
+            }
+            if (updated) {
+              await prefs.setString('user_saved_subscriptions', jsonEncode(decoded));
+            }
+          } catch (_) {}
+        }
+      }
+
+      await _pushUserDataToCloud();
+      refreshNotifier.value++;
+    }
+  }
+
+  // Cascade delete all expense entries associated with a deleted subscription
+  Future<void> cascadeDeleteSubscriptionExpenses(String subscriptionId, String title) async {
+    await _loadLocalExpenses();
+    final cleanTitle = title.trim().toLowerCase();
+    _localExpenses.removeWhere((e) {
+      if (e.id != null && e.id!.startsWith('bill_pay_$subscriptionId')) return true;
+      final t = e.title.trim().toLowerCase();
+      if (t == 'bill payment: $cleanTitle' || t == '$cleanTitle (subscription)' || t == '$cleanTitle (recurring bill)') {
+        return true;
+      }
+      return false;
+    });
     await _persistLocalExpenses();
     await _pushUserDataToCloud();
     refreshNotifier.value++;
+  }
+
+  // Cascade delete all expense and income entries associated with a deleted group/split bill
+  Future<void> cascadeDeleteGroupExpense(String groupId, String title, String paidBy) async {
+    await _loadLocalExpenses();
+    final cleanTitle = title.trim().toLowerCase();
+    _localExpenses.removeWhere((e) {
+      final t = e.title.trim().toLowerCase();
+      if (t == '$cleanTitle (my split share)') return true;
+      if (t.startsWith('paid ') && t.contains('for $cleanTitle (settled share)')) return true;
+      if (t.startsWith('reimbursement from ') && t.contains('($cleanTitle)')) return true;
+      return false;
+    });
+    await _persistLocalExpenses();
+    await removeGroupExpense(groupId);
+    await _pushUserDataToCloud();
+    refreshNotifier.value++;
+  }
+
+  // Clean any orphaned expenses whose parent subscription or split bill was deleted
+  Future<void> cleanOrphanedExpenses() async {
+    await _loadLocalExpenses();
+    final prefs = await SharedPreferences.getInstance();
+    final rawSubs = prefs.getString('user_saved_subscriptions');
+    final List<String> validSubTitles = [];
+    if (rawSubs != null && rawSubs.isNotEmpty) {
+      try {
+        final List decoded = jsonDecode(rawSubs);
+        for (var item in decoded) {
+          if (item is Map) {
+            final t = (item['title'] ?? item['name'])?.toString().trim().toLowerCase();
+            if (t != null && t.isNotEmpty) validSubTitles.add(t);
+          }
+        }
+      } catch (_) {}
+    }
+
+    final rawGroup = prefs.getString('saved_group_expenses');
+    final List<String> validGroupTitles = [];
+    if (rawGroup != null && rawGroup.isNotEmpty) {
+      try {
+        final List decoded = jsonDecode(rawGroup);
+        for (var item in decoded) {
+          if (item is Map) {
+            final t = (item['title'] ?? item['name'])?.toString().trim().toLowerCase();
+            if (t != null && t.isNotEmpty) validGroupTitles.add(t);
+          }
+        }
+      } catch (_) {}
+    }
+
+    bool removedAny = false;
+    _localExpenses.removeWhere((e) {
+      final t = e.title.trim().toLowerCase();
+      if (t.startsWith('bill payment: ')) {
+        final billName = t.replaceFirst('bill payment: ', '').trim();
+        if (!validSubTitles.contains(billName)) {
+          removedAny = true;
+          return true;
+        }
+      }
+      if (t.endsWith(' (my split share)')) {
+        final groupName = t.replaceFirst(' (my split share)', '').trim();
+        if (!validGroupTitles.contains(groupName)) {
+          removedAny = true;
+          return true;
+        }
+      }
+      if (t.startsWith('reimbursement from ') && t.endsWith(')')) {
+        final groupName = t.substring(t.lastIndexOf('(') + 1, t.lastIndexOf(')')).trim();
+        if (!validGroupTitles.contains(groupName)) {
+          removedAny = true;
+          return true;
+        }
+      }
+      return false;
+    });
+
+    if (removedAny) {
+      await _persistLocalExpenses();
+      await _pushUserDataToCloud();
+      refreshNotifier.value++;
+    }
   }
 
   // Complete clean reset of local and Supabase cloud financial data

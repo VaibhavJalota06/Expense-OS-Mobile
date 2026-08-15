@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/expense_model.dart';
 import '../models/subscription_model.dart';
 import '../services/currency_service.dart';
 import '../services/notification_service.dart';
@@ -66,10 +67,20 @@ class _BillsScreenState extends State<BillsScreen> {
   void _processCycleRollovers() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    final currentYM = '${now.year}-${now.month.toString().padLeft(2, '0')}';
     bool changed = false;
 
     for (int i = 0; i < _subscriptions.length; i++) {
       final item = _subscriptions[i];
+      
+      // If a monthly bill was paid in the current month, keep it paid!
+      if (item.isPaid && item.lastPaidDate != null) {
+        final lastPaidYM = '${item.lastPaidDate!.year}-${item.lastPaidDate!.month.toString().padLeft(2, '0')}';
+        if (item.cycle == 'monthly' && lastPaidYM == currentYM) {
+          continue;
+        }
+      }
+
       final due = DateTime(item.dueDate.year, item.dueDate.month, item.dueDate.day);
 
       // If a bill was marked PAID and today has passed its due date, advance to next cycle and reset to pending
@@ -601,31 +612,32 @@ class _BillsScreenState extends State<BillsScreen> {
                                 final due = DateTime(item.dueDate.year, item.dueDate.month, item.dueDate.day);
                                 final daysLeft = due.difference(today).inDays;
 
-                                return GestureDetector(
-                                  onTap: () => _showAddSubscriptionSheet(item),
-                                  child: Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: item.isPaid
-                                            ? const Color(0xFFD1FADF)
-                                            : (daysLeft <= 2 ? const Color(0xFFFECDCA) : const Color(0xFFF1F3F9)),
-                                        width: 1.2,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFF101828).withValues(alpha: 0.03),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 3),
-                                        ),
-                                      ],
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: item.isPaid
+                                          ? const Color(0xFFD1FADF)
+                                          : (daysLeft <= 2 ? const Color(0xFFFECDCA) : const Color(0xFFF1F3F9)),
+                                      width: 1.2,
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Container(
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF101828).withValues(alpha: 0.03),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () => _showAddSubscriptionSheet(item),
+                                        child: Container(
                                           width: 44,
                                           height: 44,
                                           decoration: BoxDecoration(
@@ -644,8 +656,12 @@ class _BillsScreenState extends State<BillsScreen> {
                                             size: 22,
                                           ),
                                         ),
-                                        const SizedBox(width: 14),
-                                        Expanded(
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: GestureDetector(
+                                          behavior: HitTestBehavior.opaque,
+                                          onTap: () => _showAddSubscriptionSheet(item),
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
@@ -696,65 +712,83 @@ class _BillsScreenState extends State<BillsScreen> {
                                             ],
                                           ),
                                         ),
-                                        const SizedBox(width: 8),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Text(
-                                              currency.format(item.amount),
-                                              style: GoogleFonts.plusJakartaSans(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w800,
-                                                color: AppTheme.textPrimary,
-                                              ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            currency.format(item.amount),
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppTheme.textPrimary,
                                             ),
-                                            const SizedBox(height: 6),
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                if (!item.isPaid) ...[
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      setState(() {
-                                                        _subscriptions[index] = item.copyWith(
-                                                          isPaid: true,
-                                                          lastPaidDate: DateTime.now(),
-                                                        );
-                                                      });
-                                                      _saveSubscriptions();
-                                                    },
-                                                    child: Container(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                                      decoration: BoxDecoration(
-                                                        color: const Color(0xFFECFDF3),
-                                                        borderRadius: BorderRadius.circular(8),
-                                                        border: Border.all(color: const Color(0xFFD1FADF)),
-                                                      ),
-                                                      child: Text(
-                                                        'Pay',
-                                                        style: GoogleFonts.plusJakartaSans(
-                                                          fontSize: 11,
-                                                          color: const Color(0xFF027A48),
-                                                          fontWeight: FontWeight.w700,
-                                                        ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (!item.isPaid) ...[
+                                                GestureDetector(
+                                                  behavior: HitTestBehavior.opaque,
+                                                  onTap: () async {
+                                                    final now = DateTime.now();
+                                                    setState(() {
+                                                      _subscriptions[index] = item.copyWith(
+                                                        isPaid: true,
+                                                        lastPaidDate: now,
+                                                      );
+                                                    });
+                                                    await _saveSubscriptions();
+
+                                                    // Auto-log bill payment to Expense Logs & sync to Web
+                                                    final payExpense = Expense(
+                                                      id: 'bill_pay_${item.id}_${now.millisecondsSinceEpoch}',
+                                                      title: 'Bill Payment: ${item.title}',
+                                                      amount: item.amount,
+                                                      category: item.category.isNotEmpty ? item.category : 'Services & Subscriptions',
+                                                      type: 'expense',
+                                                      date: now,
+                                                      paymentMethod: 'Auto-Pay',
+                                                    );
+                                                    await SupabaseService().addExpense(payExpense);
+                                                  },
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(0xFFECFDF3),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      border: Border.all(color: const Color(0xFFD1FADF)),
+                                                    ),
+                                                    child: Text(
+                                                      'Pay',
+                                                      style: GoogleFonts.plusJakartaSans(
+                                                        fontSize: 11,
+                                                        color: const Color(0xFF027A48),
+                                                        fontWeight: FontWeight.w700,
                                                       ),
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 8),
-                                                ],
-                                                GestureDetector(
-                                                  onTap: () {
-                                                    setState(() => _subscriptions.removeAt(index));
-                                                    _saveSubscriptions();
-                                                  },
-                                                  child: const Icon(Icons.delete_outline_rounded, color: Color(0xFF98A2B3), size: 19),
                                                 ),
+                                                const SizedBox(width: 8),
                                               ],
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                onTap: () async {
+                                                  final deleted = _subscriptions.removeAt(index);
+                                                  setState(() {});
+                                                  await _saveSubscriptions();
+                                                  // Cascade delete all logged expenses for this recurring bill
+                                                  await SupabaseService().cascadeDeleteSubscriptionExpenses(deleted.id, deleted.title);
+                                                },
+                                                child: const Icon(Icons.delete_outline_rounded, color: Color(0xFF98A2B3), size: 19),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 );
                               },

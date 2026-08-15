@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/expense_model.dart';
 import '../services/app_update_service.dart';
 import '../services/biometric_service.dart';
 import '../services/currency_service.dart';
@@ -59,6 +60,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserData();
     _loadUserStatistics();
     _loadAppLockState();
+
+    SupabaseService.refreshNotifier.addListener(_loadUserStatistics);
+
     if (_supabaseService.safeClient != null) {
       _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) {
         if (mounted) {
@@ -71,6 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
+    SupabaseService.refreshNotifier.removeListener(_loadUserStatistics);
     _authSubscription?.cancel();
     super.dispose();
   }
@@ -108,30 +113,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserStatistics() async {
     try {
       final list = await _supabaseService.getExpenses();
-      final expenses = list.isNotEmpty ? list : _supabaseService.localExpenses;
-
-      double income = 0;
-      double expense = 0;
-
-      for (var e in expenses) {
-        if (e.type.toLowerCase() == 'income') {
-          income += e.amount;
-        } else {
-          expense += e.amount;
-        }
-      }
-
-      final rate = income > 0 ? (((income - expense) / income) * 100).clamp(0.0, 100.0) : 60.0;
-
       if (mounted) {
-        setState(() {
-          _totalTransactions = expenses.length;
-          _totalIncome = income;
-          _totalExpense = expense;
-          _savingsRate = rate;
-        });
+        _recalculateUserStatistics(list);
       }
     } catch (_) {}
+  }
+
+  void _recalculateUserStatistics(List<Expense> expenses) {
+    double income = 0;
+    double expense = 0;
+
+    for (var e in expenses) {
+      if (e.type.toLowerCase() == 'income') {
+        income += e.amount;
+      } else {
+        expense += e.amount;
+      }
+    }
+
+    final rate = income > 0 ? (((income - expense) / income) * 100).clamp(0.0, 100.0) : 0.0;
+
+    setState(() {
+      _totalTransactions = expenses.length;
+      _totalIncome = income;
+      _totalExpense = expense;
+      _savingsRate = rate;
+    });
   }
 
   Future<void> _loadAppLockState() async {
