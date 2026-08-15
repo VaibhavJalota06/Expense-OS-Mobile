@@ -908,6 +908,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   });
                   _evaluateBudgetRules();
                 }
+                await SupabaseService.syncFinancialProfileToCloud(startingBalance: newStarting);
               }
               if (mounted) Navigator.pop(ctx);
             },
@@ -1034,6 +1035,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setDouble('monthly_budget_cap', val);
                 setState(() => _monthlyBudgetCap = val);
+                await SupabaseService.syncFinancialProfileToCloud(budgetCap: val);
                 SupabaseService.refreshNotifier.value++;
                 _evaluateBudgetRules();
                 Navigator.pop(ctx);

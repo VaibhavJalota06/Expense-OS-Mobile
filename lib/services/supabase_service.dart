@@ -156,6 +156,7 @@ class SupabaseService {
 
   Future<void> _persistLocalExpenses() async {
     try {
+      _localExpenses.removeWhere((e) => e.id == 'initial_account_balance' || e.title == 'Total Account Money' || e.title == 'Initial Account Balance');
       final prefs = await SharedPreferences.getInstance();
       final encoded = jsonEncode(_localExpenses.map((e) => e.toJson()).toList());
       await prefs.setString('local_offline_expenses', encoded);
@@ -163,7 +164,10 @@ class SupabaseService {
   }
 
   Future<void> _loadLocalExpenses() async {
-    if (_localExpenses.isNotEmpty) return;
+    if (_localExpenses.isNotEmpty) {
+      _localExpenses.removeWhere((e) => e.id == 'initial_account_balance' || e.title == 'Total Account Money' || e.title == 'Initial Account Balance');
+      return;
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString('local_offline_expenses');
@@ -171,6 +175,7 @@ class SupabaseService {
         final List decoded = jsonDecode(raw);
         _localExpenses.clear();
         _localExpenses.addAll(decoded.map((e) => Expense.fromJson(e)).toList());
+        _localExpenses.removeWhere((e) => e.id == 'initial_account_balance' || e.title == 'Total Account Money' || e.title == 'Initial Account Balance');
       }
     } catch (_) {}
   }
@@ -202,11 +207,17 @@ class SupabaseService {
           .where((e) => e.type == 'income')
           .map((e) => e.toIncomeJson())
           .toList();
+      webIncomes.add({
+        'id': 'initial_account_balance',
+        'amount': balance,
+        'source': 'Total Account Money',
+        'is_system_balance': true,
+        'date': DateTime.now().toIso8601String().split('T').first,
+      });
 
       await client.from('user_data').upsert({
         'user_id': userId,
         'budget': budget,
-        'account_balance': balance,
         'expenses': webExpenses,
         'incomes': webIncomes,
         'currency': currency,
@@ -236,13 +247,6 @@ class SupabaseService {
           }
         }
 
-        if (response['account_balance'] != null) {
-          final cloudBalance = (response['account_balance'] as num).toDouble();
-          if (cloudBalance > 0) {
-            await prefs.setDouble('user_starting_balance', cloudBalance);
-          }
-        }
-
         final List<Expense> cloudItems = [];
         if (response['expenses'] is List) {
           for (var exp in response['expenses']) {
@@ -255,7 +259,14 @@ class SupabaseService {
         if (response['incomes'] is List) {
           for (var inc in response['incomes']) {
             if (inc is Map) {
-              cloudItems.add(Expense.fromJson(Map<String, dynamic>.from(inc)));
+              if (inc['id'] == 'initial_account_balance' || inc['is_system_balance'] == true) {
+                if (inc['amount'] != null) {
+                  final cloudBalance = (inc['amount'] as num).toDouble();
+                  await prefs.setDouble('user_starting_balance', cloudBalance);
+                }
+              } else {
+                cloudItems.add(Expense.fromJson(Map<String, dynamic>.from(inc)));
+              }
             }
           }
         }
@@ -272,6 +283,7 @@ class SupabaseService {
 
         _localExpenses.clear();
         _localExpenses.addAll(mergedMap.values);
+        _localExpenses.removeWhere((e) => e.id == 'initial_account_balance' || e.title == 'Total Account Money' || e.title == 'Initial Account Balance');
         _localExpenses.sort((a, b) => b.date.compareTo(a.date));
         await _persistLocalExpenses();
         _pushUserDataToCloud();
@@ -453,6 +465,11 @@ class SupabaseService {
           UserAttributes(data: meta),
         );
       }
+    } catch (_) {}
+
+    try {
+      await SupabaseService()._pushUserDataToCloud();
+      refreshNotifier.value++;
     } catch (_) {}
   }
 
