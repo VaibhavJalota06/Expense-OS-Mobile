@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense_model.dart';
 import '../services/currency_service.dart';
 import '../services/supabase_service.dart';
@@ -18,6 +19,7 @@ class _CalendarExpensesScreenState extends State<CalendarExpensesScreen> {
   final SupabaseService _supabaseService = SupabaseService();
   List<Expense> _allExpenses = [];
   bool _isLoading = true;
+  double _monthlyBudgetCap = 0.0;
 
   DateTime _selectedDate = DateTime.now();
   DateTime _displayedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
@@ -31,17 +33,22 @@ class _CalendarExpensesScreenState extends State<CalendarExpensesScreen> {
 
   Future<void> _loadExpenses() async {
     setState(() => _isLoading = true);
+    final prefs = await SharedPreferences.getInstance();
+    final cap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+
     try {
       final data = await _supabaseService.getExpenses().timeout(const Duration(milliseconds: 800));
       if (!mounted) return;
       setState(() {
         _allExpenses = data.isNotEmpty ? data : _supabaseService.localExpenses;
+        _monthlyBudgetCap = cap;
         _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _allExpenses = _supabaseService.localExpenses;
+        _monthlyBudgetCap = cap;
         _isLoading = false;
       });
     }
@@ -57,17 +64,20 @@ class _CalendarExpensesScreenState extends State<CalendarExpensesScreen> {
     return sum;
   }
 
+  String get _budgetSubtext {
+    if (_monthlyBudgetCap <= 0) {
+      return 'Log transactions daily to track your monthly budget';
+    }
+    final pct = ((_totalMonthSpent / _monthlyBudgetCap) * 100).clamp(0.0, 999.0).toStringAsFixed(0);
+    return 'You have spent $pct% of your monthly budget';
+  }
+
   List<Expense> get _filteredDailyExpenses {
-    final list = _allExpenses.where((e) {
+    return _allExpenses.where((e) {
       return e.date.year == _selectedDate.year &&
           e.date.month == _selectedDate.month &&
           e.date.day == _selectedDate.day;
     }).toList();
-
-    if (list.isEmpty && _allExpenses.isNotEmpty) {
-      return _allExpenses.take(3).toList();
-    }
-    return list;
   }
 
   Map<String, double> get _categoryBreakdown {
@@ -77,12 +87,6 @@ class _CalendarExpensesScreenState extends State<CalendarExpensesScreen> {
         e.date.year == _displayedMonth.year &&
         e.date.month == _displayedMonth.month)) {
       map[e.category] = (map[e.category] ?? 0.0) + e.amount;
-    }
-    if (map.isEmpty) {
-      map['Food'] = 450;
-      map['Uber'] = 220;
-      map['Shopping'] = 630;
-      map['Rent'] = 300;
     }
     return map;
   }
@@ -227,7 +231,7 @@ class _CalendarExpensesScreenState extends State<CalendarExpensesScreen> {
 
                   // Subtext
                   Text(
-                    'You have Spend total 60% of you budget',
+                    _budgetSubtext,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -249,54 +253,84 @@ class _CalendarExpensesScreenState extends State<CalendarExpensesScreen> {
 
                   // Tab Content
                   if (_selectedTab == 0)
-                    ..._filteredDailyExpenses.map((expense) => ExpenseTile(expense: expense))
+                    if (_filteredDailyExpenses.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24.0),
+                        child: Center(
+                          child: Text(
+                            'No transactions logged for this date.',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: AppTheme.textSecondary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      ..._filteredDailyExpenses.map((expense) => ExpenseTile(expense: expense))
                   else
-                    ..._categoryBreakdown.entries.map((entry) {
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFF1F3F9)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF3F4F6),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(Icons.category_rounded, color: AppTheme.monexBlue, size: 20),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  entry.key,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                                ),
-                              ],
+                    if (_categoryBreakdown.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24.0),
+                        child: Center(
+                          child: Text(
+                            'No expense categories logged for this month.',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: AppTheme.textSecondary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                             ),
-                            Text(
-                              currency.format(entry.value),
-                              style: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 15,
-                                color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      )
+                    else
+                      ..._categoryBreakdown.entries.map((entry) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFF1F3F9)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF3F4F6),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(Icons.category_rounded, color: AppTheme.monexBlue, size: 20),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    entry.key,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15,
+                                      color: AppTheme.textPrimary,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
+                              Text(
+                                currency.format(entry.value),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
                 ],
               ),
             ),
