@@ -68,7 +68,9 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> {
             }
           }
         } else if (event == AuthChangeEvent.signedOut) {
-          if (mounted) {
+          final prefs = await SharedPreferences.getInstance();
+          final isStillPersistent = prefs.getBool('persistent_user_logged_in') ?? false;
+          if (!isStillPersistent && mounted) {
             setState(() {
               _isAuthenticated = false;
             });
@@ -95,7 +97,12 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> {
 
     final prefs = await SharedPreferences.getInstance();
     final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
-    final authed = _supabaseService.isAuthenticated && (_supabaseService.safeClient?.auth.currentSession != null);
+    final isPersistentLoggedIn = prefs.getBool('persistent_user_logged_in') ?? false;
+    final cachedUserId = prefs.getString('supabase_user_id');
+    final hasCachedUser = (cachedUserId != null && cachedUserId.isNotEmpty) || (prefs.getString('google_user_email') != null);
+    final hasSupabaseSession = _supabaseService.isAuthenticated || (_supabaseService.safeClient?.auth.currentSession != null);
+
+    final authed = isPersistentLoggedIn || hasCachedUser || hasSupabaseSession;
 
     if (mounted) {
       setState(() {

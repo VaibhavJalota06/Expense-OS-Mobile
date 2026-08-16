@@ -56,6 +56,8 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       final success = await _supabaseService.signInWithGoogle();
       if (success && mounted) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('persistent_user_logged_in', true);
         widget.onAuthSuccess();
       }
     } catch (e) {

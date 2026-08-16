@@ -47,6 +47,7 @@ class SupabaseService {
   static Future<void> cacheUserData(User? user) async {
     if (user == null) return;
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('persistent_user_logged_in', true);
     if (user.id.isNotEmpty) {
       await prefs.setString('supabase_user_id', user.id);
     }
@@ -68,6 +69,8 @@ class SupabaseService {
 
   Future<AuthResponse> signUp({required String email, required String password}) async {
     final res = await client.auth.signUp(email: email, password: password);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('persistent_user_logged_in', true);
     if (res.user != null) {
       await cacheUserData(res.user);
     }
@@ -76,6 +79,8 @@ class SupabaseService {
 
   Future<AuthResponse> signIn({required String email, required String password}) async {
     final res = await client.auth.signInWithPassword(email: email, password: password);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('persistent_user_logged_in', true);
     if (res.user != null) {
       await cacheUserData(res.user);
     }
