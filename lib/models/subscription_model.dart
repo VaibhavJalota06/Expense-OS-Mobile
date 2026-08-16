@@ -116,4 +116,25 @@ class SubscriptionItem {
       'type': 'subscription',
     };
   }
+
+  Map<String, dynamic> toTableJson([String? effectiveUserId]) {
+    final dateStr = dueDate.toIso8601String().split('T')[0];
+    final endStr = endDate != null ? endDate!.toIso8601String().split('T')[0] : null;
+    final lastPaidStr = lastPaidDate != null ? lastPaidDate!.toIso8601String().split('T')[0] : null;
+    return {
+      'id': id,
+      if (effectiveUserId != null && effectiveUserId != 'local_device_user') 'user_id': effectiveUserId,
+      'title': title,
+      'amount': amount,
+      'category': category,
+      'cycle': cycle,
+      'due_date': dateStr,
+      if (endStr != null) 'end_date': endStr,
+      'payment_method': paymentMethod,
+      'is_paid': isPaid,
+      if (lastPaidStr != null) 'last_paid_date': lastPaidStr,
+      'remind_on_due_date': remindOnDueDate,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    };
+  }
 }

@@ -23,18 +23,23 @@ class Expense {
     this.createdAt,
   });
 
-  // Convert JSON from Supabase user_data to Expense model
+  // Convert JSON from Supabase user_data or relational expenses table to Expense model
   factory Expense.fromJson(Map<String, dynamic> json) {
+    final rawType = json['type']?.toString().toLowerCase();
+    final inferredType = rawType != null && rawType.isNotEmpty 
+        ? rawType 
+        : (json['source'] != null ? 'income' : 'expense');
+
     return Expense(
       id: json['id']?.toString(),
-      title: json['description'] ?? json['title'] ?? json['source'] ?? 'Untitled',
+      title: json['title'] ?? json['description'] ?? json['source'] ?? 'Untitled',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      category: json['category'] ?? (json['type'] == 'income' || json['source'] != null ? 'Income' : 'Food & Dining'),
-      type: json['type'] ?? (json['source'] != null ? 'income' : 'expense'),
+      category: json['category'] ?? (inferredType == 'income' ? 'Income' : 'Food & Dining'),
+      type: inferredType,
       date: json['date'] != null 
           ? DateTime.tryParse(json['date'].toString()) ?? DateTime.now()
           : DateTime.now(),
-      paymentMethod: json['payment'] ?? json['payment_method'] ?? 'UPI',
+      paymentMethod: json['payment_method'] ?? json['payment'] ?? 'Card',
       notes: json['notes']?.toString(),
       userId: json['user_id']?.toString(),
       createdAt: json['created_at'] != null 
@@ -49,13 +54,33 @@ class Expense {
     return {
       'id': id ?? 'exp_${DateTime.now().millisecondsSinceEpoch}',
       'description': title,
+      'title': title,
       'amount': amount,
       'category': category,
       'payment': paymentMethod,
+      'payment_method': paymentMethod,
       'date': dateStr,
       'type': type,
       if (notes != null) 'notes': notes,
       if (userId != null) 'user_id': userId,
+    };
+  }
+
+  // Convert Expense model to JSON for Supabase relational expenses table
+  Map<String, dynamic> toTableJson([String? effectiveUserId]) {
+    final dateStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final uid = userId ?? effectiveUserId;
+    return {
+      'id': id ?? 'exp_${DateTime.now().millisecondsSinceEpoch}',
+      'title': title,
+      'amount': amount,
+      'category': category,
+      'type': type,
+      'date': dateStr,
+      'payment_method': paymentMethod,
+      if (notes != null) 'notes': notes,
+      if (uid != null && uid != 'local_device_user') 'user_id': uid,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
   }
 
@@ -64,8 +89,11 @@ class Expense {
     return {
       'id': id ?? 'inc_${DateTime.now().millisecondsSinceEpoch}',
       'source': title,
+      'title': title,
+      'description': title,
       'amount': amount,
       'date': dateStr,
+      'type': 'income',
     };
   }
 
@@ -78,6 +106,7 @@ class Expense {
     String? type,
     DateTime? date,
     String? paymentMethod,
+    String? notes,
     String? userId,
     DateTime? createdAt,
   }) {
@@ -89,6 +118,7 @@ class Expense {
       type: type ?? this.type,
       date: date ?? this.date,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      notes: notes ?? this.notes,
       userId: userId ?? this.userId,
       createdAt: createdAt ?? this.createdAt,
     );

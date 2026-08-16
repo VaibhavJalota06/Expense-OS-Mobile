@@ -32,12 +32,22 @@ class SplitMember {
         'isPaid': isPaid,
       };
 
+  /// For the relational split_bill_members table
+  Map<String, dynamic> toTableJson(String splitBillId) => {
+        'split_bill_id': splitBillId,
+        'name': name,
+        'amount_owed': amountOwed,
+        'is_paid': isPaid,
+      };
+
   factory SplitMember.fromJson(Map<String, dynamic> json) {
     return SplitMember(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      amountOwed: (json['amountOwed'] as num).toDouble(),
-      isPaid: json['isPaid'] as bool? ?? false,
+      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      name: (json['name'] ?? 'Member') as String,
+      amountOwed: (json['amountOwed'] ?? json['amount_owed'] ?? 0) is num
+          ? ((json['amountOwed'] ?? json['amount_owed'] ?? 0) as num).toDouble()
+          : 0.0,
+      isPaid: json['isPaid'] == true || json['is_paid'] == true,
     );
   }
 }

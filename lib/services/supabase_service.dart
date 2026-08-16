@@ -65,6 +65,34 @@ class SupabaseService {
         await prefs.setString('google_user_avatar', avatar);
       }
     }
+
+    // Sync profile to relational profiles table on login
+    try {
+      await SupabaseService()._syncProfileToTable(user);
+    } catch (_) {}
+  }
+
+  Future<void> _syncProfileToTable(User user) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currency = prefs.getString('app_currency_symbol') ?? '₹';
+      final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+      final balance = prefs.getDouble('user_starting_balance') ?? 0.0;
+      final meta = user.userMetadata;
+      final name = meta?['full_name'] ?? meta?['name'] ?? meta?['display_name'];
+      final avatar = meta?['avatar_url'] ?? meta?['picture'] ?? meta?['avatar'];
+
+      await client.from('profiles').upsert({
+        'user_id': user.id,
+        'email': user.email,
+        'full_name': name,
+        'avatar_url': avatar,
+        'currency': currency,
+        'monthly_budget': budget,
+        'starting_balance': balance,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'user_id');
+    } catch (_) {}
   }
 
   Future<AuthResponse> signUp({required String email, required String password}) async {
@@ -119,7 +147,9 @@ class SupabaseService {
     } catch (_) {}
   }
 
-  // --- EXPENSE CRUD OPERATIONS ---
+  // =====================================================================
+  // --- EXPENSE CRUD OPERATIONS (Dual-Write: expenses table + user_data)
+  // =====================================================================
   
   // Memory and disk fallback list
   final List<Expense> _localExpenses = [];
@@ -160,6 +190,9 @@ class SupabaseService {
     return 'local_device_user';
   }
 
+  // ---------------------------------------------------------------
+  // Push ALL local state to user_data JSON document (Web App compat)
+  // ---------------------------------------------------------------
   Future<void> _pushUserDataToCloud() async {
     try {
       final userId = await _getEffectiveUserId();
@@ -248,15 +281,258 @@ class SupabaseService {
     } catch (_) {}
   }
 
-  Future<void> pushAllDataToCloud() async {
-    await _pushUserDataToCloud();
+  // ---------------------------------------------------------------
+  // Push individual expenses to the relational expenses table
+  // (Desktop / iOS / multi-app compat)
+  // ---------------------------------------------------------------
+  Future<void> _pushExpenseToTable(Expense expense) async {
+    try {
+      final userId = await _getEffectiveUserId();
+      await client.from('expenses').upsert(
+        expense.toTableJson(userId),
+        onConflict: 'id',
+      );
+    } catch (e) {
+      debugPrint('Error pushing expense to table: $e');
+    }
   }
 
-  // Fetch expenses with seamless bidirectional cloud sync with Web App user_data
+  Future<void> _deleteExpenseFromTable(String id) async {
+    try {
+      await client.from('expenses').delete().eq('id', id);
+    } catch (e) {
+      debugPrint('Error deleting expense from table: $e');
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Push individual subscriptions to the relational subscriptions table
+  // ---------------------------------------------------------------
+  Future<void> _pushSubscriptionToTable(Map<String, dynamic> subJson) async {
+    try {
+      final userId = await _getEffectiveUserId();
+      final tableRow = <String, dynamic>{
+        'id': subJson['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        'title': subJson['title'] ?? subJson['name'] ?? 'Subscription',
+        'amount': subJson['amount'] ?? 0.0,
+        'category': subJson['category'] ?? 'Services & Subscriptions',
+        'cycle': subJson['cycle'] ?? 'monthly',
+        'due_date': subJson['due_date'] ?? subJson['dueDate'] ?? DateTime.now().toIso8601String().split('T')[0],
+        'payment_method': subJson['payment_method'] ?? subJson['paymentMethod'] ?? 'Card',
+        'is_paid': subJson['is_paid'] ?? subJson['isPaid'] ?? false,
+        'remind_on_due_date': subJson['remind_on_due_date'] ?? subJson['remindOnDueDate'] ?? true,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      };
+      if (subJson['end_date'] != null) tableRow['end_date'] = subJson['end_date'];
+      if (subJson['last_paid_date'] != null) tableRow['last_paid_date'] = subJson['last_paid_date'];
+      else if (subJson['lastPaidDate'] != null) tableRow['last_paid_date'] = subJson['lastPaidDate'];
+      if (userId != 'local_device_user') tableRow['user_id'] = userId;
+
+      await client.from('subscriptions').upsert(tableRow, onConflict: 'id');
+    } catch (e) {
+      debugPrint('Error pushing subscription to table: $e');
+    }
+  }
+
+  Future<void> _deleteSubscriptionFromTable(String id) async {
+    try {
+      await client.from('subscriptions').delete().eq('id', id);
+    } catch (e) {
+      debugPrint('Error deleting subscription from table: $e');
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Push split bill to the relational split_bills + split_bill_members tables
+  // ---------------------------------------------------------------
+  Future<void> _pushSplitBillToTable(Map<String, dynamic> billJson) async {
+    try {
+      final userId = await _getEffectiveUserId();
+      final billId = billJson['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString();
+      final tableRow = <String, dynamic>{
+        'id': billId,
+        'title': billJson['title'] ?? 'Group Expense',
+        'total_amount': billJson['totalAmount'] ?? 0.0,
+        'paid_by': billJson['paidBy'] ?? 'You',
+        'date': billJson['date'] != null ? billJson['date'].toString().split('T')[0] : DateTime.now().toIso8601String().split('T')[0],
+        'members': billJson['members'] ?? ['You'],
+        'custom_shares': billJson['customShares'] ?? {},
+        'settled_status': billJson['settledStatus'] ?? {},
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      };
+      if (userId != 'local_device_user') tableRow['user_id'] = userId;
+
+      await client.from('split_bills').upsert(tableRow, onConflict: 'id');
+
+      // Sync members to split_bill_members table
+      final members = billJson['members'] as List? ?? [];
+      final customShares = billJson['customShares'] as Map? ?? {};
+      final settledStatus = billJson['settledStatus'] as Map? ?? {};
+      final total = (billJson['totalAmount'] as num?)?.toDouble() ?? 0.0;
+      final perPerson = members.isNotEmpty ? total / members.length : 0.0;
+
+      // Delete existing members and re-insert
+      try {
+        await client.from('split_bill_members').delete().eq('split_bill_id', billId);
+      } catch (_) {}
+
+      for (var memberName in members) {
+        final share = customShares[memberName]?.toDouble() ?? perPerson;
+        final settled = settledStatus[memberName] == true;
+        await client.from('split_bill_members').insert({
+          'split_bill_id': billId,
+          'name': memberName.toString(),
+          'amount_owed': share,
+          'is_paid': settled,
+        });
+      }
+    } catch (e) {
+      debugPrint('Error pushing split bill to table: $e');
+    }
+  }
+
+  Future<void> _deleteSplitBillFromTable(String id) async {
+    try {
+      // Members cascade-delete automatically via foreign key
+      await client.from('split_bills').delete().eq('id', id);
+    } catch (e) {
+      debugPrint('Error deleting split bill from table: $e');
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Push budget to relational budgets table
+  // ---------------------------------------------------------------
+  Future<void> _pushBudgetToTable(double amount) async {
+    try {
+      final userId = await _getEffectiveUserId();
+      if (userId == 'local_device_user') return;
+
+      // Upsert the overall monthly budget
+      final existing = await client.from('budgets')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('category', 'overall')
+          .maybeSingle();
+
+      if (existing != null) {
+        await client.from('budgets').update({
+          'amount': amount,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        }).eq('id', existing['id']);
+      } else {
+        await client.from('budgets').insert({
+          'user_id': userId,
+          'category': 'overall',
+          'amount': amount,
+          'period': 'monthly',
+        });
+      }
+    } catch (e) {
+      debugPrint('Error pushing budget to table: $e');
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Push all subscriptions from SharedPrefs to relational table
+  // ---------------------------------------------------------------
+  Future<void> _pushAllSubscriptionsToTable() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawSubs = prefs.getString('user_saved_subscriptions');
+      if (rawSubs == null || rawSubs.isEmpty) return;
+      final List decoded = jsonDecode(rawSubs);
+      for (var item in decoded) {
+        if (item is Map) {
+          await _pushSubscriptionToTable(Map<String, dynamic>.from(item));
+        }
+      }
+    } catch (_) {}
+  }
+
+  // ---------------------------------------------------------------
+  // Push all split bills from SharedPrefs to relational table
+  // ---------------------------------------------------------------
+  Future<void> _pushAllSplitBillsToTable() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawGroup = prefs.getString('saved_group_expenses');
+      if (rawGroup == null || rawGroup.isEmpty) return;
+      final List decoded = jsonDecode(rawGroup);
+      for (var item in decoded) {
+        if (item is Map) {
+          await _pushSplitBillToTable(Map<String, dynamic>.from(item));
+        }
+      }
+    } catch (_) {}
+  }
+
+  // ---------------------------------------------------------------
+  // MASTER PUSH: Push ALL data to ALL tables (user_data + relational)
+  // ---------------------------------------------------------------
+  Future<void> pushAllDataToCloud() async {
+    await _pushUserDataToCloud();
+
+    // Dual-write to relational tables for cross-app compatibility
+    try {
+      // Push all expenses to relational expenses table
+      for (var expense in _localExpenses) {
+        _pushExpenseToTable(expense);
+      }
+
+      // Push all subscriptions to relational subscriptions table
+      _pushAllSubscriptionsToTable();
+
+      // Push all split bills to relational split_bills table
+      _pushAllSplitBillsToTable();
+
+      // Push budget to relational budgets table
+      final prefs = await SharedPreferences.getInstance();
+      final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+      if (budget > 0) _pushBudgetToTable(budget);
+
+      // Sync profile to relational profiles table
+      if (currentUser != null) {
+        _syncProfileToTable(currentUser!);
+      }
+    } catch (_) {}
+  }
+
+  // =====================================================================
+  // FETCH: Unified multi-source data collection from ALL tables
+  // =====================================================================
+
+  /// Fetch expenses with seamless bidirectional cloud sync
+  /// Merges data from both relational `expenses` table AND `user_data` JSON document
   Future<List<Expense>> getExpenses() async {
     await _loadLocalExpenses();
     try {
       final userId = await _getEffectiveUserId();
+      final Map<String, Expense> mergedMap = {};
+
+      // --- Source 1: Relational expenses table (Desktop/iOS apps write here) ---
+      try {
+        if (userId != 'local_device_user') {
+          final tableResponse = await client
+              .from('expenses')
+              .select()
+              .eq('user_id', userId)
+              .order('date', ascending: false);
+
+          if (tableResponse is List) {
+            for (var row in tableResponse) {
+              if (row is Map) {
+                final exp = Expense.fromJson(Map<String, dynamic>.from(row));
+                if (exp.id != null) mergedMap[exp.id!] = exp;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Error fetching from expenses table: $e');
+      }
+
+      // --- Source 2: user_data JSON document (Web App writes here) ---
       final response = await client
           .from('user_data')
           .select()
@@ -271,11 +547,13 @@ class SupabaseService {
           await prefs.setDouble('monthly_budget_cap', cloudBudget);
         }
 
-        final List<Expense> cloudItems = [];
         if (response['expenses'] is List) {
           for (var exp in response['expenses']) {
             if (exp is Map) {
-              cloudItems.add(Expense.fromJson(Map<String, dynamic>.from(exp)));
+              final item = Expense.fromJson(Map<String, dynamic>.from(exp));
+              if (item.id != null && !mergedMap.containsKey(item.id)) {
+                mergedMap[item.id!] = item;
+              }
             }
           }
         }
@@ -284,12 +562,16 @@ class SupabaseService {
           for (var inc in response['incomes']) {
             if (inc is Map) {
               if (inc['id'] != 'initial_account_balance' && inc['is_system_balance'] != true) {
-                cloudItems.add(Expense.fromJson(Map<String, dynamic>.from(inc)));
+                final item = Expense.fromJson(Map<String, dynamic>.from(inc));
+                if (item.id != null && !mergedMap.containsKey(item.id)) {
+                  mergedMap[item.id!] = item;
+                }
               }
             }
           }
         }
 
+        // --- Sync subscriptions, goals, split bills from user_data ---
         if (response['subscriptions'] is List) {
           final List<Map<String, dynamic>> cloudSubs = [];
           final List<Map<String, dynamic>> cloudGoals = [];
@@ -318,6 +600,54 @@ class SupabaseService {
             await prefs.setDouble('user_starting_balance', 0.0);
           }
 
+          // Merge subscriptions from relational table too
+          try {
+            if (userId != 'local_device_user') {
+              final tableSubs = await client
+                  .from('subscriptions')
+                  .select()
+                  .eq('user_id', userId);
+              if (tableSubs is List) {
+                final existingIds = cloudSubs.map((s) => s['id']?.toString()).toSet();
+                for (var row in tableSubs) {
+                  if (row is Map) {
+                    final m = Map<String, dynamic>.from(row);
+                    if (!existingIds.contains(m['id']?.toString())) {
+                      cloudSubs.add(m);
+                    }
+                  }
+                }
+              }
+            }
+          } catch (_) {}
+
+          // Merge split bills from relational table too
+          try {
+            if (userId != 'local_device_user') {
+              final tableBills = await client
+                  .from('split_bills')
+                  .select()
+                  .eq('user_id', userId)
+                  .order('date', ascending: false);
+              if (tableBills is List) {
+                final existingIds = cloudGroup.map((g) => g['id']?.toString()).toSet();
+                for (var row in tableBills) {
+                  if (row is Map) {
+                    final m = Map<String, dynamic>.from(row);
+                    // Convert relational fields to the format expected locally
+                    m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
+                    m['paidBy'] = m['paid_by'] ?? m['paidBy'];
+                    m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
+                    m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
+                    if (!existingIds.contains(m['id']?.toString())) {
+                      cloudGroup.add(m);
+                    }
+                  }
+                }
+              }
+            }
+          } catch (_) {}
+
           await prefs.setString('user_saved_subscriptions', jsonEncode(cloudSubs));
           await prefs.setString('monex_goals', jsonEncode(cloudGoals));
           if (cloudGroup.isNotEmpty) {
@@ -326,21 +656,105 @@ class SupabaseService {
             await prefs.remove('saved_group_expenses');
           }
         } else {
-          await prefs.setDouble('user_starting_balance', 0.0);
-          await prefs.remove('user_saved_subscriptions');
-          await prefs.remove('monex_goals');
-          await prefs.remove('saved_group_expenses');
+          final prefs2 = await SharedPreferences.getInstance();
+
+          // Still try relational tables even if user_data has no subscriptions
+          try {
+            if (userId != 'local_device_user') {
+              final tableSubs = await client.from('subscriptions').select().eq('user_id', userId);
+              if (tableSubs is List && tableSubs.isNotEmpty) {
+                final cloudSubs = tableSubs.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+                await prefs2.setString('user_saved_subscriptions', jsonEncode(cloudSubs));
+              } else {
+                await prefs2.remove('user_saved_subscriptions');
+              }
+            }
+          } catch (_) {
+            await prefs2.remove('user_saved_subscriptions');
+          }
+
+          try {
+            if (userId != 'local_device_user') {
+              final tableBills = await client.from('split_bills').select().eq('user_id', userId).order('date', ascending: false);
+              if (tableBills is List && tableBills.isNotEmpty) {
+                final cloudGroup = tableBills.map((e) {
+                  final m = Map<String, dynamic>.from(e as Map);
+                  m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
+                  m['paidBy'] = m['paid_by'] ?? m['paidBy'];
+                  m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
+                  m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
+                  return m;
+                }).toList();
+                await prefs2.setString('saved_group_expenses', jsonEncode(cloudGroup));
+              } else {
+                await prefs2.remove('saved_group_expenses');
+              }
+            }
+          } catch (_) {
+            await prefs2.remove('saved_group_expenses');
+          }
+
+          await prefs2.setDouble('user_starting_balance', 0.0);
+          await prefs2.remove('monex_goals');
         }
 
-        _localExpenses.clear();
-        _localExpenses.addAll(cloudItems);
-        _localExpenses.removeWhere((e) => e.id == 'initial_account_balance' || e.title == 'Total Account Money' || e.title == 'Initial Account Balance');
-        _localExpenses.sort((a, b) => b.date.compareTo(a.date));
-        await _persistLocalExpenses();
-        await cleanOrphanedExpenses();
+        // Sync budget from relational budgets table
+        try {
+          if (userId != 'local_device_user') {
+            final budgetRow = await client.from('budgets')
+                .select()
+                .eq('user_id', userId)
+                .eq('category', 'overall')
+                .maybeSingle();
+            if (budgetRow != null && budgetRow['amount'] != null) {
+              final tableBudget = (budgetRow['amount'] as num).toDouble();
+              final prefs3 = await SharedPreferences.getInstance();
+              final currentBudget = prefs3.getDouble('monthly_budget_cap') ?? 0.0;
+              // Use whichever is more recent / non-zero
+              if (tableBudget > 0 && currentBudget == 0) {
+                await prefs3.setDouble('monthly_budget_cap', tableBudget);
+              }
+            }
+          }
+        } catch (_) {}
 
-        return List.unmodifiable(_localExpenses);
+        // Sync profile from relational profiles table
+        try {
+          if (userId != 'local_device_user') {
+            final profileRow = await client.from('profiles')
+                .select()
+                .eq('user_id', userId)
+                .maybeSingle();
+            if (profileRow != null) {
+              final prefs4 = await SharedPreferences.getInstance();
+              if (profileRow['starting_balance'] != null) {
+                final bal = (profileRow['starting_balance'] as num).toDouble();
+                final currentBal = prefs4.getDouble('user_starting_balance') ?? 0.0;
+                if (bal > 0 && currentBal == 0) {
+                  await prefs4.setDouble('user_starting_balance', bal);
+                }
+              }
+              if (profileRow['currency'] != null) {
+                final curr = profileRow['currency'].toString();
+                if (curr.isNotEmpty) {
+                  final symbol = curr == 'USD' ? '\$' : (curr == 'EUR' ? '€' : (curr == 'GBP' ? '£' : '₹'));
+                  await prefs4.setString('app_currency_symbol', symbol);
+                }
+              }
+            }
+          }
+        } catch (_) {}
       }
+
+      // Build final merged list
+      _localExpenses.clear();
+      _localExpenses.addAll(mergedMap.values);
+      _localExpenses.removeWhere((e) => e.id == 'initial_account_balance' || e.title == 'Total Account Money' || e.title == 'Initial Account Balance');
+      _localExpenses.sort((a, b) => b.date.compareTo(a.date));
+      await _persistLocalExpenses();
+      await cleanOrphanedExpenses();
+
+      return List.unmodifiable(_localExpenses);
     } catch (e) {
       debugPrint('Error syncing with user_data: $e');
     }
@@ -349,12 +763,22 @@ class SupabaseService {
 
   List<Expense> get localExpenses => List.unmodifiable(_localExpenses);
 
-  // Static global refresh notifier for real-time automatic screen updates
+  // =====================================================================
+  // REALTIME: Multi-channel real-time sync across ALL tables
+  // =====================================================================
+
   static final ValueNotifier<int> refreshNotifier = ValueNotifier<int>(0);
   static RealtimeChannel? _userDataChannel;
+  static RealtimeChannel? _expensesChannel;
+  static RealtimeChannel? _subscriptionsChannel;
+  static RealtimeChannel? _splitBillsChannel;
+  static RealtimeChannel? _budgetsChannel;
+  static RealtimeChannel? _profilesChannel;
 
   Future<void> startRealtimeSync() async {
     final userId = await _getEffectiveUserId();
+
+    // --- Channel 1: user_data (Web App changes) ---
     if (_userDataChannel != null) {
       client.removeChannel(_userDataChannel!);
     }
@@ -375,9 +799,125 @@ class SupabaseService {
           },
         )
         .subscribe();
+
+    // --- Channel 2: expenses table (Desktop / iOS changes) ---
+    if (userId != 'local_device_user') {
+      if (_expensesChannel != null) {
+        client.removeChannel(_expensesChannel!);
+      }
+      _expensesChannel = client
+          .channel('public:expenses:$userId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'expenses',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId,
+            ),
+            callback: (payload) async {
+              await getExpenses();
+              refreshNotifier.value++;
+            },
+          )
+          .subscribe();
+
+      // --- Channel 3: subscriptions table ---
+      if (_subscriptionsChannel != null) {
+        client.removeChannel(_subscriptionsChannel!);
+      }
+      _subscriptionsChannel = client
+          .channel('public:subscriptions:$userId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'subscriptions',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId,
+            ),
+            callback: (payload) async {
+              await getExpenses(); // Re-fetches everything including subs
+              refreshNotifier.value++;
+            },
+          )
+          .subscribe();
+
+      // --- Channel 4: split_bills table ---
+      if (_splitBillsChannel != null) {
+        client.removeChannel(_splitBillsChannel!);
+      }
+      _splitBillsChannel = client
+          .channel('public:split_bills:$userId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'split_bills',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId,
+            ),
+            callback: (payload) async {
+              await getExpenses();
+              refreshNotifier.value++;
+            },
+          )
+          .subscribe();
+
+      // --- Channel 5: budgets table ---
+      if (_budgetsChannel != null) {
+        client.removeChannel(_budgetsChannel!);
+      }
+      _budgetsChannel = client
+          .channel('public:budgets:$userId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'budgets',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId,
+            ),
+            callback: (payload) async {
+              await getExpenses();
+              refreshNotifier.value++;
+            },
+          )
+          .subscribe();
+
+      // --- Channel 6: profiles table ---
+      if (_profilesChannel != null) {
+        client.removeChannel(_profilesChannel!);
+      }
+      _profilesChannel = client
+          .channel('public:profiles:$userId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'profiles',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId,
+            ),
+            callback: (payload) async {
+              await getExpenses();
+              refreshNotifier.value++;
+            },
+          )
+          .subscribe();
+    }
   }
 
-  // Add new expense with instant cloud sync to Web App
+  // =====================================================================
+  // CRUD: Add / Update / Delete with dual-write to all tables
+  // =====================================================================
+
+  /// Add new expense with instant dual-write cloud sync
   Future<Expense> addExpense(Expense expense) async {
     await _loadLocalExpenses();
     final localItem = expense.copyWith(
@@ -386,11 +926,12 @@ class SupabaseService {
     _localExpenses.insert(0, localItem);
     await _persistLocalExpenses();
     await _pushUserDataToCloud();
+    _pushExpenseToTable(localItem); // Dual-write to relational table
     refreshNotifier.value++;
     return localItem;
   }
 
-  // Update existing expense with instant cloud sync to Web App
+  /// Update existing expense with instant dual-write cloud sync
   Future<Expense> updateExpense(Expense expense) async {
     if (expense.id == null) throw Exception("Expense ID cannot be null for update");
     final index = _localExpenses.indexWhere((e) => e.id == expense.id);
@@ -399,11 +940,12 @@ class SupabaseService {
     }
     await _persistLocalExpenses();
     await _pushUserDataToCloud();
+    _pushExpenseToTable(expense); // Dual-write to relational table
     refreshNotifier.value++;
     return expense;
   }
 
-  // Delete expense by ID with instant cloud sync to Web App & unmarking subscription if needed
+  /// Delete expense by ID with instant dual-write cloud sync & unmarking subscription if needed
   Future<void> deleteExpense(String id) async {
     await _loadLocalExpenses();
     final index = _localExpenses.indexWhere((e) => e.id == id);
@@ -442,45 +984,71 @@ class SupabaseService {
       }
 
       await _pushUserDataToCloud();
+      _deleteExpenseFromTable(id); // Dual-delete from relational table
       refreshNotifier.value++;
     }
   }
 
-  // Cascade delete all expense entries associated with a deleted subscription
+  /// Cascade delete all expense entries associated with a deleted subscription
   Future<void> cascadeDeleteSubscriptionExpenses(String subscriptionId, String title) async {
     await _loadLocalExpenses();
     final cleanTitle = title.trim().toLowerCase();
+    final idsToDelete = <String>[];
     _localExpenses.removeWhere((e) {
-      if (e.id != null && e.id!.startsWith('bill_pay_$subscriptionId')) return true;
+      if (e.id != null && e.id!.startsWith('bill_pay_$subscriptionId')) {
+        idsToDelete.add(e.id!);
+        return true;
+      }
       final t = e.title.trim().toLowerCase();
       if (t == 'bill payment: $cleanTitle' || t == '$cleanTitle (subscription)' || t == '$cleanTitle (recurring bill)') {
+        if (e.id != null) idsToDelete.add(e.id!);
         return true;
       }
       return false;
     });
     await _persistLocalExpenses();
     await _pushUserDataToCloud();
+    // Dual-delete from relational table
+    for (var id in idsToDelete) {
+      _deleteExpenseFromTable(id);
+    }
+    _deleteSubscriptionFromTable(subscriptionId);
     refreshNotifier.value++;
   }
 
-  // Cascade delete all expense and income entries associated with a deleted group/split bill
+  /// Cascade delete all expense and income entries associated with a deleted group/split bill
   Future<void> cascadeDeleteGroupExpense(String groupId, String title, String paidBy) async {
     await _loadLocalExpenses();
     final cleanTitle = title.trim().toLowerCase();
+    final idsToDelete = <String>[];
     _localExpenses.removeWhere((e) {
       final t = e.title.trim().toLowerCase();
-      if (t == '$cleanTitle (my split share)') return true;
-      if (t.startsWith('paid ') && t.contains('for $cleanTitle (settled share)')) return true;
-      if (t.startsWith('reimbursement from ') && t.contains('($cleanTitle)')) return true;
+      if (t == '$cleanTitle (my split share)') {
+        if (e.id != null) idsToDelete.add(e.id!);
+        return true;
+      }
+      if (t.startsWith('paid ') && t.contains('for $cleanTitle (settled share)')) {
+        if (e.id != null) idsToDelete.add(e.id!);
+        return true;
+      }
+      if (t.startsWith('reimbursement from ') && t.contains('($cleanTitle)')) {
+        if (e.id != null) idsToDelete.add(e.id!);
+        return true;
+      }
       return false;
     });
     await _persistLocalExpenses();
     await removeGroupExpense(groupId);
     await _pushUserDataToCloud();
+    // Dual-delete from relational tables
+    for (var id in idsToDelete) {
+      _deleteExpenseFromTable(id);
+    }
+    _deleteSplitBillFromTable(groupId);
     refreshNotifier.value++;
   }
 
-  // Clean any orphaned expenses whose parent subscription or split bill was deleted
+  /// Clean any orphaned expenses whose parent subscription or split bill was deleted
   Future<void> cleanOrphanedExpenses() async {
     await _loadLocalExpenses();
     final prefs = await SharedPreferences.getInstance();
@@ -513,12 +1081,14 @@ class SupabaseService {
     }
 
     bool removedAny = false;
+    final idsToDelete = <String>[];
     _localExpenses.removeWhere((e) {
       final t = e.title.trim().toLowerCase();
       if (t.startsWith('bill payment: ')) {
         final billName = t.replaceFirst('bill payment: ', '').trim();
         if (!validSubTitles.contains(billName)) {
           removedAny = true;
+          if (e.id != null) idsToDelete.add(e.id!);
           return true;
         }
       }
@@ -526,6 +1096,7 @@ class SupabaseService {
         final groupName = t.replaceFirst(' (my split share)', '').trim();
         if (!validGroupTitles.contains(groupName)) {
           removedAny = true;
+          if (e.id != null) idsToDelete.add(e.id!);
           return true;
         }
       }
@@ -533,6 +1104,7 @@ class SupabaseService {
         final groupName = t.substring(t.lastIndexOf('(') + 1, t.lastIndexOf(')')).trim();
         if (!validGroupTitles.contains(groupName)) {
           removedAny = true;
+          if (e.id != null) idsToDelete.add(e.id!);
           return true;
         }
       }
@@ -542,11 +1114,14 @@ class SupabaseService {
     if (removedAny) {
       await _persistLocalExpenses();
       await _pushUserDataToCloud();
+      for (var id in idsToDelete) {
+        _deleteExpenseFromTable(id);
+      }
       refreshNotifier.value++;
     }
   }
 
-  // Complete clean reset of local and Supabase cloud financial data
+  /// Complete clean reset of local and Supabase cloud financial data
   Future<void> resetAllFinancialData() async {
     _localExpenses.clear();
     final prefs = await SharedPreferences.getInstance();
@@ -559,6 +1134,8 @@ class SupabaseService {
     
     try {
       final userId = await _getEffectiveUserId();
+
+      // Reset user_data document
       await client.from('user_data').upsert({
         'user_id': userId,
         'budget': 0.0,
@@ -568,12 +1145,22 @@ class SupabaseService {
         'currency': 'INR',
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id');
+
+      // Clear relational tables
+      if (userId != 'local_device_user') {
+        try { await client.from('expenses').delete().eq('user_id', userId); } catch (_) {}
+        try { await client.from('subscriptions').delete().eq('user_id', userId); } catch (_) {}
+        try { await client.from('split_bills').delete().eq('user_id', userId); } catch (_) {}
+        try { await client.from('budgets').delete().eq('user_id', userId); } catch (_) {}
+      }
     } catch (_) {}
 
     refreshNotifier.value++;
   }
 
-  // --- CROSS-PLATFORM (MOBILE, WEB, DESKTOP) GROUP EXPENSES CLOUD SYNC ---
+  // =====================================================================
+  // GROUP EXPENSES / SPLIT BILLS (Dual-write: split_bills table + user_data)
+  // =====================================================================
 
   Future<List<Map<String, dynamic>>> getGroupExpenses() async {
     final prefs = await SharedPreferences.getInstance();
@@ -587,18 +1174,66 @@ class SupabaseService {
     }
 
     try {
-      final response = await client
-          .from('group_expenses')
-          .select()
-          .order('date', ascending: false);
-      final List<dynamic> data = response as List<dynamic>;
-      final cloudList = data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-      if (cloudList.isNotEmpty) {
-        // Cache to local storage
-        await prefs.setString('saved_group_expenses', jsonEncode(cloudList));
-        return cloudList;
+      final userId = await _getEffectiveUserId();
+      final Map<String, Map<String, dynamic>> merged = {};
+
+      // Add local items
+      for (var item in localList) {
+        final id = item['id']?.toString();
+        if (id != null) merged[id] = item;
       }
-      return localList;
+
+      // Merge from relational split_bills table
+      if (userId != 'local_device_user') {
+        try {
+          final response = await client
+              .from('split_bills')
+              .select()
+              .eq('user_id', userId)
+              .order('date', ascending: false);
+          if (response is List) {
+            for (var row in response) {
+              if (row is Map) {
+                final m = Map<String, dynamic>.from(row);
+                m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
+                m['paidBy'] = m['paid_by'] ?? m['paidBy'];
+                m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
+                m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
+                final id = m['id']?.toString();
+                if (id != null && !merged.containsKey(id)) {
+                  merged[id] = m;
+                }
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      // Merge from user_data subscriptions array (type=split_bill)
+      try {
+        final userData = await client
+            .from('user_data')
+            .select('subscriptions')
+            .eq('user_id', userId)
+            .maybeSingle();
+        if (userData != null && userData['subscriptions'] is List) {
+          for (var item in userData['subscriptions']) {
+            if (item is Map && item['type'] == 'split_bill') {
+              final m = Map<String, dynamic>.from(item);
+              final id = m['id']?.toString();
+              if (id != null && !merged.containsKey(id)) {
+                merged[id] = m;
+              }
+            }
+          }
+        }
+      } catch (_) {}
+
+      final result = merged.values.toList();
+      if (result.isNotEmpty) {
+        await prefs.setString('saved_group_expenses', jsonEncode(result));
+      }
+      return result.isNotEmpty ? result : localList;
     } catch (_) {
       return localList;
     }
@@ -629,9 +1264,8 @@ class SupabaseService {
     }
     await prefs.setString('saved_group_expenses', jsonEncode(list));
 
-    try {
-      await client.from('group_expenses').upsert(itemJson);
-    } catch (_) {}
+    // Dual-write to relational split_bills table
+    _pushSplitBillToTable(itemJson);
   }
 
   Future<void> removeGroupExpense(String id) async {
@@ -646,12 +1280,14 @@ class SupabaseService {
       } catch (_) {}
     }
 
-    try {
-      await client.from('group_expenses').delete().eq('id', id);
-    } catch (_) {}
+    // Dual-delete from relational split_bills table (members cascade automatically)
+    _deleteSplitBillFromTable(id);
   }
 
-  // --- CROSS-PLATFORM USER PROFILE & FINANCIAL SETTINGS CLOUD SYNC ---
+  // =====================================================================
+  // USER PROFILE & FINANCIAL SETTINGS CLOUD SYNC
+  // (Writes to: auth metadata + profiles table + budgets table + user_data)
+  // =====================================================================
 
   static Future<void> syncFinancialProfileToCloud({
     double? budgetCap,
@@ -677,6 +1313,28 @@ class SupabaseService {
         await Supabase.instance.client.auth.updateUser(
           UserAttributes(data: meta),
         );
+
+        // Dual-write to relational profiles table
+        try {
+          final currencyCode = currencySymbol == '\$' ? 'USD' : (currencySymbol == '€' ? 'EUR' : (currencySymbol == '£' ? 'GBP' : 'INR'));
+          await Supabase.instance.client.from('profiles').upsert({
+            'user_id': user.id,
+            'email': user.email,
+            'full_name': customName ?? meta['full_name'] ?? meta['name'],
+            'avatar_url': meta['avatar_url'] ?? meta['picture'],
+            'currency': currencyCode,
+            'monthly_budget': budgetCap ?? prefs.getDouble('monthly_budget_cap') ?? 0.0,
+            'starting_balance': startingBalance ?? prefs.getDouble('user_starting_balance') ?? 0.0,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          }, onConflict: 'user_id');
+        } catch (_) {}
+
+        // Dual-write budget to relational budgets table
+        if (budgetCap != null && budgetCap > 0) {
+          try {
+            await SupabaseService()._pushBudgetToTable(budgetCap);
+          } catch (_) {}
+        }
       }
     } catch (_) {}
 
@@ -699,6 +1357,24 @@ class SupabaseService {
         if (meta['custom_user_name'] != null) {
           await prefs.setString('custom_user_name', meta['custom_user_name'].toString());
         }
+
+        // Also load from relational profiles table as fallback
+        try {
+          final profileRow = await Supabase.instance.client.from('profiles')
+              .select()
+              .eq('user_id', user.id)
+              .maybeSingle();
+          if (profileRow != null) {
+            if (profileRow['currency'] != null && prefs.getString('app_currency_symbol') == null) {
+              final curr = profileRow['currency'].toString();
+              final symbol = curr == 'USD' ? '\$' : (curr == 'EUR' ? '€' : (curr == 'GBP' ? '£' : '₹'));
+              await prefs.setString('app_currency_symbol', symbol);
+            }
+            if (profileRow['full_name'] != null && prefs.getString('custom_user_name') == null) {
+              await prefs.setString('custom_user_name', profileRow['full_name'].toString());
+            }
+          }
+        } catch (_) {}
       }
     } catch (_) {}
   }
