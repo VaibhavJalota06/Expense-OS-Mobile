@@ -404,6 +404,85 @@
     }
   };
 
+  // ------------------------------------------------------------
+  // 5. EXPORT & DEMO UTILITIES
+  // ------------------------------------------------------------
+  window.exportTransactionsToCSV = function(e) {
+    if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err){} }
+    const exportList = (typeof selectedMonth !== 'undefined' && selectedMonth === 'ALL')
+      ? expenses
+      : expenses.filter(item => item.date && item.date.startsWith(selectedMonth));
+
+    if (!exportList || exportList.length === 0) {
+      if (typeof showAlert === 'function') {
+        showAlert('No Data to Export', 'No expense records found for the selected period.');
+      }
+      return;
+    }
+
+    let csvContent = '\uFEFFDate,Category,Description,Payment Method,Amount\n';
+    exportList.forEach(item => {
+      const safeDate = (item.date || '').replace(/"/g, '""');
+      const safeCat = (item.category || '').replace(/"/g, '""');
+      const safeDesc = (item.description || '').replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
+      const safePay = (item.payment || '').replace(/"/g, '""');
+      const row = `"${safeDate}","${safeCat}","${safeDesc}","${safePay}",${item.amount}`;
+      csvContent += row + '\n';
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const monthLabel = (typeof selectedMonth !== 'undefined' && selectedMonth === 'ALL') ? 'AllTime' : (selectedMonth || 'export');
+    link.download = `Expense_Report_${monthLabel}_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
+  };
+
+  window.exportFinancialSummaryJSON = function(e) {
+    if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err){} }
+    const dataReport = {
+      app: 'Expense OS',
+      version: 'v3.8.0',
+      currency: typeof activeCurrency !== 'undefined' ? activeCurrency : 'INR',
+      exported_at: new Date().toISOString(),
+      budget: typeof budget !== 'undefined' ? budget : 0,
+      incomes: typeof incomes !== 'undefined' ? incomes : [],
+      expenses: typeof expenses !== 'undefined' ? expenses : [],
+      subscriptions: typeof subscriptions !== 'undefined' ? subscriptions : []
+    };
+    const blob = new Blob([JSON.stringify(dataReport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Expense_OS_Financial_Report_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 100);
+  };
+
+  window.loadDemoData = function() {
+    budget = 15000;
+    accountBalance = 50000;
+    const today = typeof getLocalDateString === 'function' ? getLocalDateString() : new Date().toISOString().split('T')[0];
+    expenses = [
+      { id: 'demo-1', amount: 1250, category: 'Food & Dining', description: 'Gourmet Dinner & Grocery', payment: 'Credit Card', date: today },
+      { id: 'demo-2', amount: 2450, category: 'Bills & Utilities', description: 'Fiber Internet & Electricity', payment: 'Auto-Pay', date: today },
+      { id: 'demo-3', amount: 850, category: 'Entertainment', description: 'Movie Tickets & Snacks', payment: 'UPI', date: today }
+    ];
+    subscriptions = [
+      { id: 'demo-sub-1', name: 'Spotify Premium', amount: 299, category: 'Services & Subscriptions', dueDay: 15, lastPaidMonth: '' },
+      { id: 'demo-sub-2', name: 'Netflix 4K Plan', amount: 499, category: 'Services & Subscriptions', dueDay: 22, lastPaidMonth: '' }
+    ];
+    if (typeof saveState === 'function') saveState();
+    if (typeof updateUI === 'function') updateUI();
+  };
+
   // Export to Global Scope
   window.ReceiptOCR = ReceiptOCR;
   window.AnomalyDetector = AnomalyDetector;

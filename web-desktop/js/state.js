@@ -965,37 +965,95 @@ function startSupabaseSync(userId) {
     if (supabaseChannel) supaClient.removeChannel(supabaseChannel);
     supabaseChannel = supaClient.channel('universal_data_changes_' + userId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_data' }, payload => {
-        if (payload.new && String(payload.new.user_id) === String(userId)) {
+        if (payload.new && (String(payload.new.user_id) === String(userId) || !payload.new.user_id)) {
           applyCloudData(payload.new);
           if (typeof setSyncStatus === 'function') setSyncStatus('synced');
         }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, payload => {
-        if (payload.new && String(payload.new.user_id) === String(userId)) {
-          const item = payload.new;
-          const idx = expenses.findIndex(e => String(e.id) === String(item.id));
-          if (payload.eventType === 'DELETE') {
-            expenses = expenses.filter(e => String(e.id) !== String(payload.old.id));
-          } else if (isValidExpense(item)) {
-            if (idx >= 0) expenses[idx] = item;
-            else expenses.unshift(item);
+        if (payload.eventType === 'DELETE') {
+          const deletedId = (payload.old && payload.old.id) ? String(payload.old.id) : null;
+          if (deletedId) {
+            expenses = expenses.filter(e => String(e.id) !== deletedId);
+            try { localStorage.setItem('expense_cal_web_expenses', JSON.stringify(expenses)); } catch(e) {}
+            if (typeof updateMonthPickerOptions === 'function') updateMonthPickerOptions();
+            if (typeof updateUI === 'function') updateUI();
           }
-          try { localStorage.setItem('expense_cal_web_expenses', JSON.stringify(expenses)); } catch(e) {}
-          updateUI();
+        } else if (payload.new && (String(payload.new.user_id) === String(userId) || !payload.new.user_id)) {
+          const item = payload.new;
+          if (isValidExpense(item)) {
+            const idx = expenses.findIndex(e => String(e.id) === String(item.id));
+            if (idx >= 0) {
+              expenses[idx] = { ...expenses[idx], ...item };
+            } else {
+              expenses.unshift(item);
+            }
+            try { localStorage.setItem('expense_cal_web_expenses', JSON.stringify(expenses)); } catch(e) {}
+            if (typeof updateMonthPickerOptions === 'function') updateMonthPickerOptions();
+            if (typeof updateUI === 'function') updateUI();
+          }
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions' }, payload => {
+        if (payload.eventType === 'DELETE') {
+          const deletedId = (payload.old && payload.old.id) ? String(payload.old.id) : null;
+          if (deletedId) {
+            subscriptions = subscriptions.filter(s => String(s.id) !== deletedId);
+            try { localStorage.setItem('expense_cal_web_subscriptions', JSON.stringify(subscriptions)); } catch(e) {}
+            if (typeof updateUI === 'function') updateUI();
+          }
+        } else if (payload.new && (String(payload.new.user_id) === String(userId) || !payload.new.user_id)) {
+          const item = payload.new;
+          const idx = subscriptions.findIndex(s => String(s.id) === String(item.id));
+          if (idx >= 0) {
+            subscriptions[idx] = { ...subscriptions[idx], ...item };
+          } else {
+            subscriptions.unshift(item);
+          }
+          try { localStorage.setItem('expense_cal_web_subscriptions', JSON.stringify(subscriptions)); } catch(e) {}
+          if (typeof updateUI === 'function') updateUI();
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'budgets' }, payload => {
+        if (payload.new && (String(payload.new.user_id) === String(userId) || !payload.new.user_id)) {
+          const newB = Number(payload.new.amount || 0);
+          if (newB > 0 && newB !== budget) {
+            budget = newB;
+            try { localStorage.setItem('expense_cal_web_budget', budget.toString()); } catch(e) {}
+            if (typeof updateUI === 'function') updateUI();
+          }
         }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, payload => {
-        if (payload.new && String(payload.new.user_id) === String(userId)) {
+        if (payload.new && (String(payload.new.user_id) === String(userId) || !payload.new.user_id)) {
           const p = payload.new;
+          if (p.starting_balance !== undefined && p.starting_balance !== null) {
+            accountBalance = Number(p.starting_balance || 0);
+            try { localStorage.setItem('expense_cal_web_account_balance', accountBalance.toString()); } catch(e) {}
+          }
           let stored = {};
           try { stored = JSON.parse(localStorage.getItem('expense_cal_user_profile') || '{}'); } catch(e) {}
           const merged = { ...stored, name: p.display_name || p.full_name || stored.name, avatar: p.avatar_url || stored.avatar, email: p.email || stored.email };
           try { localStorage.setItem('expense_cal_user_profile', JSON.stringify(merged)); } catch(e) {}
           if (typeof window.syncProfileUI === 'function') window.syncProfileUI();
+          if (typeof updateUI === 'function') updateUI();
         }
       })
       .subscribe();
   } catch (e) {}
+
+  // Periodic background cloud sync (12s interval) to guarantee seamless consistency
+  if (window._cloudSyncTimer) clearInterval(window._cloudSyncTimer);
+  window._cloudSyncTimer = setInterval(() => {
+    if (currentUserId && supaClient) {
+      supaClient.from('user_data').select('*').eq('user_id', currentUserId).maybeSingle()
+        .then(({ data }) => {
+          if (data && data.updated_at) {
+            applyCloudData(data);
+          }
+        }).catch(() => {});
+    }
+  }, 12000);
 }
 
 window.addEventListener('focus', () => {

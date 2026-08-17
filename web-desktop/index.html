@@ -1103,6 +1103,68 @@
     </div>
   </div>
 
+  <!-- Edit Transaction Modal -->
+  <div id="edit-transaction-modal" class="modal-overlay hidden">
+    <div class="modal-card glass-panel" style="max-width: 480px; width: 92%;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-pen-to-square text-sky"></i> <span>Edit Transaction</span></h3>
+        <button type="button" class="icon-btn" onclick="if(window.closeEditTransactionModal)window.closeEditTransactionModal(event);"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="edit-transaction-form" class="modal-form" onsubmit="if(window.handleSaveEditTransaction)window.handleSaveEditTransaction(event);">
+        <input type="hidden" id="edit-tx-id" />
+        <div class="modal-body modal-form-gap">
+          <div class="form-group">
+            <label for="edit-tx-description">Description / Title</label>
+            <input type="text" id="edit-tx-description" placeholder="e.g. Grocery Shopping" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="edit-tx-amount">Amount (₹)</label>
+              <div class="input-with-icon">
+                <span class="currency-symbol">₹</span>
+                <input type="number" id="edit-tx-amount" placeholder="e.g. 1500" min="0.01" step="0.01" required />
+              </div>
+            </div>
+            <div class="form-group flex-1">
+              <label for="edit-tx-date">Date</label>
+              <input type="date" id="edit-tx-date" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="edit-tx-category">Category</label>
+              <select id="edit-tx-category" required>
+                <option value="Food & Dining">🍔 Food &amp; Dining</option>
+                <option value="Transportation">🚗 Transportation</option>
+                <option value="Shopping">🛍️ Shopping</option>
+                <option value="Bills & Utilities">⚡ Bills &amp; Utilities</option>
+                <option value="Entertainment">🎬 Entertainment</option>
+                <option value="Health & Fitness">💊 Health &amp; Fitness</option>
+                <option value="Services & Subscriptions">📱 Services &amp; Subscriptions</option>
+                <option value="Miscellaneous">📦 Miscellaneous</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="edit-tx-payment">Payment Method</label>
+              <select id="edit-tx-payment" required>
+                <option value="Credit Card">💳 Credit Card</option>
+                <option value="Debit Card">🏦 Debit Card</option>
+                <option value="UPI">📱 UPI</option>
+                <option value="Cash">💵 Cash</option>
+                <option value="Net Banking">🌐 Net Banking</option>
+                <option value="Auto-Pay">🔄 Auto-Pay</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="if(window.closeEditTransactionModal)window.closeEditTransactionModal(event);">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Income Modal -->
   <div id="income-modal" class="modal-overlay hidden">
     <div class="modal-card glass-panel" style="max-width: 520px; width: 90%;">
@@ -1764,7 +1826,6 @@
   <script src="js/ui.js?v=3.8.0"></script>
   <script src="js/features.js?v=3.8.0"></script>
   <script src="js/gamification.js?v=3.8.0"></script>
-  <script src="script.js?v=3.8.0"></script>
   <script src="auth.js?v=3.8.0"></script>
 
   <!-- Service Worker Auto-Purge & Refresh -->

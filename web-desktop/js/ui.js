@@ -1026,20 +1026,23 @@ function updateUI() {
   const totalAllTimeIncome = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const totalAllTimeSpent = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const totalAccountMoney = accountBalance + totalAllTimeIncome;
+  const availableMoney = budget > 0 ? Math.max(0, totalAccountMoney - budget) : totalAccountMoney;
 
   const statAccountBalanceEl = document.getElementById('stat-account-balance');
   const statIncomeEl = document.getElementById('stat-income');
   const statIncomeCountEl = document.getElementById('stat-income-count');
 
   if (statAccountBalanceEl) {
-    statAccountBalanceEl.textContent = formatCurrency(totalAccountMoney, 'stat-account-balance');
-    statAccountBalanceEl.className = totalAccountMoney >= 0 ? 'stat-value text-emerald mono' : 'stat-value text-rose mono';
+    statAccountBalanceEl.textContent = formatCurrency(availableMoney, 'stat-account-balance');
+    statAccountBalanceEl.className = availableMoney >= 0 ? 'stat-value text-emerald mono' : 'stat-value text-rose mono';
   }
 
   const statAccountSubtextEl = document.getElementById('stat-account-subtext');
   if (statAccountSubtextEl) {
     const totalGoalSaved = savingsGoals.reduce((sum, g) => sum + Number(g.savedAmount || 0), 0);
-    if (totalGoalSaved > 0) {
+    if (budget > 0) {
+      statAccountSubtextEl.innerHTML = `Gross Total: <strong>${formatCurrency(totalAccountMoney, 'stat-account-balance')}</strong> (${formatCurrency(budget)} budgeted) <span class="edit-hint">(Edit ✏️)</span>`;
+    } else if (totalGoalSaved > 0) {
       statAccountSubtextEl.innerHTML = `Allocated to Goals: <strong>${formatCurrency(totalGoalSaved, 'stat-account-balance')}</strong> <span class="edit-hint">(Edit ✏️)</span>`;
     } else {
       statAccountSubtextEl.innerHTML = `Total Account Cash + Extra Incomes <span class="edit-hint">(Edit ✏️)</span>`;
@@ -1811,6 +1814,9 @@ function renderTransactionsTable(monthFilteredExpenses) {
       <td data-label="Amount" class="text-right font-bold text-amount">${formatCurrency(item.amount)}</td>
       <td class="text-center td-action">
         ${item.receipt ? `<button type="button" class="btn-receipt-view mr-1" title="View Attached Receipt" onclick="if(window.openReceiptModal)window.openReceiptModal('${item.id}')"><i class="fa-solid fa-paperclip"></i></button>` : ''}
+        <button type="button" class="icon-btn action-btn-edit mr-1" title="Edit Transaction" onclick="if(window.openEditTransactionModal)window.openEditTransactionModal('${escapeHtml(item.id)}')">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </button>
         <button type="button" class="icon-btn action-btn-del" data-delete-tx="${escapeHtml(item.id)}" title="Delete Transaction">
           <i class="fa-solid fa-trash-can"></i>
         </button>
@@ -1888,10 +1894,122 @@ async function deleteTransaction(id) {
   if (ok) {
     expenses = expenses.filter(item => String(item.id) !== String(id));
     saveState();
+
+    // Dual-delete from relational expenses table in Supabase
+    const supaClient = (typeof getSupabaseClient === 'function' ? getSupabaseClient() : (typeof supabase !== 'undefined' ? supabase : null));
+    if (supaClient) {
+      supaClient.from('expenses').delete().eq('id', String(id)).catch(() => {});
+    }
+
     updateMonthPickerOptions();
     updateUI();
+    if (typeof showToast === 'function') showToast('Transaction deleted & synced');
   }
 }
+window.deleteTransaction = deleteTransaction;
+
+window.openEditTransactionModal = function(id) {
+  const tx = expenses.find(e => String(e.id) === String(id));
+  if (!tx) return;
+  const modal = document.getElementById('edit-transaction-modal');
+  const idInput = document.getElementById('edit-tx-id');
+  const descInput = document.getElementById('edit-tx-description');
+  const amountInput = document.getElementById('edit-tx-amount');
+  const dateInput = document.getElementById('edit-tx-date');
+  const catSelect = document.getElementById('edit-tx-category');
+  const paySelect = document.getElementById('edit-tx-payment');
+
+  if (idInput) idInput.value = tx.id;
+  if (descInput) descInput.value = tx.description || tx.title || '';
+  if (amountInput) amountInput.value = tx.amount || 0;
+  if (dateInput) dateInput.value = tx.date || getLocalDateString();
+  if (catSelect) catSelect.value = tx.category || 'Food & Dining';
+  if (paySelect) paySelect.value = tx.payment || tx.payment_method || 'Credit Card';
+
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
+    modal.style.setProperty('z-index', '100000', 'important');
+    modal.style.setProperty('pointer-events', 'auto', 'important');
+  }
+};
+
+window.closeEditTransactionModal = function(e) {
+  if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err){} }
+  const modal = document.getElementById('edit-transaction-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.setProperty('display', 'none', 'important');
+  }
+};
+
+window.handleSaveEditTransaction = async function(e) {
+  if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err){} }
+  const idInput = document.getElementById('edit-tx-id');
+  const descInput = document.getElementById('edit-tx-description');
+  const amountInput = document.getElementById('edit-tx-amount');
+  const dateInput = document.getElementById('edit-tx-date');
+  const catSelect = document.getElementById('edit-tx-category');
+  const paySelect = document.getElementById('edit-tx-payment');
+
+  const id = idInput ? idInput.value : '';
+  const amount = parseFloat(amountInput ? amountInput.value : 0);
+  const description = descInput ? descInput.value.trim() : '';
+  const date = dateInput ? dateInput.value : getLocalDateString();
+  const category = catSelect ? catSelect.value : 'Food & Dining';
+  const payment = paySelect ? paySelect.value : 'Credit Card';
+
+  if (!id || isNaN(amount) || amount <= 0 || !description) {
+    showAlert('Invalid Input', 'Please enter a valid description and amount.');
+    return;
+  }
+
+  const idx = expenses.findIndex(exp => String(exp.id) === String(id));
+  if (idx !== -1) {
+    expenses[idx] = {
+      ...expenses[idx],
+      amount,
+      description,
+      title: description,
+      date,
+      category,
+      payment
+    };
+    saveState();
+
+    // Direct dual-write update to relational expenses table in Supabase
+    const supaClient = (typeof getSupabaseClient === 'function' ? getSupabaseClient() : (typeof supabase !== 'undefined' ? supabase : null));
+    if (supaClient) {
+      let userId = currentUserId;
+      if (!userId && supaClient.auth) {
+        try {
+          const sess = await supaClient.auth.getSession();
+          userId = sess?.data?.session?.user?.id;
+        } catch (_) {}
+      }
+      if (userId) {
+        supaClient.from('expenses').upsert({
+          id: String(id),
+          user_id: userId,
+          amount,
+          title: description,
+          category,
+          payment_method: payment,
+          date,
+          type: 'expense',
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' }).catch(() => {});
+      }
+    }
+
+    window.closeEditTransactionModal();
+    updateMonthPickerOptions();
+    updateUI();
+    if (typeof showToast === 'function') showToast('Transaction updated successfully & synced to mobile!');
+  }
+};
 
 if (filterSearchInput) filterSearchInput.addEventListener('input', updateUI);
 if (filterCategorySelect) filterCategorySelect.addEventListener('change', updateUI);
@@ -1976,11 +2094,18 @@ function handleSaveBudget(e) {
     return;
   }
 
-  // Validation: Budget cannot exceed Total Account Money
+  // Strict Validation: Total Account Money must be set first & Budget cannot exceed Total Account Money
   const totalAllTimeIncome = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const currentTotalAccountMoney = accountBalance + totalAllTimeIncome;
 
-  if (newBudget > currentTotalAccountMoney && currentTotalAccountMoney > 0) {
+  if (currentTotalAccountMoney <= 0) {
+    showAlert('Total Account Money Required', 'Please enter your Total Account Money first before setting a Monthly Budget! Your budget is allocated directly from your available account funds.');
+    closeModal(budgetModal);
+    if (typeof openAccountBalanceModal === 'function') openAccountBalanceModal();
+    return;
+  }
+
+  if (newBudget > currentTotalAccountMoney) {
     showAlert('Budget Exceeds Account Balance', `Your Monthly Budget (${formatCurrency(newBudget)}) cannot exceed your Total Account Money (${formatCurrency(currentTotalAccountMoney)}). You cannot set a spending budget higher than your total account balance!`);
     return;
   }
@@ -2293,6 +2418,16 @@ async function resetAllData(e) {
 // Global Action Handlers for Buttons
 window.openBudgetModal = function(e) {
   if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err){} }
+
+  const totalAllTimeIncome = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const currentTotalAccountMoney = accountBalance + totalAllTimeIncome;
+
+  if (currentTotalAccountMoney <= 0) {
+    showAlert('Total Account Money Required', 'Please enter your Total Account Money first before setting a Monthly Budget! Your budget is allocated directly from your available account funds.');
+    if (typeof openAccountBalanceModal === 'function') openAccountBalanceModal();
+    return;
+  }
+
   const welcomeModal = document.getElementById('welcome-modal');
   if (welcomeModal) {
     welcomeModal.classList.add('hidden');
