@@ -1000,11 +1000,11 @@ function checkAndSendSubscriptionReminders() {
                 user_name: sub.name,
                 subject: `⏰ Subscription Due Reminder: ${sub.name} is due ${daysLeft === 0 ? 'today' : 'in ' + daysLeft + ' days'}!`,
                 message: `Reminder: ${sub.name} (₹${sub.amount.toFixed(2)}) renewal payment is due ${daysLeft === 0 ? 'today' : 'in ' + daysLeft + ' days'}.`,
-                web_app_url: 'https://vaibhavjalota06.github.io/Expense-Calculator-Desktop/',
-                app_url: 'https://vaibhavjalota06.github.io/Expense-Calculator-Desktop/',
-                action_url: 'https://vaibhavjalota06.github.io/Expense-Calculator-Desktop/',
-                url: 'https://vaibhavjalota06.github.io/Expense-Calculator-Desktop/',
-                link: 'https://vaibhavjalota06.github.io/Expense-Calculator-Desktop/'
+                web_app_url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
+                app_url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
+                action_url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
+                url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
+                link: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/'
               },
               emailjsConfig.publicKey
             );
@@ -2607,12 +2607,12 @@ window.checkAppUpdates = async function checkAppUpdates(manual = false) {
 
   try {
     let latestTag = '';
-    const res = await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-Calculator-Desktop/releases/latest');
+    const res = await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile/releases/latest');
     if (res.ok) {
       const data = await res.json();
       latestTag = (data.tag_name || '').trim();
     } else {
-      const tagsRes = await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-Calculator-Desktop/tags');
+      const tagsRes = await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile/tags');
       if (tagsRes.ok) {
         const tagsData = await tagsRes.json();
         if (Array.isArray(tagsData) && tagsData.length > 0) {

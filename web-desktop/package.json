@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/VaibhavJalota06/Expense-Calculator-Desktop.git"
+    "url": "git+https://github.com/VaibhavJalota06/Expense-OS-Mobile.git"
   },
   "build": {
     "appId": "com.expensecalculator.app",
@@ -34,7 +34,7 @@
       {
         "provider": "github",
         "owner": "VaibhavJalota06",
-        "repo": "Expense-Calculator-Desktop"
+        "repo": "Expense-OS-Mobile"
       }
     ],
     "directories": {
