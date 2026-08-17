@@ -867,14 +867,12 @@ function startSupabaseSync(userId) {
         notes: g.notes || '',
         createdAt: g.createdAt || new Date().toISOString()
       }));
-      if (goalsFromCloud.length > 0) {
-        savingsGoals = goalsFromCloud;
-        try {
-          localStorage.setItem('expense_cal_web_savings_goals', JSON.stringify(savingsGoals));
-          localStorage.setItem('expense_cal_savings_goals', JSON.stringify(savingsGoals));
-        } catch(e) {}
-        if (typeof renderSavingsGoals === 'function') renderSavingsGoals();
-      }
+      savingsGoals = goalsFromCloud;
+      try {
+        localStorage.setItem('expense_cal_web_savings_goals', JSON.stringify(savingsGoals));
+        localStorage.setItem('expense_cal_savings_goals', JSON.stringify(savingsGoals));
+      } catch(e) {}
+      if (typeof renderSavingsGoals === 'function') renderSavingsGoals();
 
       const meta = data.subscriptions.find(s => s && s.type === 'system_financial_meta');
       if (meta && typeof meta.starting_balance === 'number' && Number.isFinite(meta.starting_balance)) {

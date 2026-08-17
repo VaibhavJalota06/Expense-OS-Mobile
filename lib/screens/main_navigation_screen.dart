@@ -27,7 +27,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     _screens = [
-      DashboardScreen(onOpenAddExpense: _openAddExpenseSheet),
+      DashboardScreen(
+        onOpenAddExpense: _openAddExpenseSheet,
+        onSignOut: widget.onSignOut,
+      ),
       const BillsScreen(showBackButton: false),
       const SavingsGoalsScreen(showBackButton: false),
       ProfileScreen(onSignOut: widget.onSignOut),

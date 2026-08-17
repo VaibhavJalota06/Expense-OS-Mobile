@@ -435,13 +435,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'App Settings & Financial Controls',
+          'Settings & Profile',
           style: GoogleFonts.plusJakartaSans(
             color: AppTheme.textPrimary,
             fontWeight: FontWeight.w800,
             fontSize: 18,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: AppTheme.dangerRed),
+            tooltip: 'Sign Out',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  title: Text('Sign Out', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
+                  content: Text('Are you sure you want to sign out of your Expense OS account?', style: GoogleFonts.plusJakartaSans(fontSize: 14)),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.dangerRed, foregroundColor: Colors.white),
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Sign Out'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await _supabaseService.signOut();
+                widget.onSignOut();
+              }
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),

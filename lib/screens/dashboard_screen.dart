@@ -25,8 +25,9 @@ import '../services/notification_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onOpenAddExpense;
+  final VoidCallback? onSignOut;
 
-  const DashboardScreen({super.key, this.onOpenAddExpense});
+  const DashboardScreen({super.key, this.onOpenAddExpense, this.onSignOut});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -284,7 +285,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 backgroundColor: Colors.transparent,
                                 builder: (_) => UserProfileModal(
                                   onSignOut: () {
-                                    if (mounted) setState(() {});
+                                    if (widget.onSignOut != null) {
+                                      widget.onSignOut!();
+                                    } else if (mounted) {
+                                      setState(() {});
+                                    }
                                   },
                                 ),
                               ).then((_) {

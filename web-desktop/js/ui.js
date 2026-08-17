@@ -3580,8 +3580,8 @@ function saveSavingsGoalsToStorage() {
   try {
     localStorage.setItem('expense_cal_web_savings_goals', JSON.stringify(savingsGoals));
     localStorage.setItem('expense_cal_savings_goals', JSON.stringify(savingsGoals));
-    if (typeof saveToSupabase === 'function') {
-      saveToSupabase();
+    if (typeof saveState === 'function') {
+      saveState();
     }
   } catch(e) { console.error('Error saving goals:', e); }
 }
