@@ -35,7 +35,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final SupabaseService _supabaseService = SupabaseService();
   List<Expense> _expenses = [];
-  bool _isLoading = true;
   double _monthlyBudgetCap = 0.0;
   double _startingBalance = 0.0;
   String? _avatarUrl;
@@ -168,9 +167,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadExpenses() async {
-    if (_expenses.isEmpty) {
-      setState(() => _isLoading = true);
-    }
     try {
       final list = await _supabaseService.getExpenses();
       await _loadBudgetCap();
@@ -178,7 +174,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       setState(() {
         _expenses = list;
-        _isLoading = false;
       });
 
       // Automatically evaluate AI Smart Budget Rules and push device notifications
@@ -192,7 +187,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       setState(() {
         _expenses = _supabaseService.localExpenses;
-        _isLoading = false;
       });
     }
   }
@@ -200,6 +194,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double get _totalIncome {
     final loggedIncome = _expenses.where((e) => e.type == 'income').fold(0.0, (sum, e) => sum + e.amount);
     return _startingBalance + loggedIncome;
+  }
+
+  /// Available money after monthly budget allocation is deducted
+  double get _availableMoney {
+    if (_monthlyBudgetCap <= 0) return _totalIncome;
+    return (_totalIncome - _monthlyBudgetCap).clamp(0.0, double.infinity);
   }
 
   double get _currentMonthExpenses {
@@ -219,7 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   double get _netBalance {
-    return _totalIncome - _totalExpenses;
+    return _availableMoney - _totalExpenses;
   }
 
   void _openAddExpenseSheet([Expense? expenseToEdit]) {
@@ -251,15 +251,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: AppTheme.monexBlue))
-            : RefreshIndicator(
-                color: AppTheme.monexBlue,
-                onRefresh: _loadExpenses,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-                  child: Column(
+        child: RefreshIndicator(
+          color: AppTheme.monexBlue,
+          onRefresh: () async {
+            HapticFeedback.lightImpact();
+            await _refreshDashboard();
+          },
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Top Header: "Overview" + Clickable User Avatar
@@ -343,7 +344,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             _buildStatCard(
                               index: 0,
                               title: 'Total Money',
-                              amount: currency.format(_totalIncome),
+                              amount: currency.format(_availableMoney),
+                              subtitle: _monthlyBudgetCap > 0 ? 'Gross: ${currency.format(_totalIncome)}' : null,
                               icon: Icons.account_balance_wallet_outlined,
                               isHighlighted: _activeStatIndex == 0,
                             ),

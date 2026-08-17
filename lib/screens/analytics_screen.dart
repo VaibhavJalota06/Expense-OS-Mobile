@@ -24,6 +24,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   @override
   void initState() {
     super.initState();
+    _expenses = _supabaseService.localExpenses;
+    _isLoading = _expenses.isEmpty;
     SupabaseService.refreshNotifier.addListener(_loadData);
     _loadBudgetCap();
     _loadData();
@@ -46,9 +48,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Future<void> _loadData() async {
     if (!mounted) return;
     _loadBudgetCap();
-    if (_expenses.isEmpty) {
-      setState(() => _isLoading = true);
-    }
     try {
       final data = await _supabaseService.getExpenses();
       if (!mounted) return;

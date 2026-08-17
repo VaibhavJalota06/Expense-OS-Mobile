@@ -195,6 +195,7 @@ class SupabaseService {
   // ---------------------------------------------------------------
   Future<void> _pushUserDataToCloud() async {
     try {
+      await _loadLocalExpenses();
       final userId = await _getEffectiveUserId();
       final prefs = await SharedPreferences.getInstance();
       final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
@@ -210,6 +211,20 @@ class SupabaseService {
           .where((e) => e.type == 'income' && e.id != 'initial_account_balance' && e.title != 'Total Account Money')
           .map((e) => e.toIncomeJson())
           .toList();
+
+      // Include initial_account_balance so Web App reads the Starting Balance in Total Account Money
+      if (balance > 0) {
+        webIncomes.insert(0, {
+          'id': 'initial_account_balance',
+          'source': 'Total Account Money',
+          'title': 'Total Account Money',
+          'description': 'Initial Account Balance',
+          'amount': balance,
+          'date': DateTime.now().toIso8601String().split('T')[0],
+          'type': 'income',
+          'is_system_balance': true,
+        });
+      }
 
       final List<Map<String, dynamic>> bundledSubs = [];
 
@@ -558,10 +573,16 @@ class SupabaseService {
           }
         }
 
+        double? incomeInitialBalance;
         if (response['incomes'] is List) {
           for (var inc in response['incomes']) {
             if (inc is Map) {
-              if (inc['id'] != 'initial_account_balance' && inc['is_system_balance'] != true) {
+              if (inc['id'] == 'initial_account_balance' ||
+                  inc['is_system_balance'] == true ||
+                  inc['source'] == 'Total Account Money' ||
+                  inc['title'] == 'Total Account Money') {
+                incomeInitialBalance = (inc['amount'] as num?)?.toDouble();
+              } else {
                 final item = Expense.fromJson(Map<String, dynamic>.from(inc));
                 if (item.id != null && !mergedMap.containsKey(item.id)) {
                   mergedMap[item.id!] = item;
@@ -597,7 +618,9 @@ class SupabaseService {
           }
 
           if (!foundMeta) {
-            await prefs.setDouble('user_starting_balance', 0.0);
+            if (incomeInitialBalance != null && incomeInitialBalance > 0) {
+              await prefs.setDouble('user_starting_balance', incomeInitialBalance);
+            }
           }
 
           // Merge subscriptions from relational table too
@@ -1339,6 +1362,7 @@ class SupabaseService {
     } catch (_) {}
 
     try {
+      await SupabaseService()._loadLocalExpenses();
       await SupabaseService()._pushUserDataToCloud();
       refreshNotifier.value++;
     } catch (_) {}

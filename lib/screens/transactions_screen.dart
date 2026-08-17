@@ -35,6 +35,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   void initState() {
     super.initState();
+    _allExpenses = _supabaseService.localExpenses;
+    _isLoading = _allExpenses.isEmpty;
     SupabaseService.refreshNotifier.addListener(_loadData);
     _loadData();
     _searchController.addListener(() => setState(() {}));
@@ -49,9 +51,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   Future<void> _loadData() async {
     if (!mounted) return;
-    if (_allExpenses.isEmpty) {
-      setState(() => _isLoading = true);
-    }
     try {
       final items = await _supabaseService.getExpenses();
       if (!mounted) return;

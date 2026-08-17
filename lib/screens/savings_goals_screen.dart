@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/expense_model.dart';
 import '../models/goal_model.dart';
 import '../services/currency_service.dart';
 import '../services/supabase_service.dart';
@@ -50,6 +51,36 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
         });
       }
     }
+    // Clean up any orphan goal deposit transactions for goals that no longer exist
+    _cleanupOrphanGoalTransactions();
+  }
+
+  Future<void> _cleanupOrphanGoalTransactions() async {
+    try {
+      final currentExpenses = await SupabaseService().getExpenses();
+      final activeGoalTitles = _goals.map((g) => g.title.trim().toLowerCase()).toSet();
+      final activeGoalIds = _goals.map((g) => g.id.trim()).toSet();
+
+      final orphanExpenses = currentExpenses.where((e) {
+        if (e.id != null && e.id!.startsWith('goal_dep_')) {
+          final matchesId = activeGoalIds.any((gid) => e.id!.startsWith('goal_dep_${gid}_') || e.id == 'goal_dep_$gid');
+          if (!matchesId) return true;
+        }
+        if (e.category == 'Savings & Goals' || e.title.toLowerCase().startsWith('goal deposit:')) {
+          final expenseGoalTitle = e.title.toLowerCase().replaceFirst('goal deposit:', '').trim();
+          if (expenseGoalTitle.isNotEmpty && !activeGoalTitles.contains(expenseGoalTitle)) {
+            return true;
+          }
+        }
+        return false;
+      }).toList();
+
+      for (final exp in orphanExpenses) {
+        if (exp.id != null) {
+          await SupabaseService().deleteExpense(exp.id!);
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _saveGoals() async {
@@ -70,11 +101,27 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => AddGoalScreen(
-          onAdd: (newGoal) {
+          onAdd: (newGoal) async {
             setState(() {
               _goals.add(newGoal);
             });
-            _saveGoals();
+            await _saveGoals();
+
+            // Auto-log initial deposit as an expense transaction if starting with money
+            if (newGoal.currentAmount > 0) {
+              final now = DateTime.now();
+              final goalExpense = Expense(
+                id: 'goal_dep_${newGoal.id}_${now.millisecondsSinceEpoch}',
+                title: 'Goal Deposit: ${newGoal.title}',
+                amount: newGoal.currentAmount,
+                category: 'Savings & Goals',
+                type: 'expense',
+                date: now,
+                paymentMethod: 'Bank Account',
+                notes: 'Initial savings allocation for ${newGoal.title}',
+              );
+              await SupabaseService().addExpense(goalExpense);
+            }
           },
         ),
       ),
@@ -82,26 +129,64 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
   }
 
   void _showEditGoalScreen(FinancialGoal goal) {
+    final oldAmount = goal.currentAmount;
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => AddGoalScreen(
           goalToEdit: goal,
           onAdd: (_) {},
-          onUpdate: (updatedGoal) {
+          onUpdate: (updatedGoal) async {
             setState(() {
               final index = _goals.indexWhere((g) => g.id == updatedGoal.id);
               if (index != -1) {
                 _goals[index] = updatedGoal;
               }
             });
-            _saveGoals();
+            await _saveGoals();
+
+            final added = updatedGoal.currentAmount - oldAmount;
+            if (added > 0) {
+              final now = DateTime.now();
+              final goalExpense = Expense(
+                id: 'goal_dep_${updatedGoal.id}_${now.millisecondsSinceEpoch}',
+                title: 'Goal Deposit: ${updatedGoal.title}',
+                amount: added,
+                category: 'Savings & Goals',
+                type: 'expense',
+                date: now,
+                paymentMethod: 'Bank Account',
+                notes: 'Additional savings deposit for ${updatedGoal.title}',
+              );
+              await SupabaseService().addExpense(goalExpense);
+            }
           },
-          onDelete: (id) {
+          onDelete: (id) async {
+            final targetGoal = _goals.firstWhere((g) => g.id == id, orElse: () => goal);
             setState(() {
               _goals.removeWhere((g) => g.id == id);
             });
-            _saveGoals();
+            await _saveGoals();
+
+            // When a goal is deleted, delete all associated goal deposit transactions
+            // so the money is restored back to the budget and balance!
+            try {
+              final currentExpenses = await SupabaseService().getExpenses();
+              final targetTitle = targetGoal.title.trim().toLowerCase();
+              final expensesToDelete = currentExpenses.where((e) {
+                final idMatch = e.id != null && (e.id == 'goal_dep_$id' || e.id!.startsWith('goal_dep_${id}_'));
+                final titleMatch = (e.category == 'Savings & Goals' || e.title.toLowerCase().startsWith('goal deposit:')) &&
+                    targetTitle.isNotEmpty &&
+                    e.title.toLowerCase().contains(targetTitle);
+                return idMatch || titleMatch;
+              }).toList();
+
+              for (final exp in expensesToDelete) {
+                if (exp.id != null) {
+                  await SupabaseService().deleteExpense(exp.id!);
+                }
+              }
+            } catch (_) {}
           },
         ),
       ),
@@ -183,7 +268,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                   backgroundColor: AppTheme.monexBlue,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                onPressed: () {
+                onPressed: () async {
                   final added = double.tryParse(controller.text.trim()) ?? 0.0;
                   if (added > 0) {
                     setState(() {
@@ -192,8 +277,31 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                         _goals[idx] = goal.copyWith(currentAmount: goal.currentAmount + added);
                       }
                     });
-                    _saveGoals();
-                    Navigator.pop(ctx);
+                    await _saveGoals();
+
+                    // Auto-log deposit to Expense Logs & deduct from budget/total money
+                    final now = DateTime.now();
+                    final goalExpense = Expense(
+                      id: 'goal_dep_${goal.id}_${now.millisecondsSinceEpoch}',
+                      title: 'Goal Deposit: ${goal.title}',
+                      amount: added,
+                      category: 'Savings & Goals',
+                      type: 'expense',
+                      date: now,
+                      paymentMethod: 'Bank Account',
+                      notes: 'Quick savings deposit towards ${goal.title}',
+                    );
+                    await SupabaseService().addExpense(goalExpense);
+
+                    if (mounted) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Deposited $currencySymbol${added.toStringAsFixed(0)} to "${goal.title}" and recorded in Transactions!'),
+                          backgroundColor: AppTheme.successGreen,
+                        ),
+                      );
+                    }
                   }
                 },
                 child: Text('Confirm Deposit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, color: Colors.white)),
