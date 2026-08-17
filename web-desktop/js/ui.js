@@ -6036,7 +6036,7 @@ window.renderLeaderboardView = function() {
     heroUsername.innerHTML = `${currentUserName} <span id="lb-hero-title-badge" class="hero-level-badge">Stage ${stage.stage}: ${stage.badge} ${stage.title}</span>`;
   }
 
-  // Render Table with Community Users + Current User
+  // Render Table with Authentic Users Only (No Dummy Accounts)
   const tbody = document.getElementById('lb-table-tbody');
   if (tbody) {
     const userUnlockedIcons = data.unlockedStickers.map(stId => {
@@ -6044,19 +6044,18 @@ window.renderLeaderboardView = function() {
       return st ? st.icon : '';
     }).filter(Boolean);
 
-    // Community Savers Dataset
-    const communitySavers = [
-      { name: 'Marcus Vance', avatar: '👨‍💼', emeralds: 3850, stage: 8, badge: '🏛️', title: 'Empire Architect', stickers: ['🏰', '🛡️', '💎', '🎯'], isCurrentUser: false },
-      { name: 'Elena Rostova', avatar: '👩‍💻', emeralds: 2900, stage: 6, badge: '💎', title: 'Wealth Vanguard', stickers: ['🎯', '🚀', '📈', '🐖'], isCurrentUser: false },
-      { name: 'David Kim', avatar: '👨‍🔬', emeralds: 2150, stage: 5, badge: '🛡️', title: 'Fortune Master', stickers: ['🛡️', '💰', '📊'], isCurrentUser: false },
-      { name: 'Aisha Patel', avatar: '👩‍🎨', emeralds: 1600, stage: 4, badge: '📈', title: 'Capital Builder', stickers: ['📈', '🎯', '🐖'], isCurrentUser: false },
-      { name: 'Sarah Chen', avatar: '👩‍⚕️', emeralds: 1100, stage: 3, badge: '💰', title: 'Asset Collector', stickers: ['💰', '🐖'], isCurrentUser: false },
-      { name: 'Liam O\'Connor', avatar: '👨‍🌾', emeralds: 650, stage: 2, badge: '🎖️', title: 'Pocket Guard', stickers: ['🐖', '🎯'], isCurrentUser: false },
-      { name: 'Carlos Mendez', avatar: '👨‍🍳', emeralds: 320, stage: 2, badge: '🎖️', title: 'Pocket Guard', stickers: ['🐖'], isCurrentUser: false },
-      { name: 'Maya Lin', avatar: '👩‍🎓', emeralds: 180, stage: 1, badge: '🥉', title: 'Novice Saver', stickers: ['🐖'], isCurrentUser: false },
-    ];
+    let currentUserId = 'local_user';
+    try {
+      const sess = localStorage.getItem('expense_cal_user_session');
+      if (sess) {
+        const u = JSON.parse(sess);
+        if (u.id) currentUserId = u.id;
+        else if (u.user && u.user.id) currentUserId = u.user.id;
+      }
+    } catch(e) {}
 
     const currentUserObj = {
+      userId: currentUserId,
       name: currentUserName,
       avatar: currentUserAvatar,
       emeralds: data.emeralds,
@@ -6067,38 +6066,92 @@ window.renderLeaderboardView = function() {
       isCurrentUser: true
     };
 
-    // Combine & Sort by Emeralds descending
-    const allUsers = [...communitySavers, currentUserObj].sort((a, b) => b.emeralds - a.emeralds);
+    // Helper to render array of authentic users into table
+    const renderTableRows = (userList) => {
+      // Sort descending by emeralds
+      const sorted = [...userList].sort((a, b) => b.emeralds - a.emeralds);
+      let userRank = 1;
+      sorted.forEach((u, idx) => {
+        u.rank = idx + 1;
+        if (u.isCurrentUser) userRank = u.rank;
+      });
 
-    // Assign Ranks & Find Current User Rank
-    let currentUserRank = 1;
-    allUsers.forEach((u, idx) => {
-      u.rank = idx + 1;
-      if (u.isCurrentUser) currentUserRank = u.rank;
-    });
+      const heroRankEl = document.getElementById('lb-hero-rank');
+      if (heroRankEl) heroRankEl.textContent = `#${userRank}`;
 
-    // Update Hero Rank Badge
-    const heroRankEl = document.getElementById('lb-hero-rank');
-    if (heroRankEl) heroRankEl.textContent = `#${currentUserRank}`;
-
-    tbody.innerHTML = allUsers.map(u => `
-      <tr class="${u.isCurrentUser ? 'current-user-row' : ''}">
-        <td class="lb-rank-num">#${u.rank}</td>
-        <td>
-          <div class="lb-user-col">
-            <div class="lb-user-avatar-wrapper" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: var(--glass-bg); border-radius: 50%; border: 1px solid var(--glass-border); margin-right: 12px; overflow: hidden; position: relative;">
-              ${u.avatar && (u.avatar.startsWith('data:image/') || u.avatar.startsWith('http')) 
-                ? `<img src="${u.avatar}" referrerpolicy="no-referrer" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="User Avatar" />` 
-                : `<span style="font-size: 1.5rem;">${u.avatar || u.name.charAt(0).toUpperCase()}</span>`}
+      tbody.innerHTML = sorted.map(u => `
+        <tr class="${u.isCurrentUser ? 'current-user-row' : ''}">
+          <td class="lb-rank-num">#${u.rank}</td>
+          <td>
+            <div class="lb-user-col">
+              <div class="lb-user-avatar-wrapper" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: var(--glass-bg); border-radius: 50%; border: 1px solid var(--glass-border); margin-right: 12px; overflow: hidden; position: relative;">
+                ${u.avatar && (u.avatar.startsWith('data:image/') || u.avatar.startsWith('http')) 
+                  ? `<img src="${u.avatar}" referrerpolicy="no-referrer" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="User Avatar" />` 
+                  : `<span style="font-size: 1.5rem;">${u.avatar || u.name.charAt(0).toUpperCase()}</span>`}
+              </div>
+              <strong>${u.name} ${u.isCurrentUser ? '(You)' : ''}</strong>
             </div>
-            <strong>${u.name} ${u.isCurrentUser ? '(You)' : ''}</strong>
-          </div>
-        </td>
-        <td><span class="hero-level-badge">Stage ${u.stage}: ${u.badge} ${u.title}</span></td>
-        <td><div class="lb-stickers-row">${u.stickers.map(s => `<span>${s}</span>`).join(' ')}</div></td>
-        <td style="text-align: right; font-weight: 800; color: #34d399;">${u.emeralds.toLocaleString()} 💎</td>
-      </tr>
-    `).join('');
+          </td>
+          <td><span class="hero-level-badge">Stage ${u.stage}: ${u.badge} ${u.title}</span></td>
+          <td><div class="lb-stickers-row">${u.stickers.map(s => `<span>${s}</span>`).join(' ')}</div></td>
+          <td style="text-align: right; font-weight: 800; color: #34d399;">${u.emeralds.toLocaleString()} 💎</td>
+        </tr>
+      `).join('');
+    };
+
+    // Initial render with current authentic user
+    renderTableRows([currentUserObj]);
+
+    // Async fetch other authentic users from Supabase
+    try {
+      const supaClient = typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null;
+      if (supaClient) {
+        Promise.all([
+          supaClient.from('user_emerald_rewards').select('*'),
+          supaClient.from('profiles').select('*')
+        ]).then(([rewardsRes, profilesRes]) => {
+          if (rewardsRes && rewardsRes.data && rewardsRes.data.length) {
+            const profileMap = {};
+            if (profilesRes && profilesRes.data) {
+              profilesRes.data.forEach(p => {
+                if (p.user_id) profileMap[p.user_id] = p;
+              });
+            }
+
+            const cloudUsersMap = new Map();
+            cloudUsersMap.set(currentUserId, currentUserObj);
+
+            rewardsRes.data.forEach(r => {
+              if (!r.user_id) return;
+              if (r.user_id === currentUserId) return; // already represented with latest local state
+
+              const prof = profileMap[r.user_id] || {};
+              const name = prof.name || prof.full_name || (prof.email ? prof.email.split('@')[0] : 'Expense User');
+              const avatar = prof.avatar_url || prof.picture || prof.photo_url || '';
+              const st = window.getStageByEmeralds(r.emeralds || 0);
+              const unlocked = (r.unlocked_stickers || []).map(stId => {
+                const item = window.STICKER_REGISTRY ? window.STICKER_REGISTRY.find(s => s.id === stId) : null;
+                return item ? item.icon : '';
+              }).filter(Boolean);
+
+              cloudUsersMap.set(r.user_id, {
+                userId: r.user_id,
+                name: name,
+                avatar: avatar,
+                emeralds: r.emeralds || 0,
+                stage: st.stage,
+                badge: st.badge,
+                title: st.title,
+                stickers: unlocked.length ? unlocked : ['🐖'],
+                isCurrentUser: false
+              });
+            });
+
+            renderTableRows(Array.from(cloudUsersMap.values()));
+          }
+        }).catch(() => {});
+      }
+    } catch(e) {}
   }
 
   // Render Sticker Grid
