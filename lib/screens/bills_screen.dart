@@ -58,11 +58,6 @@ class _BillsScreenState extends State<BillsScreen> {
     _checkPendingBillAlerts();
   }
 
-  void _setDefaults() {
-    _subscriptions = [];
-    _saveSubscriptions();
-  }
-
   /// Automatically rolls over paid bills whose due date has passed to the next cycle
   void _processCycleRollovers() {
     final now = DateTime.now();
@@ -264,7 +259,7 @@ class _BillsScreenState extends State<BillsScreen> {
 
                       // Category Dropdown
                       DropdownButtonFormField<String>(
-                        value: category,
+                        initialValue: category,
                         decoration: InputDecoration(
                           labelText: 'Category',
                           filled: true,
@@ -414,7 +409,7 @@ class _BillsScreenState extends State<BillsScreen> {
                             ),
                             Switch.adaptive(
                               value: remind,
-                              activeColor: AppTheme.monexBlue,
+                              activeTrackColor: AppTheme.monexBlue,
                               onChanged: (val) => setSheetState(() => remind = val),
                             ),
                           ],

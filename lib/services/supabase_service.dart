@@ -338,9 +338,14 @@ class SupabaseService {
         'remind_on_due_date': subJson['remind_on_due_date'] ?? subJson['remindOnDueDate'] ?? true,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       };
-      if (subJson['end_date'] != null) tableRow['end_date'] = subJson['end_date'];
-      if (subJson['last_paid_date'] != null) tableRow['last_paid_date'] = subJson['last_paid_date'];
-      else if (subJson['lastPaidDate'] != null) tableRow['last_paid_date'] = subJson['lastPaidDate'];
+      if (subJson['end_date'] != null) {
+        tableRow['end_date'] = subJson['end_date'];
+      }
+      if (subJson['last_paid_date'] != null) {
+        tableRow['last_paid_date'] = subJson['last_paid_date'];
+      } else if (subJson['lastPaidDate'] != null) {
+        tableRow['last_paid_date'] = subJson['lastPaidDate'];
+      }
       tableRow['user_id'] = userId;
 
       await client.from('subscriptions').upsert(tableRow, onConflict: 'id');
@@ -531,19 +536,15 @@ class SupabaseService {
             .eq('user_id', userId)
             .order('date', ascending: false);
 
-        if (tableResponse is List) {
-          for (var row in tableResponse) {
-            if (row is Map) {
-              final exp = Expense.fromJson(Map<String, dynamic>.from(row));
-              if (exp.id == 'initial_account_balance' ||
-                  exp.title == 'Total Account Money' ||
-                  exp.title == 'Initial Account Balance' ||
-                  exp.category == 'Total Account Money') {
-                continue;
-              }
-              if (exp.id != null) mergedMap[exp.id!] = exp;
-            }
+        for (var row in tableResponse) {
+          final exp = Expense.fromJson(Map<String, dynamic>.from(row));
+          if (exp.id == 'initial_account_balance' ||
+              exp.title == 'Total Account Money' ||
+              exp.title == 'Initial Account Balance' ||
+              exp.category == 'Total Account Money') {
+            continue;
           }
+          if (exp.id != null) mergedMap[exp.id!] = exp;
         }
       } catch (e) {
         debugPrint('Error fetching from expenses table: $e');
@@ -631,15 +632,11 @@ class SupabaseService {
                 .from('subscriptions')
                 .select()
                 .eq('user_id', userId);
-            if (tableSubs is List) {
-              final existingIds = cloudSubs.map((s) => s['id']?.toString()).toSet();
-              for (var row in tableSubs) {
-                if (row is Map) {
-                  final m = Map<String, dynamic>.from(row);
-                  if (!existingIds.contains(m['id']?.toString())) {
-                    cloudSubs.add(m);
-                  }
-                }
+            final existingIds = cloudSubs.map((s) => s['id']?.toString()).toSet();
+            for (var row in tableSubs) {
+              final m = Map<String, dynamic>.from(row);
+              if (!existingIds.contains(m['id']?.toString())) {
+                cloudSubs.add(m);
               }
             }
           } catch (_) {}
@@ -651,20 +648,16 @@ class SupabaseService {
                 .select()
                 .eq('user_id', userId)
                 .order('date', ascending: false);
-            if (tableBills is List) {
-              final existingIds = cloudGroup.map((g) => g['id']?.toString()).toSet();
-              for (var row in tableBills) {
-                if (row is Map) {
-                  final m = Map<String, dynamic>.from(row);
-                  // Convert relational fields to the format expected locally
-                  m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
-                  m['paidBy'] = m['paid_by'] ?? m['paidBy'];
-                  m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
-                  m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
-                  if (!existingIds.contains(m['id']?.toString())) {
-                    cloudGroup.add(m);
-                  }
-                }
+            final existingIds = cloudGroup.map((g) => g['id']?.toString()).toSet();
+            for (var row in tableBills) {
+              final m = Map<String, dynamic>.from(row);
+              // Convert relational fields to the format expected locally
+              m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
+              m['paidBy'] = m['paid_by'] ?? m['paidBy'];
+              m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
+              m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
+              if (!existingIds.contains(m['id']?.toString())) {
+                cloudGroup.add(m);
               }
             }
           } catch (_) {}
@@ -682,8 +675,8 @@ class SupabaseService {
           // Still try relational tables even if user_data has no subscriptions
           try {
             final tableSubs = await client.from('subscriptions').select().eq('user_id', userId);
-            if (tableSubs is List && tableSubs.isNotEmpty) {
-              final cloudSubs = tableSubs.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+            if (tableSubs.isNotEmpty) {
+              final cloudSubs = tableSubs.map((e) => Map<String, dynamic>.from(e)).toList();
               await prefs2.setString('user_saved_subscriptions', jsonEncode(cloudSubs));
             } else {
               await prefs2.remove('user_saved_subscriptions');
@@ -694,9 +687,9 @@ class SupabaseService {
 
           try {
             final tableBills = await client.from('split_bills').select().eq('user_id', userId).order('date', ascending: false);
-            if (tableBills is List && tableBills.isNotEmpty) {
+            if (tableBills.isNotEmpty) {
               final cloudGroup = tableBills.map((e) {
-                final m = Map<String, dynamic>.from(e as Map);
+                final m = Map<String, dynamic>.from(e);
                 m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
                 m['paidBy'] = m['paid_by'] ?? m['paidBy'];
                 m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
@@ -1196,19 +1189,15 @@ class SupabaseService {
             .select()
             .eq('user_id', userId)
             .order('date', ascending: false);
-        if (response is List) {
-          for (var row in response) {
-            if (row is Map) {
-              final m = Map<String, dynamic>.from(row);
-              m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
-              m['paidBy'] = m['paid_by'] ?? m['paidBy'];
-              m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
-              m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
-              final id = m['id']?.toString();
-              if (id != null && !merged.containsKey(id)) {
-                merged[id] = m;
-              }
-            }
+        for (var row in response) {
+          final m = Map<String, dynamic>.from(row);
+          m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
+          m['paidBy'] = m['paid_by'] ?? m['paidBy'];
+          m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
+          m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
+          final id = m['id']?.toString();
+          if (id != null && !merged.containsKey(id)) {
+            merged[id] = m;
           }
         }
       } catch (_) {}

@@ -2,18 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/expense_model.dart';
 import '../services/currency_service.dart';
-import '../services/export_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
-import 'bills_screen.dart';
-import 'budget_rules_screen.dart';
 import 'calendar_expenses_screen.dart';
-import 'fx_converter_screen.dart';
 import 'gamification_screen.dart';
 import 'ocr_scanner_screen.dart';
-import 'savings_goals_screen.dart';
 import 'split_bill_screen.dart';
-import 'what_if_screen.dart';
 
 class ToolsHubScreen extends StatelessWidget {
   final bool? showBackButton;
@@ -22,7 +16,6 @@ class ToolsHubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final SupabaseService supabase = SupabaseService();
-    final ExportService exporter = ExportService();
 
     final List<Map<String, dynamic>> tools = [
       {

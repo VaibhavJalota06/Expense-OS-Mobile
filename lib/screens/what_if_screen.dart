@@ -14,7 +14,7 @@ class WhatIfScreen extends StatefulWidget {
 
 class _WhatIfScreenState extends State<WhatIfScreen> {
   double _monthlySavings = 150.0;
-  double _annualReturnRate = 0.09; // 9% market average
+  final double _annualReturnRate = 0.09; // 9% market average
   String _selectedHabit = '☕ Daily Specialty Coffee';
 
   final Map<String, double> _habitPresets = {

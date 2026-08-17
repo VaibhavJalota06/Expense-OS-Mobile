@@ -157,7 +157,7 @@ class _BudgetRulesScreenState extends State<BudgetRulesScreen> {
                               ),
                               Switch(
                                 value: rule.isEnabled,
-                                activeColor: AppTheme.monexBlue,
+                                activeTrackColor: AppTheme.monexBlue,
                                 onChanged: (val) async {
                                   await _engine.setRuleEnabled(rule.id, val);
                                   setState(() => rule.isEnabled = val);

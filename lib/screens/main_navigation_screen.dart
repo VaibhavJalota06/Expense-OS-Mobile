@@ -7,7 +7,6 @@ import 'bills_screen.dart';
 import 'dashboard_screen.dart';
 import 'profile_screen.dart';
 import 'savings_goals_screen.dart';
-import 'tools_hub_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final VoidCallback onSignOut;

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -24,10 +23,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final SupabaseService _supabaseService = SupabaseService();
 
-  String _displayName = 'User';
-  String _email = 'user@gmail.com';
-  String? _avatarUrl;
-  String? _customAvatarPath;
   String _selectedCurrencySymbol = '\$';
 
   int _totalTransactions = 0;
@@ -76,29 +71,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    final user = _supabaseService.currentUser;
-
-    if (user != null) {
-      await SupabaseService.cacheUserData(user);
-    }
-
-    final googleEmail = prefs.getString('google_user_email');
-    final googleAvatar = prefs.getString('google_user_avatar');
-    final customName = prefs.getString('custom_user_name');
-    final customAvatar = prefs.getString('custom_avatar_path');
-
-    String email = user?.email ?? googleEmail ?? 'Member';
-    String name = customName ?? (user?.userMetadata?['full_name'] ?? user?.userMetadata?['name'] ?? (email.contains('@') ? email.split('@').first : 'Expense User'));
-    String? photoUrl = googleAvatar ?? user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
-
     final savedSymbol = prefs.getString('app_currency_symbol') ?? CurrencyService.currencySymbolNotifier.value;
 
     if (mounted) {
       setState(() {
-        _displayName = name;
-        _email = email;
-        _avatarUrl = photoUrl;
-        _customAvatarPath = customAvatar;
         _selectedCurrencySymbol = savedSymbol;
       });
     }
@@ -133,126 +109,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _totalExpense = expense;
       _savingsRate = rate;
     });
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final picker = ImagePicker();
-      final XFile? pickedFile = await picker.pickImage(
-        source: source,
-        maxWidth: 600,
-        maxHeight: 600,
-        imageQuality: 85,
-      );
-
-      if (pickedFile != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('custom_avatar_path', pickedFile.path);
-        if (mounted) {
-          setState(() {
-            _customAvatarPath = pickedFile.path;
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('Image picking error: $e');
-    }
-  }
-
-  void _showEditNameDialog() {
-    final nameController = TextEditingController(text: _displayName);
-    final emailController = TextEditingController(text: _email);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Edit Profile Details',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary, fontSize: 18),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Full Name',
-                style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                keyboardType: TextInputType.name,
-                textCapitalization: TextCapitalization.words,
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z\s\-\.]"))],
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'e.g. Vaibhav Jalota',
-                  prefixIcon: const Icon(Icons.person_outline_rounded, size: 20, color: AppTheme.monexBlue),
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE4E7EC))),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Gmail / Email Address',
-                style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'yourname@gmail.com',
-                  prefixIcon: const Icon(Icons.mail_outline_rounded, size: 20, color: AppTheme.monexBlue),
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE4E7EC))),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF667085), fontWeight: FontWeight.w600)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final newName = nameController.text.trim();
-              final newEmail = emailController.text.trim();
-              final prefs = await SharedPreferences.getInstance();
-
-              if (newName.isNotEmpty) {
-                await prefs.setString('custom_user_name', newName);
-              }
-              if (newEmail.isNotEmpty) {
-                await prefs.setString('google_user_email', newEmail);
-              }
-
-              setState(() {
-                if (newName.isNotEmpty) _displayName = newName;
-                if (newEmail.isNotEmpty) _email = newEmail;
-              });
-
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.monexBlue,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text('Save Profile', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showCurrencySelector() {
@@ -654,7 +510,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // 4. PREFERENCES & CURRENCY
             // ------------------------------------------------------------
             _buildSectionCard(
-              title: 'Preferences',
+              title: 'Preferences & Financial Controls',
               children: [
                 ListTile(
                   leading: const Icon(Icons.attach_money_rounded, color: AppTheme.monexBlue),
@@ -671,6 +527,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   onTap: _showCurrencySelector,
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F3F9)),
+                ListTile(
+                  leading: const Icon(Icons.savings_rounded, color: AppTheme.successGreen),
+                  title: Text('Monthly Budget Limit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                  subtitle: Text('Set monthly spending threshold & alerts', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF98A2B3)),
+                  onTap: _showEditBudgetDialog,
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F3F9)),
+                ListTile(
+                  leading: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF7A5AF8)),
+                  title: Text('Starting Bank Balance', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                  subtitle: Text('Initial money across accounts & cards', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF98A2B3)),
+                  onTap: _showEditStartingBalanceDialog,
                 ),
               ],
             ),
@@ -801,20 +673,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 40),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInitials() {
-    final initials = _displayName.isNotEmpty ? _displayName[0].toUpperCase() : 'U';
-    return Center(
-      child: Text(
-        initials,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 24,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
         ),
       ),
     );

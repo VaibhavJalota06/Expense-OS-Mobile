@@ -14,14 +14,10 @@ import 'add_expense_screen.dart';
 import 'calendar_expenses_screen.dart';
 import 'gamification_screen.dart';
 import 'ocr_scanner_screen.dart';
-import 'profile_screen.dart';
-import 'savings_goals_screen.dart';
 import 'split_bill_screen.dart';
-import 'tools_hub_screen.dart';
 import '../widgets/user_profile_modal.dart';
 import '../services/budget_rules_engine.dart';
 import '../services/currency_service.dart';
-import '../services/notification_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onOpenAddExpense;
@@ -35,6 +31,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final SupabaseService _supabaseService = SupabaseService();
+  bool _isLoading = false;
   List<Expense> _expenses = [];
   double _monthlyBudgetCap = 0.0;
   double _startingBalance = 0.0;
@@ -215,14 +212,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return _monthlyBudgetCap - _currentMonthExpenses;
   }
 
-  double get _totalExpenses {
-    return _expenses.where((e) => e.type == 'expense').fold(0.0, (sum, e) => sum + e.amount);
-  }
-
-  double get _netBalance {
-    return _availableMoney - _totalExpenses;
-  }
-
   void _openAddExpenseSheet([Expense? expenseToEdit]) {
     showModalBottomSheet(
       context: context,
@@ -242,109 +231,121 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
-    final currency = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 2);
+    return ValueListenableBuilder<String>(
+      valueListenable: CurrencyService.currencySymbolNotifier,
+      builder: (context, activeSymbol, _) {
+        final currency = NumberFormat.currency(symbol: activeSymbol, locale: 'en_US', decimalDigits: 0);
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: AppTheme.monexBlue,
-          onRefresh: () async {
-            HapticFeedback.lightImpact();
-            await _refreshDashboard();
-          },
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-            child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Top Header: "Overview" + Clickable User Avatar
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          body: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: AppTheme.monexBlue))
+              : SafeArea(
+                  child: RefreshIndicator(
+                    color: AppTheme.monexBlue,
+                    onRefresh: () async {
+                      HapticFeedback.lightImpact();
+                      await _refreshDashboard();
+                    },
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Overview',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (_) => UserProfileModal(
-                                  onSignOut: () {
-                                    if (widget.onSignOut != null) {
-                                      widget.onSignOut!();
-                                    } else if (mounted) {
-                                      setState(() {});
-                                    }
-                                  },
+                          // Top Header: "Overview" + Reminders & User Profile
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Overview',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.textPrimary,
+                                  letterSpacing: -0.3,
                                 ),
-                              ).then((_) {
-                                if (mounted) setState(() {});
-                              });
-                            },
-                            child: Stack(
-                              children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppTheme.monexBlue,
-                                    border: Border.all(color: Colors.white, width: 2),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppTheme.monexBlue.withValues(alpha: 0.25),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.notifications_none_rounded, color: AppTheme.textPrimary, size: 24),
+                                    tooltip: 'Reminders & Alerts',
+                                    onPressed: _showRemindersSheet,
                                   ),
-                                  child: ClipOval(
-                                    child: _buildAvatarContent(),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 1,
-                                  right: 1,
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF12B76A),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
+                                  const SizedBox(width: 4),
+                                  GestureDetector(
+                                    onTap: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (_) => UserProfileModal(
+                                          onSignOut: () {
+                                            if (widget.onSignOut != null) {
+                                              widget.onSignOut!();
+                                            } else if (mounted) {
+                                              setState(() {});
+                                            }
+                                          },
+                                        ),
+                                      ).then((_) {
+                                        if (mounted) setState(() {});
+                                      });
+                                    },
+                                    child: Stack(
+                                      children: [
+                                        Container(
+                                          width: 44,
+                                          height: 44,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: AppTheme.monexBlue,
+                                            border: Border.all(color: Colors.white, width: 2),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: AppTheme.monexBlue.withValues(alpha: 0.25),
+                                                blurRadius: 10,
+                                                offset: const Offset(0, 3),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ClipOval(
+                                            child: _buildAvatarContent(),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          top: 1,
+                                          right: 1,
+                                          child: Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF12B76A),
+                                              shape: BoxShape.circle,
+                                              border: Border.all(color: Colors.white, width: 2),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
 
-                      const SizedBox(height: 20),
+                          const SizedBox(height: 20),
 
-                      // Horizontal Stat Cards Carousel
-                      SizedBox(
-                        height: 145,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          clipBehavior: Clip.none,
-                          children: [
+                          // Horizontal Stat Cards Carousel
+                          SizedBox(
+                            height: 145,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              clipBehavior: Clip.none,
+                              children: [
                             // Card 1: Total Money (Bank Funds = Initial Starting Balance + Incomes)
                             _buildStatCard(
                               index: 0,
@@ -478,7 +479,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         final count = lineItems.isNotEmpty ? lineItems.length : 1;
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('$count scanned item(s) saved from $merchant • $currencySymbol${totalAmount.toStringAsFixed(2)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                                            content: Text('$count scanned item(s) saved from $merchant • $activeSymbol${totalAmount.toStringAsFixed(2)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
                                             backgroundColor: AppTheme.successGreen,
                                           ),
                                         );
@@ -691,11 +692,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ),
-      ),
+            ),
+        );
+      },
     );
   }
-
-
 
   void _showRemindersSheet() {
     showModalBottomSheet(
@@ -1154,55 +1155,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionPill({
-    required String label,
-    required IconData? icon,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isActive ? AppTheme.monexBlue : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: isActive
-              ? null
-              : Border.all(color: const Color(0xFFE4E7EC), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF101828).withValues(alpha: 0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(
-                icon,
-                size: 16,
-                color: isActive ? Colors.white : const Color(0xFF475467),
-              ),
-              const SizedBox(width: 6),
-            ],
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: isActive ? Colors.white : const Color(0xFF344054),
-              ),
             ),
           ],
         ),

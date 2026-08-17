@@ -63,7 +63,7 @@ class _Floating3DBadgeState extends State<Floating3DBadge>
         return Transform(
           transform: Matrix4.identity()
             ..setEntry(3, 2, 0.002)
-            ..translate(0.0, -floatVal)
+            ..translateByDouble(0.0, -floatVal, 0.0, 1.0)
             ..rotateX(tiltAngle)
             ..rotateZ(tiltAngle * 0.5),
           alignment: Alignment.center,

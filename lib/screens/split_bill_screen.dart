@@ -737,7 +737,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                       Text('Custom Unequal Shares', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 13, color: AppTheme.textSecondary)),
                       Switch(
                         value: _isUnequalSplit,
-                        activeColor: AppTheme.monexBlue,
+                        activeTrackColor: AppTheme.monexBlue,
                         onChanged: (val) {
                           setState(() {
                             _isUnequalSplit = val;
@@ -847,7 +847,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                                 onChanged: (_) => setState(() {}),
                                 style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
                                 decoration: InputDecoration(
-                                  prefixText: '$currencySymbol',
+                                  prefixText: currencySymbol,
                                   isDense: true,
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                                 ),

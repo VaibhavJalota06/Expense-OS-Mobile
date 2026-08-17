@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CurrencyService {
@@ -52,14 +51,23 @@ class CurrencyService {
       final primaryStr = primaryLocale.toString().toUpperCase();
 
       if (rawCountry.isEmpty) {
-        if (primaryStr.contains('IN') || primaryStr.contains('HI')) rawCountry = 'IN';
-        else if (primaryStr.contains('GB') || primaryStr.contains('UK')) rawCountry = 'GB';
-        else if (primaryStr.contains('CA')) rawCountry = 'CA';
-        else if (primaryStr.contains('AU')) rawCountry = 'AU';
-        else if (primaryStr.contains('JP')) rawCountry = 'JP';
-        else if (primaryStr.contains('SG')) rawCountry = 'SG';
-        else if (primaryStr.contains('AE')) rawCountry = 'AE';
-        else if (primaryStr.contains('US')) rawCountry = 'US';
+        if (primaryStr.contains('IN') || primaryStr.contains('HI')) {
+          rawCountry = 'IN';
+        } else if (primaryStr.contains('GB') || primaryStr.contains('UK')) {
+          rawCountry = 'GB';
+        } else if (primaryStr.contains('CA')) {
+          rawCountry = 'CA';
+        } else if (primaryStr.contains('AU')) {
+          rawCountry = 'AU';
+        } else if (primaryStr.contains('JP')) {
+          rawCountry = 'JP';
+        } else if (primaryStr.contains('SG')) {
+          rawCountry = 'SG';
+        } else if (primaryStr.contains('AE')) {
+          rawCountry = 'AE';
+        } else if (primaryStr.contains('US')) {
+          rawCountry = 'US';
+        }
       }
 
       if (rawCountry.isEmpty) {
