@@ -92,10 +92,10 @@
       <p class="section-desc">Get Expense OS on your Android phone, Windows PC, or use our instant web app in any browser.</p>
     </div>
 
-    <div class="download-platforms-grid">
+    <div class="download-platforms-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
       
       <!-- Android APK Card -->
-      <div class="glass-panel platform-card">
+      <div class="glass-panel platform-card" style="padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
         <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
           <div class="platform-icon" style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399;">
             <i class="fa-brands fa-android"></i>
@@ -103,18 +103,37 @@
           <div style="display: inline-block; padding: 4px 12px; background: rgba(52, 211, 153, 0.12); color: #34d399; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem;">
             Android Package
           </div>
-          <h3 style="font-size: 1.35rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Android (.apk)</h3>
-          <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1.75rem;">
-            Install directly on any Android smartphone or tablet. Fast, offline-first mobile expense tracking on the go.
+          <h3 style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Android (.apk)</h3>
+          <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem;">
+            Direct APK install for all Android phones &amp; tablets. Fast, lightweight, and offline-ready.
           </p>
         </div>
-        <a href="Expense-OS.apk" download="Expense-OS.apk" class="btn btn-emerald btn-block" style="width: 100%; padding: 0.85rem; font-size: 0.95rem; text-decoration: none;">
-          <i class="fa-solid fa-download"></i> Download Android APK
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v2.9.5/app-release.apk" class="btn btn-emerald btn-block" style="width: 100%; padding: 0.85rem; font-size: 0.95rem; text-decoration: none;">
+          <i class="fa-solid fa-download"></i> Download APK
+        </a>
+      </div>
+
+      <!-- iOS IPA Card -->
+      <div class="glass-panel platform-card" style="padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+          <div class="platform-icon" style="background: rgba(244, 114, 182, 0.15); border: 1px solid rgba(244, 114, 182, 0.3); color: #f472b6;">
+            <i class="fa-brands fa-apple"></i>
+          </div>
+          <div style="display: inline-block; padding: 4px 12px; background: rgba(244, 114, 182, 0.12); color: #f472b6; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem;">
+            iOS Package
+          </div>
+          <h3 style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">iOS / iPhone (.ipa)</h3>
+          <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem;">
+            Install via AltStore, TrollStore, or Sideloadly. Fluid 120Hz native iOS animations &amp; haptics.
+          </p>
+        </div>
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v2.9.5/ExpenseOS-iOS.ipa" class="btn btn-block" style="width: 100%; padding: 0.85rem; font-size: 0.95rem; text-decoration: none; background: rgba(244, 114, 182, 0.2); border: 1px solid rgba(244, 114, 182, 0.4); color: #fdf2f8;">
+          <i class="fa-solid fa-download"></i> Download IPA
         </a>
       </div>
 
       <!-- Windows Desktop Card -->
-      <div class="glass-panel platform-card">
+      <div class="glass-panel platform-card" style="padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
         <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
           <div class="platform-icon" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8;">
             <i class="fa-brands fa-windows"></i>
@@ -122,18 +141,18 @@
           <div style="display: inline-block; padding: 4px 12px; background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem;">
             Windows Installer
           </div>
-          <h3 style="font-size: 1.35rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Windows PC (.exe)</h3>
-          <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1.75rem;">
-            Native desktop experience for Windows 10 &amp; 11 with keyboard shortcuts, multi-windowing, and offline DB support.
+          <h3 style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Windows PC (.exe)</h3>
+          <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem;">
+            Full desktop app for Windows 10 &amp; 11 with keyboard shortcuts, system tray, and dark glass UI.
           </p>
         </div>
         <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v2.9.5/Expense-OS-Setup-2.9.5.exe" class="btn btn-secondary btn-block" style="width: 100%; padding: 0.85rem; font-size: 0.95rem; text-decoration: none;">
-          <i class="fa-solid fa-download"></i> Download Windows (.exe)
+          <i class="fa-solid fa-download"></i> Download (.exe)
         </a>
       </div>
 
       <!-- Web App Card -->
-      <div class="glass-panel platform-card">
+      <div class="glass-panel platform-card" style="padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
         <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
           <div class="platform-icon" style="background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.3); color: #a78bfa;">
             <i class="fa-solid fa-globe"></i>
@@ -141,9 +160,9 @@
           <div style="display: inline-block; padding: 4px 12px; background: rgba(167, 139, 250, 0.12); color: #a78bfa; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem;">
             Browser &amp; PWA
           </div>
-          <h3 style="font-size: 1.35rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Web Application</h3>
-          <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1.75rem;">
-            No installation required. Access your financial dashboard instantly from any modern web browser.
+          <h3 style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Web Application</h3>
+          <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem;">
+            Zero installation required. Launch immediately in Chrome, Safari, Firefox, or Edge on any device.
           </p>
         </div>
         <a href="../index.html" target="_blank" class="btn btn-primary btn-block" style="width: 100%; padding: 0.85rem; font-size: 0.95rem; text-decoration: none;">
