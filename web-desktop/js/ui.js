@@ -2366,7 +2366,7 @@ async function resetAllData(e) {
 
   let cloudSuccess = false;
 
-  // 1. Reset Supabase Cloud Database Data with schema-valid columns
+  // 1. Reset Supabase Cloud Database Data with schema-valid columns & clear relational tables
   const supaClient = (typeof getSupabaseClient === 'function' ? getSupabaseClient() : (typeof supabase !== 'undefined' ? supabase : null));
   if (supaClient) {
     try {
@@ -2381,16 +2381,19 @@ async function resetAllData(e) {
         const payload = {
           user_id: uId,
           budget: 0,
+          starting_balance: 0.0,
+          account_balance: 0.0,
           expenses: [],
           subscriptions: [],
           incomes: [],
+          savings_goals: [],
           updated_at: new Date().toISOString()
         };
         const { error } = await supaClient.from('user_data').upsert(payload, { onConflict: 'user_id' });
         if (!error) {
           cloudSuccess = true;
         } else {
-          // Fallback basic payload if incomes column is not present in older DB schemas
+          // Fallback basic payload if some columns are absent
           const basicPayload = {
             user_id: uId,
             budget: 0,
@@ -2401,6 +2404,13 @@ async function resetAllData(e) {
           const { error: basicErr } = await supaClient.from('user_data').upsert(basicPayload, { onConflict: 'user_id' });
           if (!basicErr) cloudSuccess = true;
         }
+
+        // Delete relational database table rows cleanly so cross-platform sync stays at 0
+        try { await supaClient.from('expenses').delete().eq('user_id', uId); } catch (_) {}
+        try { await supaClient.from('subscriptions').delete().eq('user_id', uId); } catch (_) {}
+        try { await supaClient.from('split_bills').delete().eq('user_id', uId); } catch (_) {}
+        try { await supaClient.from('budgets').delete().eq('user_id', uId); } catch (_) {}
+        try { await supaClient.from('user_emerald_rewards').delete().eq('user_id', uId); } catch (_) {}
       }
     } catch(err) {
       console.warn('Supabase reset notice:', err);

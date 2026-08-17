@@ -1140,9 +1140,12 @@ class SupabaseService {
       await client.from('user_data').upsert({
         'user_id': userId,
         'budget': 0.0,
+        'starting_balance': 0.0,
+        'account_balance': 0.0,
         'expenses': [],
         'incomes': [],
         'subscriptions': [],
+        'savings_goals': [],
         'currency': 'INR',
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id');
@@ -1152,6 +1155,7 @@ class SupabaseService {
       try { await client.from('subscriptions').delete().eq('user_id', userId); } catch (_) {}
       try { await client.from('split_bills').delete().eq('user_id', userId); } catch (_) {}
       try { await client.from('budgets').delete().eq('user_id', userId); } catch (_) {}
+      try { await client.from('user_emerald_rewards').delete().eq('user_id', userId); } catch (_) {}
     } catch (_) {}
 
     refreshNotifier.value++;

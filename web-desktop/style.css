@@ -811,6 +811,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   padding: 1.5rem 1.1rem;
   flex-shrink: 0;
   z-index: 100;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .sidebar-brand {
@@ -1144,6 +1147,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
 }
 
