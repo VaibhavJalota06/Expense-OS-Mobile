@@ -55,15 +55,13 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
 
     // 2. Fetch fresh data from Supabase Cloud so any goals added/updated on Web/Desktop show up immediately
     try {
-      if (SupabaseService().isLoggedIn) {
-        await SupabaseService().pullUserData();
-        final freshData = prefs.getString('monex_goals');
-        if (freshData != null && mounted) {
-          final List freshDecoded = jsonDecode(freshData);
-          setState(() {
-            _goals = freshDecoded.map((e) => FinancialGoal.fromJson(e)).toList();
-          });
-        }
+      await SupabaseService().getExpenses();
+      final freshData = prefs.getString('monex_goals');
+      if (freshData != null && mounted) {
+        final List freshDecoded = jsonDecode(freshData);
+        setState(() {
+          _goals = freshDecoded.map((e) => FinancialGoal.fromJson(e)).toList();
+        });
       }
     } catch (_) {}
   }
