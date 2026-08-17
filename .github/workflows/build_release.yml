@@ -109,7 +109,10 @@ jobs:
 
       - name: Build Windows Executable
         working-directory: web-desktop
-        run: npx electron-builder --win --publish never
+        run: |
+          npx electron-builder --win --publish never
+          Copy-Item "dist/Expense OS Setup 2.9.5.exe" "dist/Expense-OS-Setup-2.9.5.exe" -ErrorAction SilentlyContinue
+          Copy-Item "dist/Expense OS 2.9.5.exe" "dist/Expense-OS-2.9.5.exe" -ErrorAction SilentlyContinue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
