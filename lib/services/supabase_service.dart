@@ -949,7 +949,7 @@ class SupabaseService {
     _localExpenses.insert(0, localItem);
     await _persistLocalExpenses();
     await _pushUserDataToCloud();
-    _pushExpenseToTable(localItem); // Dual-write to relational table
+    await _pushExpenseToTable(localItem); // Dual-write to relational table
     refreshNotifier.value++;
     return localItem;
   }
@@ -963,7 +963,7 @@ class SupabaseService {
     }
     await _persistLocalExpenses();
     await _pushUserDataToCloud();
-    _pushExpenseToTable(expense); // Dual-write to relational table
+    await _pushExpenseToTable(expense); // Dual-write to relational table
     refreshNotifier.value++;
     return expense;
   }
@@ -1007,7 +1007,7 @@ class SupabaseService {
       }
 
       await _pushUserDataToCloud();
-      _deleteExpenseFromTable(id); // Dual-delete from relational table
+      await _deleteExpenseFromTable(id); // Dual-delete from relational table
       refreshNotifier.value++;
     }
   }
