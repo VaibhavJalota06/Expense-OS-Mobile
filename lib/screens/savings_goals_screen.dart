@@ -41,43 +41,28 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
   }
 
   Future<void> _loadGoals() async {
+    // 1. Instant local render from cached preferences
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString('monex_goals');
-    if (data != null) {
-      final List decoded = jsonDecode(data);
-      if (mounted) {
+    if (data != null && mounted) {
+      try {
+        final List decoded = jsonDecode(data);
         setState(() {
           _goals = decoded.map((e) => FinancialGoal.fromJson(e)).toList();
         });
-      }
+      } catch (_) {}
     }
-    // Clean up any orphan goal deposit transactions for goals that no longer exist
-    _cleanupOrphanGoalTransactions();
-  }
 
-  Future<void> _cleanupOrphanGoalTransactions() async {
+    // 2. Fetch fresh data from Supabase Cloud so any goals added/updated on Web/Desktop show up immediately
     try {
-      final currentExpenses = await SupabaseService().getExpenses();
-      final activeGoalTitles = _goals.map((g) => g.title.trim().toLowerCase()).toSet();
-      final activeGoalIds = _goals.map((g) => g.id.trim()).toSet();
-
-      final orphanExpenses = currentExpenses.where((e) {
-        if (e.id != null && e.id!.startsWith('goal_dep_')) {
-          final matchesId = activeGoalIds.any((gid) => e.id!.startsWith('goal_dep_${gid}_') || e.id == 'goal_dep_$gid');
-          if (!matchesId) return true;
-        }
-        if (e.category == 'Savings & Goals' || e.title.toLowerCase().startsWith('goal deposit:')) {
-          final expenseGoalTitle = e.title.toLowerCase().replaceFirst('goal deposit:', '').trim();
-          if (expenseGoalTitle.isNotEmpty && !activeGoalTitles.contains(expenseGoalTitle)) {
-            return true;
-          }
-        }
-        return false;
-      }).toList();
-
-      for (final exp in orphanExpenses) {
-        if (exp.id != null) {
-          await SupabaseService().deleteExpense(exp.id!);
+      if (SupabaseService().isLoggedIn) {
+        await SupabaseService().pullUserData();
+        final freshData = prefs.getString('monex_goals');
+        if (freshData != null && mounted) {
+          final List freshDecoded = jsonDecode(freshData);
+          setState(() {
+            _goals = freshDecoded.map((e) => FinancialGoal.fromJson(e)).toList();
+          });
         }
       }
     } catch (_) {}
