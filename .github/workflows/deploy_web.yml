@@ -1,0 +1,85 @@
+name: Deploy Web App & Landing Page to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'web-desktop/**'
+      - '.github/workflows/deploy_web.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Assemble Web & Landing Site
+        run: |
+          mkdir -p _site
+          mkdir -p _site/landing
+          mkdir -p _site/app
+
+          # Copy entire web app to root and /app/
+          cp -r web-desktop/index.html _site/
+          cp -r web-desktop/style.css _site/
+          cp -r web-desktop/script.js _site/
+          cp -r web-desktop/auth.js _site/
+          cp -r web-desktop/auth-callback.html _site/
+          cp -r web-desktop/supabase-config.js _site/
+          cp -r web-desktop/service-worker.js _site/
+          cp -r web-desktop/manifest.json _site/
+          cp -r web-desktop/icon.png _site/
+          cp -r web-desktop/icon.ico _site/
+          cp -r web-desktop/js _site/
+          cp -r web-desktop/supabase _site/
+          cp -r web-desktop/templates _site/
+
+          # Also mirror to /app/
+          cp -r web-desktop/index.html _site/app/
+          cp -r web-desktop/style.css _site/app/
+          cp -r web-desktop/script.js _site/app/
+          cp -r web-desktop/auth.js _site/app/
+          cp -r web-desktop/auth-callback.html _site/app/
+          cp -r web-desktop/supabase-config.js _site/app/
+          cp -r web-desktop/service-worker.js _site/app/
+          cp -r web-desktop/manifest.json _site/app/
+          cp -r web-desktop/icon.png _site/app/
+          cp -r web-desktop/icon.ico _site/app/
+          cp -r web-desktop/js _site/app/
+          cp -r web-desktop/supabase _site/app/
+          cp -r web-desktop/templates _site/app/
+
+          # Copy landing page to /landing/
+          cp -r web-desktop/landing/* _site/landing/
+          cp web-desktop/landing/index.html _site/landing.html
+
+          # Create a .nojekyll file to prevent Jekyll processing
+          touch _site/.nojekyll
+
+      - name: Upload GitHub Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

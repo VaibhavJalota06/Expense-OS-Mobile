@@ -336,13 +336,13 @@ document.addEventListener('DOMContentLoaded', () => {
               <i class="fa-solid fa-file-csv" style="font-size:2rem; color:var(--primary-bright); margin-bottom:8px;"></i>
               <div style="font-weight:700;">Export as CSV</div>
               <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:12px;">Spreadsheet Ready</div>
-              <a href="../web/index.html" target="_blank" class="preview-pill" style="background:var(--primary); color:#000; display:inline-block;">Download CSV</a>
+              <a href="../index.html" target="_blank" class="preview-pill" style="background:var(--primary); color:#000; display:inline-block;">Download CSV</a>
             </div>
             <div class="mockup-stat-card" style="width:240px; text-align:center;">
               <i class="fa-solid fa-file-code" style="font-size:2rem; color:var(--accent-cyan); margin-bottom:8px;"></i>
               <div style="font-weight:700;">Backup JSON</div>
               <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:12px;">Complete Raw Ledger</div>
-              <a href="../web/index.html" target="_blank" class="preview-pill" style="background:var(--accent-cyan); color:#000; display:inline-block;">Download JSON</a>
+              <a href="../index.html" target="_blank" class="preview-pill" style="background:var(--accent-cyan); color:#000; display:inline-block;">Download JSON</a>
             </div>
           </div>
         </div>
