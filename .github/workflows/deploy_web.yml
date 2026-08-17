@@ -70,7 +70,9 @@ jobs:
 
           # Copy landing page to /landing/
           cp -r web-desktop/landing/* _site/landing/
-          cp web-desktop/landing/index.html _site/landing.html
+          
+          # Create root landing.html with corrected asset paths for root location
+          sed 's|href="style\.css|href="landing/style.css|g; s|src="script\.js|src="landing/script.js|g; s|href="\.\./icon\.png"|href="icon.png"|g; s|href="\.\./index\.html"|href="index.html"|g' web-desktop/landing/index.html > _site/landing.html
 
           # Create a .nojekyll file to prevent Jekyll processing
           touch _site/.nojekyll
