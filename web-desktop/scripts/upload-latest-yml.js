@@ -20,7 +20,7 @@ const pkg = require('../package.json');
 
 async function uploadLatestYml() {
   try {
-    const releasesRes = await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-Calculator-Desktop/releases', {
+    const releasesRes = await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile/releases', {
       headers: { Authorization: `token ${token}` }
     });
     const releases = await releasesRes.json();
@@ -41,7 +41,7 @@ async function uploadLatestYml() {
     // Delete old latest.yml asset if already exists
     const existingAsset = match.assets ? match.assets.find(a => a.name === 'latest.yml') : null;
     if (existingAsset) {
-      await fetch(`https://api.github.com/repos/VaibhavJalota06/Expense-Calculator-Desktop/releases/assets/${existingAsset.id}`, {
+      await fetch(`https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile/releases/assets/${existingAsset.id}`, {
         method: 'DELETE',
         headers: { Authorization: `token ${token}` }
       });

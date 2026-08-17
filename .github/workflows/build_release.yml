@@ -111,8 +111,7 @@ jobs:
         working-directory: web-desktop
         run: |
           npx electron-builder --win --publish never
-          Copy-Item "dist/Expense OS Setup 2.9.5.exe" "dist/Expense-OS-Setup-2.9.5.exe" -ErrorAction SilentlyContinue
-          Copy-Item "dist/Expense OS 2.9.5.exe" "dist/Expense-OS-2.9.5.exe" -ErrorAction SilentlyContinue
+          Get-ChildItem -Path "dist" -Filter "*.exe" | ForEach-Object { Copy-Item $_.FullName ($_.FullName -replace ' ', '-') -ErrorAction SilentlyContinue }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -123,6 +122,7 @@ jobs:
           name: ExpenseOS-Windows-EXE
           path: |
             web-desktop/dist/*.exe
+            web-desktop/dist/latest.yml
 
   create-release:
     name: Publish Release Assets
@@ -162,6 +162,7 @@ jobs:
             artifacts/android/*.apk
             artifacts/ios/*.ipa
             artifacts/desktop/*.exe
+            artifacts/desktop/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

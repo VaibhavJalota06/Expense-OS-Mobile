@@ -46,7 +46,7 @@ try {
   const token = process.env.GH_TOKEN;
   if (token && pkg.version) {
     try {
-      const res = execSync(`node -e "fetch('https://api.github.com/repos/VaibhavJalota06/Expense-Calculator-Desktop/releases', { headers: { Authorization: 'token ${token}' } }).then(r => r.json()).then(async releases => { const match = releases.find(r => r.tag_name === 'v${pkg.version}' || r.tag_name === '${pkg.version}'); if (match && match.draft) { await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-Calculator-Desktop/releases/' + match.id, { method: 'PATCH', headers: { Authorization: 'token ${token}', 'Content-Type': 'application/json' }, body: JSON.stringify({ draft: false, prerelease: false, make_latest: 'true' }) }); console.log('Draft release v${pkg.version} officially published to public!'); } }).catch(() => {})"`).toString();
+      const res = execSync(`node -e "fetch('https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile/releases', { headers: { Authorization: 'token ${token}' } }).then(r => r.json()).then(async releases => { const match = releases.find(r => r.tag_name === 'v${pkg.version}' || r.tag_name === '${pkg.version}'); if (match && match.draft) { await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile/releases/' + match.id, { method: 'PATCH', headers: { Authorization: 'token ${token}', 'Content-Type': 'application/json' }, body: JSON.stringify({ draft: false, prerelease: false, make_latest: 'true' }) }); console.log('Draft release v${pkg.version} officially published to public!'); } }).catch(() => {})"`).toString();
       if (res.trim()) console.log(res.trim());
     } catch (e) {}
   }
