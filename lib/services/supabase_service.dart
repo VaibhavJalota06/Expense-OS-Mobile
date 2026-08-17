@@ -535,6 +535,12 @@ class SupabaseService {
           for (var row in tableResponse) {
             if (row is Map) {
               final exp = Expense.fromJson(Map<String, dynamic>.from(row));
+              if (exp.id == 'initial_account_balance' ||
+                  exp.title == 'Total Account Money' ||
+                  exp.title == 'Initial Account Balance' ||
+                  exp.category == 'Total Account Money') {
+                continue;
+              }
               if (exp.id != null) mergedMap[exp.id!] = exp;
             }
           }

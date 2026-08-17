@@ -412,6 +412,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               final newBal = double.tryParse(controller.text.trim()) ?? 0.0;
               await prefs.setDouble('user_starting_balance', newBal);
+              await SupabaseService.syncFinancialProfileToCloud(startingBalance: newBal);
               SupabaseService.refreshNotifier.value++;
               if (mounted) setState(() {});
               Navigator.pop(ctx);

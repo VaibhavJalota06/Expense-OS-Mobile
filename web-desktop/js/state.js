@@ -450,6 +450,8 @@ window.syncProfileToSupabase = async function(profileData) {
       currency: prof.currency || activeCurrency || 'INR',
       bio: prof.bio || '',
       avatar_url: prof.avatar || '',
+      monthly_budget: Number(budget || 0),
+      starting_balance: Number(accountBalance || 0),
       updated_at: new Date().toISOString()
     };
     await supaClient.from('profiles').upsert(payload, { onConflict: 'user_id' }).catch(() => {});
