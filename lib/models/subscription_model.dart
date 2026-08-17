@@ -123,7 +123,7 @@ class SubscriptionItem {
     final lastPaidStr = lastPaidDate != null ? lastPaidDate!.toIso8601String().split('T')[0] : null;
     return {
       'id': id,
-      if (effectiveUserId != null && effectiveUserId != 'local_device_user') 'user_id': effectiveUserId,
+      if (effectiveUserId != null) 'user_id': effectiveUserId,
       'title': title,
       'amount': amount,
       'category': category,

@@ -187,7 +187,7 @@ class SupabaseService {
     final prefs = await SharedPreferences.getInstance();
     final cached = prefs.getString('supabase_user_id');
     if (cached != null && cached.isNotEmpty) return cached;
-    return 'local_device_user';
+    throw Exception('User is not authenticated. Please sign in to sync your data.');
   }
 
   // ---------------------------------------------------------------
@@ -341,7 +341,7 @@ class SupabaseService {
       if (subJson['end_date'] != null) tableRow['end_date'] = subJson['end_date'];
       if (subJson['last_paid_date'] != null) tableRow['last_paid_date'] = subJson['last_paid_date'];
       else if (subJson['lastPaidDate'] != null) tableRow['last_paid_date'] = subJson['lastPaidDate'];
-      if (userId != 'local_device_user') tableRow['user_id'] = userId;
+      tableRow['user_id'] = userId;
 
       await client.from('subscriptions').upsert(tableRow, onConflict: 'id');
     } catch (e) {
@@ -375,7 +375,7 @@ class SupabaseService {
         'settled_status': billJson['settledStatus'] ?? {},
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       };
-      if (userId != 'local_device_user') tableRow['user_id'] = userId;
+      tableRow['user_id'] = userId;
 
       await client.from('split_bills').upsert(tableRow, onConflict: 'id');
 
@@ -421,7 +421,6 @@ class SupabaseService {
   Future<void> _pushBudgetToTable(double amount) async {
     try {
       final userId = await _getEffectiveUserId();
-      if (userId == 'local_device_user') return;
 
       // Upsert the overall monthly budget
       final existing = await client.from('budgets')
@@ -525,21 +524,18 @@ class SupabaseService {
       final userId = await _getEffectiveUserId();
       final Map<String, Expense> mergedMap = {};
 
-      // --- Source 1: Relational expenses table (Desktop/iOS apps write here) ---
       try {
-        if (userId != 'local_device_user') {
-          final tableResponse = await client
-              .from('expenses')
-              .select()
-              .eq('user_id', userId)
-              .order('date', ascending: false);
+        final tableResponse = await client
+            .from('expenses')
+            .select()
+            .eq('user_id', userId)
+            .order('date', ascending: false);
 
-          if (tableResponse is List) {
-            for (var row in tableResponse) {
-              if (row is Map) {
-                final exp = Expense.fromJson(Map<String, dynamic>.from(row));
-                if (exp.id != null) mergedMap[exp.id!] = exp;
-              }
+        if (tableResponse is List) {
+          for (var row in tableResponse) {
+            if (row is Map) {
+              final exp = Expense.fromJson(Map<String, dynamic>.from(row));
+              if (exp.id != null) mergedMap[exp.id!] = exp;
             }
           }
         }
@@ -625,19 +621,17 @@ class SupabaseService {
 
           // Merge subscriptions from relational table too
           try {
-            if (userId != 'local_device_user') {
-              final tableSubs = await client
-                  .from('subscriptions')
-                  .select()
-                  .eq('user_id', userId);
-              if (tableSubs is List) {
-                final existingIds = cloudSubs.map((s) => s['id']?.toString()).toSet();
-                for (var row in tableSubs) {
-                  if (row is Map) {
-                    final m = Map<String, dynamic>.from(row);
-                    if (!existingIds.contains(m['id']?.toString())) {
-                      cloudSubs.add(m);
-                    }
+            final tableSubs = await client
+                .from('subscriptions')
+                .select()
+                .eq('user_id', userId);
+            if (tableSubs is List) {
+              final existingIds = cloudSubs.map((s) => s['id']?.toString()).toSet();
+              for (var row in tableSubs) {
+                if (row is Map) {
+                  final m = Map<String, dynamic>.from(row);
+                  if (!existingIds.contains(m['id']?.toString())) {
+                    cloudSubs.add(m);
                   }
                 }
               }
@@ -646,25 +640,23 @@ class SupabaseService {
 
           // Merge split bills from relational table too
           try {
-            if (userId != 'local_device_user') {
-              final tableBills = await client
-                  .from('split_bills')
-                  .select()
-                  .eq('user_id', userId)
-                  .order('date', ascending: false);
-              if (tableBills is List) {
-                final existingIds = cloudGroup.map((g) => g['id']?.toString()).toSet();
-                for (var row in tableBills) {
-                  if (row is Map) {
-                    final m = Map<String, dynamic>.from(row);
-                    // Convert relational fields to the format expected locally
-                    m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
-                    m['paidBy'] = m['paid_by'] ?? m['paidBy'];
-                    m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
-                    m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
-                    if (!existingIds.contains(m['id']?.toString())) {
-                      cloudGroup.add(m);
-                    }
+            final tableBills = await client
+                .from('split_bills')
+                .select()
+                .eq('user_id', userId)
+                .order('date', ascending: false);
+            if (tableBills is List) {
+              final existingIds = cloudGroup.map((g) => g['id']?.toString()).toSet();
+              for (var row in tableBills) {
+                if (row is Map) {
+                  final m = Map<String, dynamic>.from(row);
+                  // Convert relational fields to the format expected locally
+                  m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
+                  m['paidBy'] = m['paid_by'] ?? m['paidBy'];
+                  m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
+                  m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
+                  if (!existingIds.contains(m['id']?.toString())) {
+                    cloudGroup.add(m);
                   }
                 }
               }
@@ -683,35 +675,31 @@ class SupabaseService {
 
           // Still try relational tables even if user_data has no subscriptions
           try {
-            if (userId != 'local_device_user') {
-              final tableSubs = await client.from('subscriptions').select().eq('user_id', userId);
-              if (tableSubs is List && tableSubs.isNotEmpty) {
-                final cloudSubs = tableSubs.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-                await prefs2.setString('user_saved_subscriptions', jsonEncode(cloudSubs));
-              } else {
-                await prefs2.remove('user_saved_subscriptions');
-              }
+            final tableSubs = await client.from('subscriptions').select().eq('user_id', userId);
+            if (tableSubs is List && tableSubs.isNotEmpty) {
+              final cloudSubs = tableSubs.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+              await prefs2.setString('user_saved_subscriptions', jsonEncode(cloudSubs));
+            } else {
+              await prefs2.remove('user_saved_subscriptions');
             }
           } catch (_) {
             await prefs2.remove('user_saved_subscriptions');
           }
 
           try {
-            if (userId != 'local_device_user') {
-              final tableBills = await client.from('split_bills').select().eq('user_id', userId).order('date', ascending: false);
-              if (tableBills is List && tableBills.isNotEmpty) {
-                final cloudGroup = tableBills.map((e) {
-                  final m = Map<String, dynamic>.from(e as Map);
-                  m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
-                  m['paidBy'] = m['paid_by'] ?? m['paidBy'];
-                  m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
-                  m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
-                  return m;
-                }).toList();
-                await prefs2.setString('saved_group_expenses', jsonEncode(cloudGroup));
-              } else {
-                await prefs2.remove('saved_group_expenses');
-              }
+            final tableBills = await client.from('split_bills').select().eq('user_id', userId).order('date', ascending: false);
+            if (tableBills is List && tableBills.isNotEmpty) {
+              final cloudGroup = tableBills.map((e) {
+                final m = Map<String, dynamic>.from(e as Map);
+                m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
+                m['paidBy'] = m['paid_by'] ?? m['paidBy'];
+                m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
+                m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
+                return m;
+              }).toList();
+              await prefs2.setString('saved_group_expenses', jsonEncode(cloudGroup));
+            } else {
+              await prefs2.remove('saved_group_expenses');
             }
           } catch (_) {
             await prefs2.remove('saved_group_expenses');
@@ -723,46 +711,42 @@ class SupabaseService {
 
         // Sync budget from relational budgets table
         try {
-          if (userId != 'local_device_user') {
-            final budgetRow = await client.from('budgets')
-                .select()
-                .eq('user_id', userId)
-                .eq('category', 'overall')
-                .maybeSingle();
-            if (budgetRow != null && budgetRow['amount'] != null) {
-              final tableBudget = (budgetRow['amount'] as num).toDouble();
-              final prefs3 = await SharedPreferences.getInstance();
-              final currentBudget = prefs3.getDouble('monthly_budget_cap') ?? 0.0;
-              // Use whichever is more recent / non-zero
-              if (tableBudget > 0 && currentBudget == 0) {
-                await prefs3.setDouble('monthly_budget_cap', tableBudget);
-              }
+          final budgetRow = await client.from('budgets')
+              .select()
+              .eq('user_id', userId)
+              .eq('category', 'overall')
+              .maybeSingle();
+          if (budgetRow != null && budgetRow['amount'] != null) {
+            final tableBudget = (budgetRow['amount'] as num).toDouble();
+            final prefs3 = await SharedPreferences.getInstance();
+            final currentBudget = prefs3.getDouble('monthly_budget_cap') ?? 0.0;
+            // Use whichever is more recent / non-zero
+            if (tableBudget > 0 && currentBudget == 0) {
+              await prefs3.setDouble('monthly_budget_cap', tableBudget);
             }
           }
         } catch (_) {}
 
         // Sync profile from relational profiles table
         try {
-          if (userId != 'local_device_user') {
-            final profileRow = await client.from('profiles')
-                .select()
-                .eq('user_id', userId)
-                .maybeSingle();
-            if (profileRow != null) {
-              final prefs4 = await SharedPreferences.getInstance();
-              if (profileRow['starting_balance'] != null) {
-                final bal = (profileRow['starting_balance'] as num).toDouble();
-                final currentBal = prefs4.getDouble('user_starting_balance') ?? 0.0;
-                if (bal > 0 && currentBal == 0) {
-                  await prefs4.setDouble('user_starting_balance', bal);
-                }
+          final profileRow = await client.from('profiles')
+              .select()
+              .eq('user_id', userId)
+              .maybeSingle();
+          if (profileRow != null) {
+            final prefs4 = await SharedPreferences.getInstance();
+            if (profileRow['starting_balance'] != null) {
+              final bal = (profileRow['starting_balance'] as num).toDouble();
+              final currentBal = prefs4.getDouble('user_starting_balance') ?? 0.0;
+              if (bal > 0 && currentBal == 0) {
+                await prefs4.setDouble('user_starting_balance', bal);
               }
-              if (profileRow['currency'] != null) {
-                final curr = profileRow['currency'].toString();
-                if (curr.isNotEmpty) {
-                  final symbol = curr == 'USD' ? '\$' : (curr == 'EUR' ? '€' : (curr == 'GBP' ? '£' : '₹'));
-                  await prefs4.setString('app_currency_symbol', symbol);
-                }
+            }
+            if (profileRow['currency'] != null) {
+              final curr = profileRow['currency'].toString();
+              if (curr.isNotEmpty) {
+                final symbol = curr == 'USD' ? '\$' : (curr == 'EUR' ? '€' : (curr == 'GBP' ? '£' : '₹'));
+                await prefs4.setString('app_currency_symbol', symbol);
               }
             }
           }
@@ -824,10 +808,9 @@ class SupabaseService {
         .subscribe();
 
     // --- Channel 2: expenses table (Desktop / iOS changes) ---
-    if (userId != 'local_device_user') {
-      if (_expensesChannel != null) {
-        client.removeChannel(_expensesChannel!);
-      }
+    if (_expensesChannel != null) {
+      client.removeChannel(_expensesChannel!);
+    }
       _expensesChannel = client
           .channel('public:expenses:$userId')
           .onPostgresChanges(
@@ -933,7 +916,6 @@ class SupabaseService {
             },
           )
           .subscribe();
-    }
   }
 
   // =====================================================================
@@ -1170,12 +1152,10 @@ class SupabaseService {
       }, onConflict: 'user_id');
 
       // Clear relational tables
-      if (userId != 'local_device_user') {
-        try { await client.from('expenses').delete().eq('user_id', userId); } catch (_) {}
-        try { await client.from('subscriptions').delete().eq('user_id', userId); } catch (_) {}
-        try { await client.from('split_bills').delete().eq('user_id', userId); } catch (_) {}
-        try { await client.from('budgets').delete().eq('user_id', userId); } catch (_) {}
-      }
+      try { await client.from('expenses').delete().eq('user_id', userId); } catch (_) {}
+      try { await client.from('subscriptions').delete().eq('user_id', userId); } catch (_) {}
+      try { await client.from('split_bills').delete().eq('user_id', userId); } catch (_) {}
+      try { await client.from('budgets').delete().eq('user_id', userId); } catch (_) {}
     } catch (_) {}
 
     refreshNotifier.value++;
@@ -1207,30 +1187,28 @@ class SupabaseService {
       }
 
       // Merge from relational split_bills table
-      if (userId != 'local_device_user') {
-        try {
-          final response = await client
-              .from('split_bills')
-              .select()
-              .eq('user_id', userId)
-              .order('date', ascending: false);
-          if (response is List) {
-            for (var row in response) {
-              if (row is Map) {
-                final m = Map<String, dynamic>.from(row);
-                m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
-                m['paidBy'] = m['paid_by'] ?? m['paidBy'];
-                m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
-                m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
-                final id = m['id']?.toString();
-                if (id != null && !merged.containsKey(id)) {
-                  merged[id] = m;
-                }
+      try {
+        final response = await client
+            .from('split_bills')
+            .select()
+            .eq('user_id', userId)
+            .order('date', ascending: false);
+        if (response is List) {
+          for (var row in response) {
+            if (row is Map) {
+              final m = Map<String, dynamic>.from(row);
+              m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
+              m['paidBy'] = m['paid_by'] ?? m['paidBy'];
+              m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
+              m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
+              final id = m['id']?.toString();
+              if (id != null && !merged.containsKey(id)) {
+                merged[id] = m;
               }
             }
           }
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
 
       // Merge from user_data subscriptions array (type=split_bill)
       try {

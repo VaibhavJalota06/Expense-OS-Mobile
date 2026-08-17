@@ -79,7 +79,7 @@ class Expense {
       'date': dateStr,
       'payment_method': paymentMethod,
       if (notes != null) 'notes': notes,
-      if (uid != null && uid != 'local_device_user') 'user_id': uid,
+      if (uid != null) 'user_id': uid,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
   }
