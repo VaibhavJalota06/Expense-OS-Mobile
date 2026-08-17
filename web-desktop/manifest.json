@@ -1,0 +1,27 @@
+{
+  "id": "com.expenseos.app",
+  "name": "Expense OS",
+  "short_name": "Expense OS",
+  "description": "Futuristic Glassmorphic Personal Finance Command Center",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090C11",
+  "theme_color": "#050811",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

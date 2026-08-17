@@ -1,0 +1,17 @@
+node_modules/
+dist/
+dist-verify/
+release/
+.DS_Store
+*.log
+.env
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+*.pdf
+implementation_plan.md

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Expense OS — Product Launch Brochure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: 1080px 1080px;
+      margin: 0;
+    }
+    :root {
+      --gold: #C9A96E;
+      --gold-light: #E8D5A3;
+      --cream: #F5EDD8;
+      --warm-white: #FAF6EE;
+      --dark-bg: #050811;
+      --cyan-glow: #00f2fe;
+    }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    html, body {
+      background-color: #050811 !important;
+      font-family: 'Jost', sans-serif;
+      color: var(--warm-white);
+      -webkit-font-smoothing: antialiased;
+      width: 1080px;
+    }
+    .page {
+      width: 1080px;
+      height: 1080px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 75px 85px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #050811 !important;
+      page-break-after: always;
+      page-break-inside: avoid;
+      break-after: page;
+      break-inside: avoid;
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(5,8,17,0.85) 0%, rgba(5,8,17,0.70) 50%, rgba(5,8,17,0.92) 100%);
+      z-index: 1;
+    }
+    .content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .eyebrow {
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 6px;
+      color: var(--gold-light);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .rule {
+      height: 1px;
+      flex: 1;
+      background: linear-gradient(to right, var(--gold), transparent);
+    }
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 5.8rem;
+      line-height: 1.05;
+      color: var(--warm-white);
+      margin-top: 20px;
+    }
+    .hero-title span {
+      color: var(--gold);
+      font-style: italic;
+    }
+    .subtitle {
+      font-size: 1.25rem;
+      font-weight: 300;
+      color: var(--cream);
+      line-height: 1.6;
+      margin-top: 25px;
+      max-width: 850px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-top: 40px;
+    }
+    .feature-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(201, 169, 110, 0.25);
+      backdrop-filter: blur(12px);
+      padding: 35px;
+      border-radius: 12px;
+    }
+    .feature-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      font-weight: 400;
+      color: var(--gold-light);
+      margin-bottom: 12px;
+    }
+    .feature-card p {
+      font-size: 1.05rem;
+      line-height: 1.5;
+      color: var(--cream);
+      opacity: 0.9;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      border-radius: 50px;
+    }
+    .footer-note {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--gold-light);
+      opacity: 0.8;
+      letter-spacing: 2px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(201, 169, 110, 0.2);
+      padding-top: 25px;
+    }
+    .page-1 { background-image: url('https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1260'); }
+    .page-2 { background-image: url('https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=1260'); }
+    .page-3 { background-image: url('https://images.pexels.com/photos/669615/pexels-photo-669615.jpeg?auto=compress&cs=tinysrgb&w=1260'); }
+    .page-4 { background-image: url('https://images.pexels.com/photos/7567443/pexels-photo-7567443.jpeg?auto=compress&cs=tinysrgb&w=1260'); }
+    .page-5 { background-image: url('https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=1260'); }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 1: COVER -->
+  <div class="page page-1">
+    <div class="overlay"></div>
+    <div class="content">
+      <div class="eyebrow">
+        <span>Expense OS ✦ Personal Finance Command Center</span>
+        <div class="rule"></div>
+      </div>
+      <div>
+        <div class="badge">Desktop & Web Application</div>
+        <h1 class="hero-title">Master Your Financial <span>Universe</span></h1>
+        <p class="subtitle">A futuristic, dark glassmorphic personal finance OS engineered for extreme clarity, real-time analytics, and zero-bloat tracking.</p>
+      </div>
+      <div class="footer-note">
+        <span>EXPENSE OS v2.9.5</span>
+        <span>✦ PRIVACY FIRST ✦</span>
+        <span>ISSUE 01 / 2026</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: VISION & PHILOSOPHY -->
+  <div class="page page-2">
+    <div class="overlay"></div>
+    <div class="content">
+      <div class="eyebrow">
+        <span>01 ✦ Core Philosophy</span>
+        <div class="rule"></div>
+      </div>
+      <div>
+        <h2 class="hero-title">Uncompromising <span>Simplicity</span></h2>
+        <p class="subtitle">Built on the <i>Ponytail Principles</i> — native platform efficiency, instant responsiveness, and zero unnecessary dependencies. Your financial data stays under your complete control.</p>
+        <div class="grid-2">
+          <div class="feature-card">
+            <h3>🔒 Local & Cloud Sync</h3>
+            <p>Seamlessly switch between local offline storage and real-time encrypted Supabase sync.</p>
+          </div>
+          <div class="feature-card">
+            <h3>⚡ Zero Lag UI</h3>
+            <p>Dark glassmorphic interface designed with vanilla CSS for ultra-fast rendering.</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>EXPENSE OS</span>
+        <span>PAGE 02</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 3: FEATURE HIGHLIGHTS -->
+  <div class="page page-3">
+    <div class="overlay"></div>
+    <div class="content">
+      <div class="eyebrow">
+        <span>02 ✦ Advanced Intelligence</span>
+        <div class="rule"></div>
+      </div>
+      <div>
+        <h2 class="hero-title">Analytical <span>Precision</span></h2>
+        <p class="subtitle">Gain immediate actionable insights into monthly cash flow, category breakdowns, and subscription renewals.</p>
+        <div class="grid-2">
+          <div class="feature-card">
+            <h3>📊 Radial Gauge & Analytics</h3>
+            <p>Dynamic SVG budget gauges and category donut charts visualize your exact spending distribution.</p>
+          </div>
+          <div class="feature-card">
+            <h3>📄 Statement Parser</h3>
+            <p>Import bank statements via integrated SheetJS & PDF.js parsers directly in browser.</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>EXPENSE OS</span>
+        <span>PAGE 03</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 4: SECURITY & PLATFORM -->
+  <div class="page page-4">
+    <div class="overlay"></div>
+    <div class="content">
+      <div class="eyebrow">
+        <span>03 ✦ Benav Vibe-Checked Security</span>
+        <div class="rule"></div>
+      </div>
+      <div>
+        <h2 class="hero-title">Fortress-Grade <span>Security</span></h2>
+        <p class="subtitle">Validated against 17 critical vulnerability checks — strict Content Security Policy, zero exposed secrets, and automated Playwright test verification.</p>
+        <div class="grid-2">
+          <div class="feature-card">
+            <h3>🛡️ 17-Point Audit Passed</h3>
+            <p>Audited for XSS prevention, parameterization, RLS policies, and safe session handling.</p>
+          </div>
+          <div class="feature-card">
+            <h3>🖥️ Cross-Platform</h3>
+            <p>Available as a standalone Windows desktop app via Electron and an offline PWA.</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>EXPENSE OS</span>
+        <span>PAGE 04</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 5: CTA & CALL TO ACTION -->
+  <div class="page page-5">
+    <div class="overlay"></div>
+    <div class="content">
+      <div class="eyebrow">
+        <span>04 ✦ Take Control</span>
+        <div class="rule"></div>
+      </div>
+      <div>
+        <div class="badge">Open Source Project</div>
+        <h1 class="hero-title">Elevate Your <span>Finances Today</span></h1>
+        <p class="subtitle">Experience the next-generation personal finance command center. Free, open-source, and engineered for high performers.</p>
+        <div style="margin-top: 35px; background: rgba(201, 169, 110, 0.1); border: 1px solid var(--gold); padding: 30px; border-radius: 12px;">
+          <p style="font-family: 'IBM Plex Mono', monospace; font-size: 1.1rem; color: var(--gold-light);">GitHub: VaibhavJalota06/Expense-Calculator-Desktop</p>
+          <p style="margin-top: 8px; font-size: 0.95rem; color: var(--cream);">Built with Electron, Supabase, Vanilla JS, & Glassmorphic CSS</p>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>EXPENSE OS — FINANCIAL FREEDOM</span>
+        <span>PAGE 05</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

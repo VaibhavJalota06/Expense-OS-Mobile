@@ -1,0 +1,86 @@
+{
+  "name": "expense-calculator-desktop",
+  "version": "2.9.5",
+  "description": "Expense OS - Futuristic Dark Glassmorphic Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "publish": "node scripts/publish-release.js",
+    "update-landing": "node scripts/update-landing-page.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VaibhavJalota06/Expense-Calculator-Desktop.git"
+  },
+  "build": {
+    "appId": "com.expensecalculator.app",
+    "productName": "Expense OS",
+    "protocols": [
+      {
+        "name": "Expense OS Authentication",
+        "schemes": [
+          "com.expensecalculator.expenseosmobile"
+        ]
+      }
+    ],
+    "icon": "icon.ico",
+    "files": [
+      "!dist{,/**}",
+      "!dist-verify{,/**}",
+      "!release{,/**}"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "VaibhavJalota06",
+        "repo": "Expense-Calculator-Desktop"
+      }
+    ],
+    "forceCodeSigning": false,
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "sign": null,
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Expense OS",
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico",
+      "runAfterFinish": true
+    }
+  },
+  "keywords": [
+    "expense",
+    "calculator",
+    "budget",
+    "desktop",
+    "windows",
+    "glassmorphism"
+  ],
+  "author": "Expense Cal",
+  "license": "ISC",
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.2.0",
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3"
+  }
+}

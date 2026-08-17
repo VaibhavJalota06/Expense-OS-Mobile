@@ -42,3 +42,14 @@ ios/Runner.xcworkspace/
 # Environment secrets
 .env
 .env.local
+
+# Node / Web / Desktop
+node_modules/
+dist/
+playwright-report/
+test-results/
+web-desktop/node_modules/
+web-desktop/dist/
+web-desktop/playwright-report/
+web-desktop/test-results/
+
