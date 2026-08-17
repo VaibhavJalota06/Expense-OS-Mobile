@@ -6036,7 +6036,7 @@ window.renderLeaderboardView = function() {
     heroUsername.innerHTML = `${currentUserName} <span id="lb-hero-title-badge" class="hero-level-badge">Stage ${stage.stage}: ${stage.badge} ${stage.title}</span>`;
   }
 
-  // Render Table with Real User Record Only
+  // Render Table with Community Users + Current User
   const tbody = document.getElementById('lb-table-tbody');
   if (tbody) {
     const userUnlockedIcons = data.unlockedStickers.map(stId => {
@@ -6044,12 +6044,45 @@ window.renderLeaderboardView = function() {
       return st ? st.icon : '';
     }).filter(Boolean);
 
-    const realUsers = [
-      { rank: 1, name: currentUserName, avatar: currentUserAvatar, emeralds: data.emeralds, stage: stage.stage, badge: stage.badge, title: stage.title, stickers: userUnlockedIcons.length ? userUnlockedIcons : ['🐖'], isCurrentUser: true }
+    // Community Savers Dataset
+    const communitySavers = [
+      { name: 'Marcus Vance', avatar: '👨‍💼', emeralds: 3850, stage: 8, badge: '🏛️', title: 'Empire Architect', stickers: ['🏰', '🛡️', '💎', '🎯'], isCurrentUser: false },
+      { name: 'Elena Rostova', avatar: '👩‍💻', emeralds: 2900, stage: 6, badge: '💎', title: 'Wealth Vanguard', stickers: ['🎯', '🚀', '📈', '🐖'], isCurrentUser: false },
+      { name: 'David Kim', avatar: '👨‍🔬', emeralds: 2150, stage: 5, badge: '🛡️', title: 'Fortune Master', stickers: ['🛡️', '💰', '📊'], isCurrentUser: false },
+      { name: 'Aisha Patel', avatar: '👩‍🎨', emeralds: 1600, stage: 4, badge: '📈', title: 'Capital Builder', stickers: ['📈', '🎯', '🐖'], isCurrentUser: false },
+      { name: 'Sarah Chen', avatar: '👩‍⚕️', emeralds: 1100, stage: 3, badge: '💰', title: 'Asset Collector', stickers: ['💰', '🐖'], isCurrentUser: false },
+      { name: 'Liam O\'Connor', avatar: '👨‍🌾', emeralds: 650, stage: 2, badge: '🎖️', title: 'Pocket Guard', stickers: ['🐖', '🎯'], isCurrentUser: false },
+      { name: 'Carlos Mendez', avatar: '👨‍🍳', emeralds: 320, stage: 2, badge: '🎖️', title: 'Pocket Guard', stickers: ['🐖'], isCurrentUser: false },
+      { name: 'Maya Lin', avatar: '👩‍🎓', emeralds: 180, stage: 1, badge: '🥉', title: 'Novice Saver', stickers: ['🐖'], isCurrentUser: false },
     ];
 
-    tbody.innerHTML = realUsers.map(u => `
-      <tr class="current-user-row">
+    const currentUserObj = {
+      name: currentUserName,
+      avatar: currentUserAvatar,
+      emeralds: data.emeralds,
+      stage: stage.stage,
+      badge: stage.badge,
+      title: stage.title,
+      stickers: userUnlockedIcons.length ? userUnlockedIcons : ['🐖'],
+      isCurrentUser: true
+    };
+
+    // Combine & Sort by Emeralds descending
+    const allUsers = [...communitySavers, currentUserObj].sort((a, b) => b.emeralds - a.emeralds);
+
+    // Assign Ranks & Find Current User Rank
+    let currentUserRank = 1;
+    allUsers.forEach((u, idx) => {
+      u.rank = idx + 1;
+      if (u.isCurrentUser) currentUserRank = u.rank;
+    });
+
+    // Update Hero Rank Badge
+    const heroRankEl = document.getElementById('lb-hero-rank');
+    if (heroRankEl) heroRankEl.textContent = `#${currentUserRank}`;
+
+    tbody.innerHTML = allUsers.map(u => `
+      <tr class="${u.isCurrentUser ? 'current-user-row' : ''}">
         <td class="lb-rank-num">#${u.rank}</td>
         <td>
           <div class="lb-user-col">
@@ -6058,7 +6091,7 @@ window.renderLeaderboardView = function() {
                 ? `<img src="${u.avatar}" referrerpolicy="no-referrer" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="User Avatar" />` 
                 : `<span style="font-size: 1.5rem;">${u.avatar || u.name.charAt(0).toUpperCase()}</span>`}
             </div>
-            <strong>${u.name} (You)</strong>
+            <strong>${u.name} ${u.isCurrentUser ? '(You)' : ''}</strong>
           </div>
         </td>
         <td><span class="hero-level-badge">Stage ${u.stage}: ${u.badge} ${u.title}</span></td>
