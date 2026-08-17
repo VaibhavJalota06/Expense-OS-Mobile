@@ -603,7 +603,7 @@ class SupabaseService {
                 cloudGoals.add(map);
               } else if (type == 'split_bill') {
                 cloudGroup.add(map);
-              } else if (type == 'system_financial_meta') {
+              } else if (type == 'system_financial_meta' || map['id'] == 'system_financial_meta') {
                 foundMeta = true;
                 final b = (map['starting_balance'] as num?)?.toDouble() ?? 0.0;
                 await prefs.setDouble('user_starting_balance', b);
@@ -614,7 +614,7 @@ class SupabaseService {
           }
 
           if (!foundMeta) {
-            if (incomeInitialBalance != null && incomeInitialBalance > 0) {
+            if (incomeInitialBalance != null) {
               await prefs.setDouble('user_starting_balance', incomeInitialBalance);
             }
           }
@@ -737,10 +737,7 @@ class SupabaseService {
             final prefs4 = await SharedPreferences.getInstance();
             if (profileRow['starting_balance'] != null) {
               final bal = (profileRow['starting_balance'] as num).toDouble();
-              final currentBal = prefs4.getDouble('user_starting_balance') ?? 0.0;
-              if (bal > 0 && currentBal == 0) {
-                await prefs4.setDouble('user_starting_balance', bal);
-              }
+              await prefs4.setDouble('user_starting_balance', bal);
             }
             if (profileRow['currency'] != null) {
               final curr = profileRow['currency'].toString();
