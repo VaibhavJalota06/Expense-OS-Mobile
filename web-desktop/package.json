@@ -43,8 +43,7 @@
     "win": {
       "icon": "icon.ico",
       "target": [
-        "nsis",
-        "portable"
+        "nsis"
       ],
       "verifyUpdateCodeSignature": false
     },
