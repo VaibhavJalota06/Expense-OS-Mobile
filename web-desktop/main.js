@@ -165,12 +165,21 @@ const mimeTypes = {
   '.json': 'application/json',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
   '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+  '.map': 'application/json',
 };
 
-const webRoot = path.join(__dirname, 'web');
+const webSubDir = path.join(__dirname, 'web');
+const webRoot = (fs.existsSync(webSubDir) && fs.existsSync(path.join(webSubDir, 'index.html')))
+  ? webSubDir
+  : __dirname;
 
 const AUTH_SUCCESS_HTML = `<!DOCTYPE html><html><head><title>Authentication Successful - Expense OS</title>
 <style>body{font-family:system-ui,sans-serif;background:#050811;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}.card{background:#0f172a;padding:2.5rem;border-radius:1rem;border:1px solid rgba(255,255,255,0.1);max-width:400px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5)}.icon{font-size:3rem;margin-bottom:1rem}h2{color:#10b981;margin:0 0 .5rem 0}p{color:#94a3b8;font-size:.95rem;line-height:1.5}</style></head>

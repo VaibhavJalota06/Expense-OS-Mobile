@@ -31,7 +31,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final SupabaseService _supabaseService = SupabaseService();
-  bool _isLoading = false;
+  final bool _isLoading = false;
   List<Expense> _expenses = [];
   double _monthlyBudgetCap = 0.0;
   double _startingBalance = 0.0;
