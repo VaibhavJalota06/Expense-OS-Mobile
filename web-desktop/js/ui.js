@@ -3444,6 +3444,10 @@ const escapeHTML = (str) => {
 function saveSavingsGoalsToStorage() {
   try {
     localStorage.setItem('expense_cal_web_savings_goals', JSON.stringify(savingsGoals));
+    localStorage.setItem('expense_cal_savings_goals', JSON.stringify(savingsGoals));
+    if (typeof saveToSupabase === 'function') {
+      saveToSupabase();
+    }
   } catch(e) { console.error('Error saving goals:', e); }
 }
 
@@ -3536,9 +3540,12 @@ function handleGoalSubmit(e) {
     return;
   }
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
   if (editId) {
     const index = savingsGoals.findIndex(g => g.id === editId);
     if (index !== -1) {
+      const oldSaved = Number(savingsGoals[index].savedAmount || 0);
       savingsGoals[index] = {
         ...savingsGoals[index],
         title,
@@ -3549,10 +3556,28 @@ function handleGoalSubmit(e) {
         notes,
         updatedAt: new Date().toISOString()
       };
+      const added = savedAmount - oldSaved;
+      if (added > 0) {
+        const goalExpense = {
+          id: `goal_dep_${editId}_${Date.now()}`,
+          amount: added,
+          category: 'Savings & Goals',
+          description: `Goal Deposit: ${title}`,
+          title: `Goal Deposit: ${title}`,
+          date: todayStr,
+          type: 'expense',
+          paymentMethod: 'Bank Account',
+          notes: `Additional savings deposit for ${title}`,
+          createdAt: new Date().toISOString()
+        };
+        expenses.unshift(goalExpense);
+        try { localStorage.setItem('expense_cal_web_expenses', JSON.stringify(expenses)); } catch(err){}
+      }
     }
   } else {
+    const newGoalId = 'goal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
     const newGoal = {
-      id: 'goal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      id: newGoalId,
       title,
       targetAmount,
       savedAmount: Math.max(0, savedAmount),
@@ -3562,20 +3587,56 @@ function handleGoalSubmit(e) {
       createdAt: new Date().toISOString()
     };
     savingsGoals.push(newGoal);
+
+    if (savedAmount > 0) {
+      const goalExpense = {
+        id: `goal_dep_${newGoalId}_${Date.now()}`,
+        amount: savedAmount,
+        category: 'Savings & Goals',
+        description: `Goal Deposit: ${title}`,
+        title: `Goal Deposit: ${title}`,
+        date: todayStr,
+        type: 'expense',
+        paymentMethod: 'Bank Account',
+        notes: `Initial savings allocation for ${title}`,
+        createdAt: new Date().toISOString()
+      };
+      expenses.unshift(goalExpense);
+      try { localStorage.setItem('expense_cal_web_expenses', JSON.stringify(expenses)); } catch(err){}
+    }
+
     try { if (window.dispatchGoalCreatedEmail) window.dispatchGoalCreatedEmail(newGoal); } catch(err){}
   }
 
   saveSavingsGoalsToStorage();
   closeGoalModal();
   renderSavingsGoals();
+  if (typeof updateUI === 'function') updateUI();
 }
 window.handleGoalSubmit = handleGoalSubmit;
 
 function deleteGoal(goalId) {
-  if (!confirm('Are you sure you want to delete this savings goal?')) return;
+  if (!confirm('Are you sure you want to delete this savings goal? All saved funds will be returned to your budget.')) return;
+  const targetGoal = savingsGoals.find(g => g.id === goalId);
+  const targetTitle = (targetGoal?.title || '').trim().toLowerCase();
+
+  // 1. Remove goal
   savingsGoals = savingsGoals.filter(g => g.id !== goalId);
+
+  // 2. Cascade delete all deposit expenses associated with this goal to restore budget
+  expenses = expenses.filter(e => {
+    if (e.id && (e.id === `goal_dep_${goalId}` || e.id.startsWith(`goal_dep_${goalId}_`))) return false;
+    const t = (e.description || e.title || '').trim().toLowerCase();
+    if ((e.category === 'Savings & Goals' || t.startsWith('goal deposit:')) && targetTitle && t.includes(targetTitle)) {
+      return false;
+    }
+    return true;
+  });
+  try { localStorage.setItem('expense_cal_web_expenses', JSON.stringify(expenses)); } catch(err){}
+
   saveSavingsGoalsToStorage();
   renderSavingsGoals();
+  if (typeof updateUI === 'function') updateUI();
 }
 window.deleteGoal = deleteGoal;
 
@@ -3643,7 +3704,6 @@ function handleGoalDepositSubmit(e) {
   const goalId = document.getElementById('deposit-goal-id')?.value;
   const actionType = document.getElementById('deposit-action-type')?.value || 'deposit';
   const amount = parseFloat(document.getElementById('deposit-amount-input')?.value || '0');
-  const shouldDeduct = document.getElementById('deposit-deduct-account')?.checked;
 
   if (!goalId || isNaN(amount) || amount <= 0) {
     alert('Please enter a valid amount.');
@@ -3657,41 +3717,44 @@ function handleGoalDepositSubmit(e) {
 
   if (actionType === 'deposit') {
     goal.savedAmount += amount;
-    if (shouldDeduct) {
-      const newExp = {
-        id: 'exp_savings_' + Date.now(),
-        amount: amount,
-        category: 'Services & Subscriptions',
-        description: `Savings Allocation (${goal.icon || ''} ${goal.title})`,
-        date: todayStr,
-        createdAt: new Date().toISOString()
-      };
-      expenses.unshift(newExp);
-      try { localStorage.setItem('expense_cal_web_expenses', JSON.stringify(expenses)); } catch(err){}
-    }
+    const goalExpense = {
+      id: `goal_dep_${goal.id}_${Date.now()}`,
+      amount: amount,
+      category: 'Savings & Goals',
+      description: `Goal Deposit: ${goal.title}`,
+      title: `Goal Deposit: ${goal.title}`,
+      date: todayStr,
+      type: 'expense',
+      paymentMethod: 'Bank Account',
+      notes: `Quick savings deposit towards ${goal.title}`,
+      createdAt: new Date().toISOString()
+    };
+    expenses.unshift(goalExpense);
+    try { localStorage.setItem('expense_cal_web_expenses', JSON.stringify(expenses)); } catch(err){}
   } else {
     if (amount > goal.savedAmount) {
       alert(`Cannot withdraw more than current balance (${formatCurrency(goal.savedAmount)}).`);
       return;
     }
     goal.savedAmount -= amount;
-    if (shouldDeduct) {
-      const newInc = {
-        id: 'inc_savings_' + Date.now(),
-        amount: amount,
-        source: `Savings Goal Withdrawal (${goal.icon || ''} ${goal.title})`,
-        date: todayStr,
-        createdAt: new Date().toISOString()
-      };
-      incomes.unshift(newInc);
-      try { localStorage.setItem('expense_cal_web_incomes', JSON.stringify(incomes)); } catch(err){}
-    }
+    const goalIncome = {
+      id: `goal_with_${goal.id}_${Date.now()}`,
+      amount: amount,
+      source: `Savings Withdrawal: ${goal.title}`,
+      description: `Savings Withdrawal: ${goal.title}`,
+      date: todayStr,
+      type: 'income',
+      createdAt: new Date().toISOString()
+    };
+    incomes.unshift(goalIncome);
+    try { localStorage.setItem('expense_cal_web_incomes', JSON.stringify(incomes)); } catch(err){}
   }
 
   goal.updatedAt = new Date().toISOString();
   saveSavingsGoalsToStorage();
   closeGoalDepositModal();
-  updateUI();
+  renderSavingsGoals();
+  if (typeof updateUI === 'function') updateUI();
 }
 window.handleGoalDepositSubmit = handleGoalDepositSubmit;
 
