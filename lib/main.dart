@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/auth_screen.dart';
@@ -25,17 +24,42 @@ void main() async {
     ),
   );
 
-  try {
-    await SupabaseService.initialize();
-  } catch (e) {
+  // Fast parallel initialization
+  final prefsFuture = SharedPreferences.getInstance();
+  final supabaseFuture = SupabaseService.initialize().catchError((e) {
     debugPrint('Supabase initialization error: $e');
-  }
+  });
 
-  runApp(const ExpenseOSApp());
+  // Wait for local storage concurrently to guarantee 0ms screen launch
+  final results = await Future.wait([prefsFuture, supabaseFuture]);
+  final prefs = results[0] as SharedPreferences;
+
+  // Initialize currency & notifications in background non-blocking
+  CurrencyService().initialize().catchError((_) {});
+  NotificationService().initialize().catchError((_) {});
+
+  final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+  final isPersistentLoggedIn = prefs.getBool('persistent_user_logged_in') ?? false;
+  final cachedUserId = prefs.getString('supabase_user_id');
+  final hasCachedUser = (cachedUserId != null && cachedUserId.isNotEmpty) || (prefs.getString('google_user_email') != null);
+
+  final initialAuthed = isPersistentLoggedIn || hasCachedUser;
+
+  runApp(ExpenseOSApp(
+    initialHasSeenOnboarding: hasSeenOnboarding,
+    initialIsAuthenticated: initialAuthed,
+  ));
 }
 
 class ExpenseOSApp extends StatefulWidget {
-  const ExpenseOSApp({super.key});
+  final bool initialHasSeenOnboarding;
+  final bool initialIsAuthenticated;
+
+  const ExpenseOSApp({
+    super.key,
+    required this.initialHasSeenOnboarding,
+    required this.initialIsAuthenticated,
+  });
 
   @override
   State<ExpenseOSApp> createState() => _ExpenseOSAppState();
@@ -43,17 +67,17 @@ class ExpenseOSApp extends StatefulWidget {
 
 class _ExpenseOSAppState extends State<ExpenseOSApp> {
   final SupabaseService _supabaseService = SupabaseService();
-  final CurrencyService _currencyService = CurrencyService();
 
-  bool _hasSeenOnboarding = false;
-  bool _isAuthenticated = false;
-  bool _isInitialized = false;
+  late bool _hasSeenOnboarding;
+  late bool _isAuthenticated;
   StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
-    _initializeAppState();
+    _hasSeenOnboarding = widget.initialHasSeenOnboarding;
+    _isAuthenticated = widget.initialIsAuthenticated;
+
     if (_supabaseService.safeClient != null) {
       _authSubscription = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) async {
         final AuthChangeEvent event = data.event;
@@ -86,46 +110,11 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> {
     super.dispose();
   }
 
-  Future<void> _initializeAppState() async {
-    // 1. Auto-detect & initialize local currency
-    await _currencyService.initialize();
-
-    // 2. Initialize automatic background device notifications
-    NotificationService().initialize().catchError((e) {
-      debugPrint('Notification init error: $e');
-    });
-
-    final prefs = await SharedPreferences.getInstance();
-    final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
-    final isPersistentLoggedIn = prefs.getBool('persistent_user_logged_in') ?? false;
-    final cachedUserId = prefs.getString('supabase_user_id');
-    final hasCachedUser = (cachedUserId != null && cachedUserId.isNotEmpty) || (prefs.getString('google_user_email') != null);
-    final hasSupabaseSession = _supabaseService.isAuthenticated || (_supabaseService.safeClient?.auth.currentSession != null);
-
-    final authed = isPersistentLoggedIn || hasCachedUser || hasSupabaseSession;
-
-    if (mounted) {
-      setState(() {
-        _hasSeenOnboarding = hasSeenOnboarding;
-        _isAuthenticated = authed;
-        _isInitialized = true;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<String>(
       valueListenable: CurrencyService.currencySymbolNotifier,
       builder: (context, currentCurrencySymbol, _) {
-        if (!_isInitialized) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            home: const ExpenseOSSplashLoadingScreen(),
-          );
-        }
-
         Widget initialScreen;
         if (!_hasSeenOnboarding) {
           initialScreen = OnboardingScreen(
@@ -160,66 +149,6 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> {
           home: initialScreen,
         );
       },
-    );
-  }
-}
-
-class ExpenseOSSplashLoadingScreen extends StatelessWidget {
-  const ExpenseOSSplashLoadingScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF101828).withValues(alpha: 0.08),
-                    blurRadius: 28,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: Image.asset(
-                  'assets/logo.png',
-                  width: 140,
-                  height: 140,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Expense OS',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textPrimary,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 36),
-            const SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(
-                color: AppTheme.monexBlue,
-                strokeWidth: 2.8,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
