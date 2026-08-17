@@ -89,9 +89,38 @@ jobs:
           name: ExpenseOS-iOS-IPA
           path: ExpenseOS-iOS.ipa
 
+  build-desktop-exe:
+    name: Build Windows Desktop EXE
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'web-desktop/package-lock.json'
+
+      - name: Install Dependencies
+        working-directory: web-desktop
+        run: npm ci || npm install
+
+      - name: Build Windows Executable
+        working-directory: web-desktop
+        run: npx electron-builder --win
+
+      - name: Upload Windows Desktop Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExpenseOS-Windows-EXE
+          path: |
+            web-desktop/dist/*.exe
+
   create-release:
     name: Publish Release Assets
-    needs: [build-android, build-ios]
+    needs: [build-android, build-ios, build-desktop-exe]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     steps:
@@ -110,16 +139,24 @@ jobs:
           name: ExpenseOS-iOS-IPA
           path: artifacts/ios
 
+      - name: Download Desktop Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ExpenseOS-Windows-EXE
+          path: artifacts/desktop
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Expense OS Mobile Release
+          name: Expense OS Multiplatform Release
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            artifacts/android/app-release.apk
-            artifacts/ios/ExpenseOS-iOS.ipa
+            artifacts/android/*.apk
+            artifacts/ios/*.ipa
+            artifacts/desktop/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 

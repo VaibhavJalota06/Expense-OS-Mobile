@@ -37,7 +37,6 @@
         "repo": "Expense-Calculator-Desktop"
       }
     ],
-    "forceCodeSigning": false,
     "directories": {
       "output": "dist"
     },
@@ -47,7 +46,6 @@
         "nsis",
         "portable"
       ],
-      "sign": null,
       "verifyUpdateCodeSignature": false
     },
     "nsis": {
