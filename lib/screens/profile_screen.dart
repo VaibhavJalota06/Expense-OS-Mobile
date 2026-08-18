@@ -419,6 +419,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+  @override
   Widget build(BuildContext context) {
     final activeSymbol = CurrencyService.currencySymbolNotifier.value;
     final currencyFormatter = NumberFormat.currency(symbol: activeSymbol, locale: 'en_US', decimalDigits: 0);
