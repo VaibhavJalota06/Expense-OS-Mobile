@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/expense_model.dart';
 import '../services/currency_service.dart';
+import '../services/notification_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import 'calendar_expenses_screen.dart';
@@ -95,6 +96,16 @@ class ToolsHubScreen extends StatelessWidget {
         'badge': 'CALENDAR',
         'action': (BuildContext ctx) {
           Navigator.push(ctx, MaterialPageRoute(builder: (_) => const CalendarExpensesScreen()));
+        },
+      },
+      {
+        'title': 'Smart Push Notifications',
+        'subtitle': 'Manage budget limits, bill due dates, daily streaks & fraud alerts',
+        'icon': Icons.notifications_active_rounded,
+        'color': const Color(0xFF12B76A),
+        'badge': 'ALERTS',
+        'action': (BuildContext ctx) {
+          _showNotificationManagerModal(ctx);
         },
       },
     ];
@@ -217,6 +228,223 @@ class ToolsHubScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showNotificationManagerModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(24.0),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE4E7EC),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF12B76A).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.notifications_active_rounded, color: Color(0xFF12B76A), size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Push Notifications & Alerts',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          'Real-time proactive financial intelligence',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: const Color(0xFF667085),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _buildChannelRow(
+                icon: Icons.pie_chart_rounded,
+                color: const Color(0xFFF04438),
+                title: 'Budget Threshold Warnings',
+                subtitle: 'Alerts at 80% and 100% of your monthly spending cap',
+              ),
+              const SizedBox(height: 12),
+              _buildChannelRow(
+                icon: Icons.calendar_today_rounded,
+                color: const Color(0xFF7A5AF8),
+                title: 'Bill & Subscription Due Dates',
+                subtitle: 'Automatic reminders 24h before recurring bill renewals',
+              ),
+              const SizedBox(height: 12),
+              _buildChannelRow(
+                icon: Icons.local_fire_department_rounded,
+                color: const Color(0xFFF79009),
+                title: 'Daily Streak Reminders',
+                subtitle: 'Evening alerts to log expenses & maintain your streak',
+              ),
+              const SizedBox(height: 12),
+              _buildChannelRow(
+                icon: Icons.security_rounded,
+                color: const Color(0xFF2E90FA),
+                title: 'Fraud & Anomaly Detection',
+                subtitle: 'Instant warnings for duplicate charges and spike expenses',
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        side: const BorderSide(color: Color(0xFFD0D5DD)),
+                      ),
+                      onPressed: () async {
+                        final granted = await NotificationService().requestPermissions();
+                        if (ctx.mounted) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                granted ? '✅ Notification permissions active' : '⚠️ Permissions not granted',
+                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                              ),
+                              backgroundColor: granted ? AppTheme.successGreen : const Color(0xFFF04438),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.verified_user_rounded, size: 18, color: AppTheme.textPrimary),
+                      label: Text(
+                        'Permissions',
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF12B76A),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      onPressed: () async {
+                        await NotificationService().showTestNotification();
+                        if (ctx.mounted) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '🚀 Test notification sent to your device!',
+                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                              ),
+                              backgroundColor: AppTheme.successGreen,
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.send_rounded, size: 18, color: Colors.white),
+                      label: Text(
+                        'Send Test Alert',
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildChannelRow({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFEAECF0)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: const Color(0xFF667085),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.check_circle_rounded, color: Color(0xFF12B76A), size: 18),
+        ],
       ),
     );
   }
