@@ -196,9 +196,6 @@ class SupabaseService {
       final success = await client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: redirectUrl,
-        queryParams: {
-          'prompt': 'select_account',
-        },
         authScreenLaunchMode: defaultTargetPlatform == TargetPlatform.iOS
             ? LaunchMode.platformDefault
             : (kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication),
