@@ -23,8 +23,8 @@ class AppUpdateInfo {
 }
 
 class AppUpdateService {
-  static const String currentAppVersion = "1.0.45";
-  static const int currentBuildNumber = 45;
+  static const String currentAppVersion = "3.0.0";
+  static const int currentBuildNumber = 51;
 
   static final AppUpdateService _instance = AppUpdateService._internal();
   factory AppUpdateService() => _instance;
