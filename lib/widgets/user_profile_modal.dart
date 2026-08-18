@@ -95,18 +95,43 @@ class _UserProfileModalState extends State<UserProfileModal> {
   }
 
   Future<void> _editDisplayName() async {
+    final isDark = AppTheme.isDark(context);
     final controller = TextEditingController(text: _displayName);
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF131A29) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Edit Profile Name', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18)),
+        title: Text(
+          'Edit Profile Name',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+          ),
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,
+          style: GoogleFonts.plusJakartaSans(
+            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
           decoration: InputDecoration(
             hintText: 'Enter your name',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            hintStyle: GoogleFonts.plusJakartaSans(
+              color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3),
+            ),
+            filled: true,
+            fillColor: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+            ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppTheme.monexBlue, width: 2),
@@ -116,7 +141,12 @@ class _UserProfileModalState extends State<UserProfileModal> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF667085))),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.plusJakartaSans(
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
+              ),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -284,9 +314,12 @@ class _UserProfileModalState extends State<UserProfileModal> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEFF8FF),
+                      color: isDark ? const Color(0xFF1E293B).withValues(alpha: 0.6) : const Color(0xFFEFF8FF),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFB2DDFF), width: 1),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF334155) : const Color(0xFFB2DDFF),
+                        width: 1,
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -305,7 +338,7 @@ class _UserProfileModalState extends State<UserProfileModal> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.monexBlue,
+                            color: isDark ? const Color(0xFF60A5FA) : AppTheme.monexBlue,
                           ),
                         ),
                       ],
