@@ -201,17 +201,13 @@ class AppTheme {
           color: monexBlue,
         ),
       ),
-      chipTheme: ChipThemeData(
-        backgroundColor: const Color(0xFFF0F5FF),
-        disabledColor: const Color(0xFFF2F4F7),
-        selectedColor: monexBlue.withValues(alpha: 0.15),
-        secondarySelectedColor: monexBlue,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        labelStyle: GoogleFonts.plusJakartaSans(color: textPrimary, fontWeight: FontWeight.w600),
-        secondaryLabelStyle: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700),
+      chipTheme: const ChipThemeData(
+        backgroundColor: Color(0xFFF0F5FF),
+        disabledColor: Color(0xFFF2F4F7),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         brightness: Brightness.light,
         side: BorderSide.none,
-        shape: const StadiumBorder(),
+        shape: StadiumBorder(),
       ),
     );
   }
@@ -224,17 +220,13 @@ class AppTheme {
       scaffoldBackgroundColor: const Color(0xFF090D16),
       primaryColor: monexBlue,
       cardColor: const Color(0xFF131A29),
-      chipTheme: ChipThemeData(
-        backgroundColor: const Color(0xFF1E293B),
-        disabledColor: const Color(0xFF131A29),
-        selectedColor: monexBlue.withValues(alpha: 0.2),
-        secondarySelectedColor: monexBlue,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        labelStyle: GoogleFonts.plusJakartaSans(color: const Color(0xFFF8FAFC), fontWeight: FontWeight.w600),
-        secondaryLabelStyle: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700),
+      chipTheme: const ChipThemeData(
+        backgroundColor: Color(0xFF1E293B),
+        disabledColor: Color(0xFF131A29),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         brightness: Brightness.dark,
         side: BorderSide.none,
-        shape: const StadiumBorder(),
+        shape: StadiumBorder(),
       ),
       colorScheme: const ColorScheme.dark(
         primary: Color(0xFF38BDF8),
