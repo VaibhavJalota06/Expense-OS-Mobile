@@ -333,22 +333,6 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
     );
   }
 
-  void _addPresetGoal(String title, double target, String icon) {
-    final newGoal = FinancialGoal(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: title,
-      targetAmount: target,
-      currentAmount: 0.0,
-      contributionType: 'Monthly',
-      deadline: DateTime.now().add(const Duration(days: 365)),
-      icon: icon,
-    );
-    setState(() {
-      _goals.add(newGoal);
-    });
-    _saveGoals();
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
@@ -500,7 +484,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
             if (_goals.isEmpty)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF131A29) : Colors.white,
                   borderRadius: BorderRadius.circular(24),
@@ -508,53 +492,33 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.savings_outlined, size: 44, color: AppTheme.monexBlue),
-                    const SizedBox(height: 10),
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppTheme.monexBlue.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.savings_outlined, size: 28, color: AppTheme.monexBlue),
+                    ),
+                    const SizedBox(height: 14),
                     Text(
                       'No Savings Goals Created Yet',
-                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                      ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
-                      'Tap a quick starter preset below to create your first goal instantly:',
+                      'Tap "+ Add Goal" below to set custom financial targets & track milestones.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary),
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        ActionChip(
-                          avatar: const Text('🏖️'),
-                          label: Text('Emergency Fund ($currencySymbol 50k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
-                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F5FF),
-                          side: BorderSide.none,
-                          onPressed: () => _addPresetGoal('Emergency Fund', 50000, '🏖️'),
-                        ),
-                        ActionChip(
-                          avatar: const Text('💻'),
-                          label: Text('New Laptop ($currencySymbol 80k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
-                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F5FF),
-                          side: BorderSide.none,
-                          onPressed: () => _addPresetGoal('New Laptop', 80000, '💻'),
-                        ),
-                        ActionChip(
-                          avatar: const Text('✈️'),
-                          label: Text('Vacation Trip ($currencySymbol 30k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
-                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F5FF),
-                          side: BorderSide.none,
-                          onPressed: () => _addPresetGoal('Vacation Trip', 30000, '✈️'),
-                        ),
-                        ActionChip(
-                          avatar: const Text('🏠'),
-                          label: Text('House Deposit ($currencySymbol 200k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
-                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F5FF),
-                          side: BorderSide.none,
-                          onPressed: () => _addPresetGoal('House Deposit', 200000, '🏠'),
-                        ),
-                      ],
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary,
+                        height: 1.4,
+                      ),
                     ),
                   ],
                 ),
