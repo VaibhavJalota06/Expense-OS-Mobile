@@ -18,7 +18,7 @@ class AuthScreen extends StatefulWidget {
 
 enum AuthMode { login, signup, resetPassword }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthScreenState extends State<AuthScreen> with WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -37,14 +37,17 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (_supabaseService.safeClient != null) {
       _authSub = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) async {
+        debugPrint('[AuthScreen] onAuthStateChange event: ${data.event}, hasSession: ${data.session != null}, hasUser: ${data.session?.user != null}');
         if ((data.event == AuthChangeEvent.signedIn ||
                 data.event == AuthChangeEvent.initialSession ||
                 data.event == AuthChangeEvent.tokenRefreshed ||
                 data.event == AuthChangeEvent.userUpdated) &&
             data.session?.user != null &&
             mounted) {
+          debugPrint('[AuthScreen] Auth success! User: ${data.session!.user.email}, navigating to dashboard...');
           await SupabaseService.cacheUserData(data.session!.user);
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('persistent_user_logged_in', true);
@@ -55,7 +58,33 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkAndNavigateIfAuthed();
+    }
+  }
+
+  Future<void> _checkAndNavigateIfAuthed() async {
+    for (int i = 0; i < 4; i++) {
+      if (!mounted) return;
+      final user = _supabaseService.currentUser;
+      if (user != null) {
+        debugPrint('[AuthScreen] App resumed with authenticated user: ${user.email}');
+        await SupabaseService.cacheUserData(user);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('persistent_user_logged_in', true);
+        if (mounted) {
+          widget.onAuthSuccess();
+        }
+        return;
+      }
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _authSub?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
@@ -200,18 +229,12 @@ class _AuthScreenState extends State<AuthScreen> {
                 if (_authMode == AuthMode.login) ...[
                   Row(
                     children: [
-                      Image.asset(
-                        'assets/logo.png',
-                        width: 44,
-                        height: 44,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.account_balance_wallet_rounded,
-                          size: 44,
-                          color: AppTheme.monexBlue,
-                        ),
+                      const Icon(
+                        Icons.account_balance_wallet_rounded,
+                        size: 32,
+                        color: AppTheme.monexBlue,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Text(
                         'Expense OS',
                         style: GoogleFonts.plusJakartaSans(

@@ -14,7 +14,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -33,19 +33,33 @@
             </intent-filter>
 
             <!-- Deep Link Intent Filter for Supabase & Google OAuth Callback -->
-            <intent-filter>
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="com.expensecalculator.expenseosmobile"
-                    android:host="login-callback" />
+                <data android:scheme="com.expensecalculator.expenseosmobile" android:host="login-callback" />
+                <data android:scheme="com.expensecalculator.expenseosmobile" />
             </intent-filter>
-            <intent-filter>
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.expensecalculator.expense_os_mobile" android:host="login-callback" />
+                <data android:scheme="com.expensecalculator.expense_os_mobile" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="expenseos" android:host="login-callback" />
                 <data android:scheme="expenseos" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="io.supabase.expenseos" android:host="login-callback" />
+                <data android:scheme="io.supabase.expenseos" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

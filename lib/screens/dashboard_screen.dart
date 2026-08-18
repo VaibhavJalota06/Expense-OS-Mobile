@@ -96,6 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _loadFromLocalCacheImmediate();
     SupabaseService.refreshNotifier.addListener(_refreshDashboard);
     _refreshDashboard();
     _supabaseService.startRealtimeSync();
@@ -108,11 +109,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _loadFromLocalCacheImmediate() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final bal = prefs.getDouble('user_starting_balance') ?? 0.0;
+    final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+    final local = _supabaseService.localExpenses;
+    setState(() {
+      _startingBalance = bal;
+      _monthlyBudgetCap = budget;
+      if (local.isNotEmpty) {
+        _expenses = local;
+      }
+    });
+  }
+
   Future<void> _refreshDashboard() async {
-    await _loadExpenses();
-    await _loadUserData();
-    await _loadBudgetCap();
-    await _loadStartingBalance();
+    await Future.wait([
+      _loadExpenses(),
+      _loadUserData(),
+    ]);
   }
 
   Future<void> _loadUserData() async {

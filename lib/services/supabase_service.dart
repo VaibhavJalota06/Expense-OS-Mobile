@@ -33,6 +33,9 @@ class SupabaseService {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
+      authOptions: const FlutterAuthClientOptions(
+        authFlowType: AuthFlowType.pkce,
+      ),
     );
   }
 
@@ -134,72 +137,85 @@ class SupabaseService {
   }
 
   static const String googleServerClientId = "15673126976-lrpvllp65ca80f4d5p87mes8bb6srorp.apps.googleusercontent.com";
+  static const String googleIosClientId = "15673126976-c67nj6jll0noh5neas867mdv023n81f1.apps.googleusercontent.com";
+  static const String googleAndroidClientId = "15673126976-fu4p42673veifcnqh6dg0kfd2joibr6g.apps.googleusercontent.com";
 
   Future<bool> signInWithGoogle() async {
-    // 1. Try Native Google Sign-In with serverClientId on Android & iOS
+    debugPrint('[GoogleSignIn] Starting Google Sign-In flow...');
+
+    // 1. On Mobile (Android / iOS): Try Native Google Sign-In with GoogleSignIn SDK
     if (!kIsWeb) {
       try {
+        debugPrint('[GoogleSignIn] Attempting Native Google Sign-In via GoogleSignIn SDK...');
         final GoogleSignIn googleSignIn = GoogleSignIn(
+          clientId: defaultTargetPlatform == TargetPlatform.iOS ? googleIosClientId : null,
           serverClientId: googleServerClientId,
-          scopes: ['email', 'profile', 'openid'],
+          scopes: const [
+            'email',
+            'profile',
+          ],
         );
 
-        // Sign out previous cached native account to allow fresh selection
+        // Sign out any cached local credentials to prompt fresh account chooser
         try {
           await googleSignIn.signOut();
         } catch (_) {}
 
         final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-        if (googleUser != null) {
-          final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-          final idToken = googleAuth.idToken;
-          final accessToken = googleAuth.accessToken;
-
-          if (idToken != null && idToken.isNotEmpty) {
-            final res = await client.auth.signInWithIdToken(
-              provider: OAuthProvider.google,
-              idToken: idToken,
-              accessToken: accessToken,
-            );
-
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setBool('persistent_user_logged_in', true);
-            await prefs.setString('google_user_email', googleUser.email);
-            if (googleUser.displayName != null && googleUser.displayName!.isNotEmpty) {
-              await prefs.setString('custom_user_name', googleUser.displayName!);
-            }
-            if (googleUser.photoUrl != null && googleUser.photoUrl!.isNotEmpty) {
-              await prefs.setString('google_user_avatar', googleUser.photoUrl!);
-            }
-
-            if (res.user != null) {
-              await cacheUserData(res.user);
-            }
-            return true;
-          }
-        } else {
-          // User explicitly cancelled account picker
+        if (googleUser == null) {
+          debugPrint('[GoogleSignIn] User cancelled Google Sign-In prompt.');
           return false;
         }
+
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final String? idToken = googleAuth.idToken;
+        final String? accessToken = googleAuth.accessToken;
+
+        debugPrint('[GoogleSignIn] Native credentials obtained. idToken: ${idToken != null}, accessToken: ${accessToken != null}');
+
+        if (idToken != null) {
+          final AuthResponse response = await client.auth.signInWithIdToken(
+            provider: OAuthProvider.google,
+            idToken: idToken,
+            accessToken: accessToken,
+          );
+
+          if (response.user != null) {
+            debugPrint('[GoogleSignIn] Native Google Sign-In successful for: ${response.user!.email}');
+            await cacheUserData(response.user);
+            return true;
+          }
+        }
       } catch (nativeError) {
-        debugPrint('Native GoogleSignIn exception with serverClientId: $nativeError');
+        debugPrint('[GoogleSignIn] Native Google Sign-In exception / fallback to OAuth: $nativeError');
       }
     }
 
-    // 2. OAuth Flow (Launch browser and redirect to app scheme)
+    // 2. Fallback / Web / Desktop: Supabase OAuth Flow with External Browser
     try {
       final String redirectUrl = kIsWeb
           ? Uri.base.origin
-          : 'com.expensecalculator.expenseosmobile://login-callback';
+          : (defaultTargetPlatform == TargetPlatform.iOS
+              ? 'io.supabase.expenseos://login-callback'
+              : 'com.expensecalculator.expenseosmobile://login-callback');
+
+      debugPrint('[GoogleSignIn] Using Supabase OAuth flow with redirectUrl: $redirectUrl');
 
       final success = await client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: redirectUrl,
-        authScreenLaunchMode: LaunchMode.externalApplication,
+        queryParams: {
+          'prompt': 'select_account',
+        },
+        authScreenLaunchMode: defaultTargetPlatform == TargetPlatform.iOS
+            ? LaunchMode.platformDefault
+            : (kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication),
       );
+
+      debugPrint('[GoogleSignIn] OAuth browser launched: $success');
       return success;
     } catch (e) {
-      debugPrint('Google OAuth Sign-In Exception: $e');
+      debugPrint('[GoogleSignIn] OAuth Exception: $e');
       rethrow;
     }
   }

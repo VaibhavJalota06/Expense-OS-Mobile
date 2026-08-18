@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/auth_screen.dart';
 import 'screens/main_navigation_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/currency_service.dart';
 import 'services/notification_service.dart';
 import 'services/supabase_service.dart';
@@ -25,17 +26,13 @@ void main() async {
     ),
   );
 
-  // Fast parallel initialization
-  final prefsFuture = SharedPreferences.getInstance();
-  final supabaseFuture = SupabaseService.initialize().catchError((e) {
+  // Instant local storage access (<5ms)
+  final prefs = await SharedPreferences.getInstance();
+
+  // Non-blocking background initializations
+  SupabaseService.initialize().catchError((e) {
     debugPrint('Supabase initialization error: $e');
   });
-
-  // Wait for local storage concurrently to guarantee 0ms screen launch
-  final results = await Future.wait([prefsFuture, supabaseFuture]);
-  final prefs = results[0] as SharedPreferences;
-
-  // Initialize currency, theme & notifications in background non-blocking
   CurrencyService().initialize().catchError((_) {});
   NotificationService().initialize().catchError((_) {});
   ThemeService.initialize().catchError((_) {});
@@ -70,6 +67,7 @@ class ExpenseOSApp extends StatefulWidget {
 class _ExpenseOSAppState extends State<ExpenseOSApp> {
   final SupabaseService _supabaseService = SupabaseService();
 
+  bool _showSplash = true;
   late bool _hasSeenOnboarding;
   late bool _isAuthenticated;
   StreamSubscription<AuthState>? _authSubscription;
@@ -121,7 +119,17 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> {
           valueListenable: CurrencyService.currencySymbolNotifier,
           builder: (context, currentCurrencySymbol, _) {
             Widget initialScreen;
-            if (!_hasSeenOnboarding) {
+            if (_showSplash) {
+              initialScreen = SplashScreen(
+                onFinish: () {
+                  if (mounted) {
+                    setState(() {
+                      _showSplash = false;
+                    });
+                  }
+                },
+              );
+            } else if (!_hasSeenOnboarding) {
               initialScreen = OnboardingScreen(
                 onFinish: () {
                   setState(() {

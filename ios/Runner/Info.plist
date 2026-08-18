@@ -20,8 +20,11 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.expensecalculator.expenseosmobile</string>
+				<string>com.expensecalculator.expenseOsMobile</string>
+				<string>com.expensecalculator.expense_os_mobile</string>
 				<string>expenseos</string>
 				<string>io.supabase.expenseos</string>
+				<string>com.googleusercontent.apps.15673126976-c67nj6jll0noh5neas867mdv023n81f1</string>
 			</array>
 		</dict>
 	</array>
@@ -30,6 +33,8 @@
 		<string>https</string>
 		<string>http</string>
 		<string>com.expensecalculator.expenseosmobile</string>
+		<string>com.expensecalculator.expenseOsMobile</string>
+		<string>com.expensecalculator.expense_os_mobile</string>
 		<string>expenseos</string>
 	</array>
 	<key>CFBundleExecutable</key>

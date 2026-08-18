@@ -24,14 +24,10 @@ class MonexLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveColor = color ?? AppTheme.textPrimary;
 
-    final iconWidget = Image.asset(
-      'assets/logo.png',
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) {
-        return Icon(Icons.account_balance_wallet_rounded, size: size, color: AppTheme.monexBlue);
-      },
+    final iconWidget = Icon(
+      Icons.account_balance_wallet_rounded,
+      size: size * 0.9,
+      color: AppTheme.monexBlue,
     );
 
     if (!showText) return iconWidget;
