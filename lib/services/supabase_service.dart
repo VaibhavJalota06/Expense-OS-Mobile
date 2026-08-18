@@ -208,21 +208,21 @@ class SupabaseService {
           }
         }
 
-        // Native Google session fallback: Persist authenticated user directly
-        await prefs.setBool('persistent_user_logged_in', true);
-        await prefs.setString('google_user_email', googleUser.email);
-        await prefs.setString('custom_user_name', googleUser.displayName ?? googleUser.email.split('@').first);
-        final userEmail = googleUser.email.toLowerCase().trim();
-        await prefs.setString('supabase_user_id', googleUser.id);
-        await prefs.setString('google_user_email', userEmail);
-        debugPrint('[GoogleSignIn] Native In-App Login SUCCESS for: ${googleUser.email}');
-        return true;
+        // If in-app ID token didn't create Supabase session, run Supabase direct OAuth to register user in auth.users
+        debugPrint('[GoogleSignIn] Initiating Supabase direct OAuth to register user on Supabase auth.users...');
+        final success = await client.auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: 'io.supabase.expenseos://login-callback',
+          authScreenLaunchMode: LaunchMode.externalApplication,
+        );
+        return success;
       } catch (nativeError) {
-        debugPrint('[GoogleSignIn] Native in-app sign-in error: $nativeError. Attempting OAuth fallback...');
+        debugPrint('[GoogleSignIn] Native sign-in error: $nativeError. Using Supabase OAuth...');
         try {
           final success = await client.auth.signInWithOAuth(
             OAuthProvider.google,
             redirectTo: 'io.supabase.expenseos://login-callback',
+            authScreenLaunchMode: LaunchMode.externalApplication,
           );
           return success;
         } catch (_) {
