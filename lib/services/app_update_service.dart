@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -25,8 +24,8 @@ class AppUpdateInfo {
 }
 
 class AppUpdateService {
-  static const String currentAppVersion = "3.0.8";
-  static const int currentBuildNumber = 59;
+  static const String currentAppVersion = "3.1.2";
+  static const int currentBuildNumber = 62;
 
   static final AppUpdateService _instance = AppUpdateService._internal();
   factory AppUpdateService() => _instance;
@@ -34,6 +33,17 @@ class AppUpdateService {
 
   /// Check if a newer version is published in Supabase or GitHub Releases
   Future<AppUpdateInfo> checkForUpdate() async {
+    // Completely disable update checks and popups on iOS (App Store policy)
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      return AppUpdateInfo(
+        currentVersion: currentAppVersion,
+        latestVersion: currentAppVersion,
+        downloadUrl: '',
+        releaseNotes: 'iOS app updates are delivered automatically.',
+        isUpdateAvailable: false,
+      );
+    }
+
     // 1. Check Supabase first if available
     try {
       final client = SupabaseService().safeClient;
@@ -136,6 +146,22 @@ class AppUpdateService {
 
   /// Show the Update Dialog / Sheet to the user
   void showUpdateModal(BuildContext context, AppUpdateInfo info, {bool showUpToDateNotice = false}) {
+    // Suppress update modal on iOS
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      if (showUpToDateNotice) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '🎉 You are on the latest version of Expense OS',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: AppTheme.successGreen,
+          ),
+        );
+      }
+      return;
+    }
+
     if (!info.isUpdateAvailable) {
       if (showUpToDateNotice) {
         ScaffoldMessenger.of(context).showSnackBar(

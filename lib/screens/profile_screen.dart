@@ -872,26 +872,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   leading: const Icon(Icons.system_update_alt_rounded, color: AppTheme.monexBlue),
                   title: Text('App Version', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
                   subtitle: Text('v${AppUpdateService.currentAppVersion} (Build ${AppUpdateService.currentBuildNumber})', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
-                  trailing: OutlinedButton(
-                    onPressed: () async {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Checking for updates...', style: GoogleFonts.plusJakartaSans()),
-                          duration: const Duration(milliseconds: 1000),
+                  trailing: (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS)
+                      ? null
+                      : OutlinedButton(
+                          onPressed: () async {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Checking for updates...', style: GoogleFonts.plusJakartaSans()),
+                                duration: const Duration(milliseconds: 1000),
+                              ),
+                            );
+                            final updateInfo = await AppUpdateService().checkForUpdate();
+                            if (context.mounted) {
+                              AppUpdateService().showUpdateModal(context, updateInfo, showUpToDateNotice: true);
+                            }
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppTheme.monexBlue),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          ),
+                          child: Text('Check Update', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.monexBlue)),
                         ),
-                      );
-                      final updateInfo = await AppUpdateService().checkForUpdate();
-                      if (context.mounted) {
-                        AppUpdateService().showUpdateModal(context, updateInfo, showUpToDateNotice: true);
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppTheme.monexBlue),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    ),
-                    child: Text('Check Update', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.monexBlue)),
-                  ),
                 ),
               ],
             ),
