@@ -34,13 +34,12 @@ jobs:
       - name: Configure Android SDK & Gradle
         run: |
           chmod +x android/gradlew
-          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           flutter precache --android
           flutter pub get
 
       - name: Build Release APK
         run: |
-          flutter build apk --release --no-tree-shake-icons -v > build_apk.log 2>&1 || (tail -n 100 build_apk.log && exit 1)
+          flutter build apk --release --no-tree-shake-icons
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
@@ -74,7 +73,7 @@ jobs:
 
       - name: Build iOS App (Unsigned IPA)
         run: |
-          flutter build ipa --no-codesign --no-tree-shake-icons -v > build_ios.log 2>&1 || (tail -n 100 build_ios.log && exit 1)
+          flutter build ipa --no-codesign --no-tree-shake-icons
           mkdir -p Payload
           if [ -d "build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app" ]; then
             cp -r build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app Payload/
@@ -128,25 +127,28 @@ jobs:
     name: Publish Release Assets
     needs: [build-android, build-ios, build-desktop-exe]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    if: always() && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Download Android Artifact
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: ExpenseOS-Android-APK
           path: artifacts/android
 
       - name: Download iOS Artifact
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: ExpenseOS-iOS-IPA
           path: artifacts/ios
 
       - name: Download Desktop Artifact
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: ExpenseOS-Windows-EXE
           path: artifacts/desktop
@@ -154,7 +156,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Expense OS Multiplatform Release
+          name: Expense OS Multiplatform Release ${{ github.ref_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
