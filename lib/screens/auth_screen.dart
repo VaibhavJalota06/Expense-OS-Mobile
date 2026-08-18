@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/monex_illustrations.dart';
@@ -30,9 +32,28 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _showSuccessState = false;
 
   final SupabaseService _supabaseService = SupabaseService();
+  StreamSubscription<AuthState>? _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_supabaseService.safeClient != null) {
+      _authSub = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) async {
+        if ((data.event == AuthChangeEvent.signedIn || data.event == AuthChangeEvent.initialSession) &&
+            data.session?.user != null &&
+            mounted) {
+          await SupabaseService.cacheUserData(data.session!.user);
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('persistent_user_logged_in', true);
+          widget.onAuthSuccess();
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -55,7 +76,8 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       final success = await _supabaseService.signInWithGoogle();
-      if (success && mounted) {
+      if (success && _supabaseService.currentUser != null && mounted) {
+        await SupabaseService.cacheUserData(_supabaseService.currentUser);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('persistent_user_logged_in', true);
         widget.onAuthSuccess();

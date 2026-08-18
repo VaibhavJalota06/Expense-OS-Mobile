@@ -87,16 +87,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final customAvatar = prefs.getString('custom_avatar_path');
 
     String email = user?.email ?? googleEmail ?? 'Member';
-    String name = customName ??
-        (user?.userMetadata?['full_name'] ??
-            user?.userMetadata?['name'] ??
-            (email.contains('@') ? email.split('@').first : 'Expense User'));
-    String? photoUrl = googleAvatar ?? user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
+    String? name = customName;
+    if (name == null || name.isEmpty || name == 'Expense User' || name == 'User') {
+      name = user?.userMetadata?['full_name'] ??
+          user?.userMetadata?['name'] ??
+          user?.userMetadata?['display_name'];
+      if ((name == null || name.isEmpty) && email.contains('@')) {
+        final prefix = email.split('@').first.replaceAll(RegExp(r'[._]'), ' ');
+        name = prefix
+            .split(' ')
+            .where((w) => w.isNotEmpty)
+            .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
+            .join(' ');
+      }
+    }
+    String? photoUrl = customAvatar ?? googleAvatar ?? user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
 
     if (mounted) {
       setState(() {
         _selectedCurrencySymbol = savedSymbol;
-        _userName = name;
+        _userName = name ?? 'Expense User';
         _userEmail = email;
         _avatarUrl = photoUrl;
         _customAvatarPath = customAvatar;

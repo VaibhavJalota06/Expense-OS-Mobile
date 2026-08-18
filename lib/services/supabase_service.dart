@@ -58,15 +58,30 @@ class SupabaseService {
       await prefs.setString('google_user_email', user.email!);
     }
     final meta = user.userMetadata;
+    String? resolvedName;
+    String? resolvedAvatar;
+
     if (meta != null) {
-      final String? name = meta['full_name'] ?? meta['name'] ?? meta['display_name'];
-      if (name != null && name.isNotEmpty) {
-        await prefs.setString('custom_user_name', name);
-      }
-      final String? avatar = meta['avatar_url'] ?? meta['picture'] ?? meta['avatar'];
-      if (avatar != null && avatar.isNotEmpty) {
-        await prefs.setString('google_user_avatar', avatar);
-      }
+      resolvedName = meta['full_name'] ?? meta['name'] ?? meta['display_name'] ?? meta['user_name'];
+      resolvedAvatar = meta['avatar_url'] ?? meta['picture'] ?? meta['avatar'];
+    }
+
+    if ((resolvedName == null || resolvedName.isEmpty || resolvedName == 'Expense User') &&
+        user.email != null &&
+        user.email!.contains('@')) {
+      final prefix = user.email!.split('@').first.replaceAll(RegExp(r'[._]'), ' ');
+      resolvedName = prefix
+          .split(' ')
+          .where((w) => w.isNotEmpty)
+          .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
+          .join(' ');
+    }
+
+    if (resolvedName != null && resolvedName.isNotEmpty) {
+      await prefs.setString('custom_user_name', resolvedName);
+    }
+    if (resolvedAvatar != null && resolvedAvatar.isNotEmpty) {
+      await prefs.setString('google_user_avatar', resolvedAvatar);
     }
 
     // Sync profile to relational profiles table on login

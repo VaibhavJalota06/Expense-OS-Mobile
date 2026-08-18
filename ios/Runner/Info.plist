@@ -20,6 +20,8 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.expensecalculator.expenseosmobile</string>
+				<string>expenseos</string>
+				<string>io.supabase.expenseos</string>
 			</array>
 		</dict>
 	</array>
@@ -28,6 +30,7 @@
 		<string>https</string>
 		<string>http</string>
 		<string>com.expensecalculator.expenseosmobile</string>
+		<string>expenseos</string>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
