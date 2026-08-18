@@ -133,7 +133,60 @@ class SupabaseService {
     return res;
   }
 
+  static const String googleServerClientId = "15673126976-lrpvllp65ca80f4d5p87mes8bb6srorp.apps.googleusercontent.com";
+
   Future<bool> signInWithGoogle() async {
+    // 1. Try Native Google Sign-In with serverClientId on Android & iOS
+    if (!kIsWeb) {
+      try {
+        final GoogleSignIn googleSignIn = GoogleSignIn(
+          serverClientId: googleServerClientId,
+          scopes: ['email', 'profile', 'openid'],
+        );
+
+        // Sign out previous cached native account to allow fresh selection
+        try {
+          await googleSignIn.signOut();
+        } catch (_) {}
+
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser != null) {
+          final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+          final idToken = googleAuth.idToken;
+          final accessToken = googleAuth.accessToken;
+
+          if (idToken != null && idToken.isNotEmpty) {
+            final res = await client.auth.signInWithIdToken(
+              provider: OAuthProvider.google,
+              idToken: idToken,
+              accessToken: accessToken,
+            );
+
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('persistent_user_logged_in', true);
+            await prefs.setString('google_user_email', googleUser.email);
+            if (googleUser.displayName != null && googleUser.displayName!.isNotEmpty) {
+              await prefs.setString('custom_user_name', googleUser.displayName!);
+            }
+            if (googleUser.photoUrl != null && googleUser.photoUrl!.isNotEmpty) {
+              await prefs.setString('google_user_avatar', googleUser.photoUrl!);
+            }
+
+            if (res.user != null) {
+              await cacheUserData(res.user);
+            }
+            return true;
+          }
+        } else {
+          // User explicitly cancelled account picker
+          return false;
+        }
+      } catch (nativeError) {
+        debugPrint('Native GoogleSignIn exception with serverClientId: $nativeError');
+      }
+    }
+
+    // 2. OAuth In-App Browser Fallback
     try {
       final String redirectUrl = kIsWeb
           ? Uri.base.origin
