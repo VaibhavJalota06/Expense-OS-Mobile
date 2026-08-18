@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -30,8 +32,9 @@ class AppUpdateService {
   factory AppUpdateService() => _instance;
   AppUpdateService._internal();
 
-  /// Check if a newer version is published in Supabase or remote config
+  /// Check if a newer version is published in Supabase or GitHub Releases
   Future<AppUpdateInfo> checkForUpdate() async {
+    // 1. Check Supabase first if available
     try {
       final client = SupabaseService().safeClient;
       if (client != null) {
@@ -43,25 +46,70 @@ class AppUpdateService {
             .maybeSingle();
 
         if (response != null) {
-          final latestVersion = response['version'] as String? ?? currentAppVersion;
+          final latestVersion = (response['version'] as String? ?? currentAppVersion).replaceAll('v', '').trim();
           final downloadUrl = response['apk_url'] as String? ?? 'https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases';
           final notes = response['changelog'] as String? ?? 'Performance improvements and new tools.';
           final mandatory = response['is_mandatory'] as bool? ?? false;
 
           final hasUpdate = _isNewer(latestVersion, currentAppVersion);
-          return AppUpdateInfo(
-            currentVersion: currentAppVersion,
-            latestVersion: latestVersion,
-            downloadUrl: downloadUrl,
-            releaseNotes: notes,
-            isUpdateAvailable: hasUpdate,
-            isMandatory: mandatory,
-          );
+          if (hasUpdate) {
+            return AppUpdateInfo(
+              currentVersion: currentAppVersion,
+              latestVersion: latestVersion,
+              downloadUrl: downloadUrl,
+              releaseNotes: notes,
+              isUpdateAvailable: true,
+              isMandatory: mandatory,
+            );
+          }
         }
       }
     } catch (_) {
-      // Fallback
+      // Fallback to GitHub API
     }
+
+    // 2. Check GitHub Releases API directly
+    try {
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 6);
+      final request = await client.getUrl(
+        Uri.parse('https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile/releases/latest'),
+      );
+      request.headers.set('User-Agent', 'ExpenseOS-MobileApp');
+      request.headers.set('Accept', 'application/vnd.github.v3+json');
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final body = await response.transform(utf8.decoder).join();
+        final json = jsonDecode(body) as Map<String, dynamic>;
+        final tagName = (json['tag_name'] as String? ?? '').replaceAll('v', '').trim();
+        final releaseNotes = json['body'] as String? ?? 'Exciting new improvements and bug fixes.';
+        final htmlUrl = json['html_url'] as String? ?? 'https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases';
+
+        // Find direct apk asset url if available
+        String downloadUrl = htmlUrl;
+        final assets = json['assets'] as List<dynamic>?;
+        if (assets != null) {
+          for (final asset in assets) {
+            final name = asset['name'] as String? ?? '';
+            if (name.endsWith('.apk')) {
+              downloadUrl = asset['browser_download_url'] as String? ?? htmlUrl;
+              break;
+            }
+          }
+        }
+
+        final hasUpdate = _isNewer(tagName, currentAppVersion);
+        return AppUpdateInfo(
+          currentVersion: currentAppVersion,
+          latestVersion: tagName.isNotEmpty ? tagName : currentAppVersion,
+          downloadUrl: downloadUrl,
+          releaseNotes: releaseNotes.isNotEmpty ? releaseNotes : 'New release with latest features and optimizations.',
+          isUpdateAvailable: hasUpdate,
+          isMandatory: false,
+        );
+      }
+    } catch (_) {}
 
     return AppUpdateInfo(
       currentVersion: currentAppVersion,

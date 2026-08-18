@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/app_update_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/spendly_nav_bar.dart';
@@ -34,6 +35,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const SavingsGoalsScreen(showBackButton: false),
       ProfileScreen(onSignOut: widget.onSignOut),
     ];
+
+    // Automatic silent check for new updates on app launch
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(seconds: 3), () async {
+        if (!mounted) return;
+        final updateInfo = await AppUpdateService().checkForUpdate();
+        if (mounted && updateInfo.isUpdateAvailable) {
+          AppUpdateService().showUpdateModal(context, updateInfo);
+        }
+      });
+    });
   }
 
   void _openAddExpenseSheet() {
