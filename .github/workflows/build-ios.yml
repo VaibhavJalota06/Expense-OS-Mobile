@@ -1,9 +1,13 @@
-﻿name: Build Mobile Apps (Android APK & iOS IPA)
+name: Build & Release Mobile Apps (APK & IPA)
 
 on:
   push:
     branches: [ main, master ]
+    tags: [ 'v*' ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-android:
@@ -44,3 +48,25 @@ jobs:
         with:
           name: Expense-OS-ipa
           path: Expense-OS.ipa
+
+  publish-release:
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: app-release-apk
+      - uses: actions/download-artifact@v4
+        with:
+          name: Expense-OS-ipa
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            app-release.apk
+            Expense-OS.ipa
+          generate_release_notes: true
+          draft: false
+          prerelease: false
