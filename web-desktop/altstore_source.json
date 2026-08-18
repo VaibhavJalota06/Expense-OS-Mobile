@@ -1,0 +1,20 @@
+﻿{
+  "name": "Expense OS Mobile",
+  "identifier": "com.expensecalculator.expenseosmobile.source",
+  "website": "https://vaibhavjalota06.github.io/Expense-OS-Mobile/",
+  "apps": [
+    {
+      "name": "Expense OS",
+      "bundleIdentifier": "com.expensecalculator.expenseosmobile",
+      "developerName": "Vaibhav Jalota",
+      "version": "3.3.5",
+      "versionDate": "2026-08-18T19:55:00Z",
+      "versionDescription": "Permanent Light Theme, Multi-Tenant Data Privacy, and Universal Cloud Sync.",
+      "downloadURL": "https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.5/ExpenseOS-iOS.ipa",
+      "localizedDescription": "A comprehensive personal finance and expense command center.",
+      "iconURL": "https://vaibhavjalota06.github.io/Expense-OS-Mobile/icons/icon-512.png",
+      "tintColor": "0052FF",
+      "size": 25792758
+    }
+  ]
+}
