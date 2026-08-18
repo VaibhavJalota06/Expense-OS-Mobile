@@ -159,8 +159,7 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> {
               title: 'Expense OS',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.lightTheme,
-              darkTheme: AppTheme.darkTheme,
-              themeMode: currentThemeMode,
+              themeMode: ThemeMode.light,
               home: initialScreen,
               onGenerateRoute: (settings) {
                 return MaterialPageRoute(

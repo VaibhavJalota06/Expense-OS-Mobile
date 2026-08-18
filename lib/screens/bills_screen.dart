@@ -37,6 +37,10 @@ class _BillsScreenState extends State<BillsScreen> {
   }
 
   Future<void> _loadSubscriptions() async {
+    try {
+      await SupabaseService().getExpenses();
+    } catch (_) {}
+
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString('user_saved_subscriptions');
     if (raw != null && raw.isNotEmpty) {

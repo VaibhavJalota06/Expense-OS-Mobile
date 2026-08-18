@@ -7,17 +7,15 @@ class ThemeService {
   ThemeService._internal();
 
   static final ValueNotifier<ThemeMode> themeModeNotifier =
-      ValueNotifier<ThemeMode>(ThemeMode.system);
+      ValueNotifier<ThemeMode>(ThemeMode.light);
 
   static Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
-    final modeStr = prefs.getString('app_theme_mode') ?? 'system';
-    if (modeStr == 'light') {
-      themeModeNotifier.value = ThemeMode.light;
-    } else if (modeStr == 'dark') {
+    final modeStr = prefs.getString('app_theme_mode') ?? 'light';
+    if (modeStr == 'dark') {
       themeModeNotifier.value = ThemeMode.dark;
     } else {
-      themeModeNotifier.value = ThemeMode.system;
+      themeModeNotifier.value = ThemeMode.light;
     }
   }
 
