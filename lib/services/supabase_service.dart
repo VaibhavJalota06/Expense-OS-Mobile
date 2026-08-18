@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/expense_model.dart';
+import 'currency_service.dart';
+import 'notification_service.dart';
 
 class SupabaseService {
   static const String supabaseUrl = "https://gtwirhvswhslljbfvnoe.supabase.co";
@@ -918,7 +920,7 @@ class SupabaseService {
   // CRUD: Add / Update / Delete with dual-write to all tables
   // =====================================================================
 
-  /// Add new expense with instant dual-write cloud sync
+  /// Add new expense with instant dual-write cloud sync and push notification
   Future<Expense> addExpense(Expense expense) async {
     await _loadLocalExpenses();
     final localItem = expense.copyWith(
@@ -929,6 +931,47 @@ class SupabaseService {
     await _pushUserDataToCloud();
     await _pushExpenseToTable(localItem); // Dual-write to relational table
     refreshNotifier.value++;
+
+    // Fire instant device push notification
+    try {
+      final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+      final isIncome = localItem.type.toLowerCase() == 'income';
+      
+      if (isIncome) {
+        await NotificationService().showNotification(
+          id: (localItem.id.hashCode.abs() % 90000) + 10000,
+          title: '💰 Income Logged: +$currencySymbol${localItem.amount.toStringAsFixed(2)}',
+          body: '${localItem.title} • ${localItem.category}',
+          channelType: NotificationChannelType.general,
+        );
+      } else {
+        await NotificationService().showNotification(
+          id: (localItem.id.hashCode.abs() % 90000) + 20000,
+          title: '💸 Expense Logged: -$currencySymbol${localItem.amount.toStringAsFixed(2)}',
+          body: '${localItem.title} • ${localItem.category}',
+          channelType: NotificationChannelType.budget,
+        );
+
+        // Check if this expense approaches or exceeds the monthly budget cap
+        final prefs = await SharedPreferences.getInstance();
+        final cap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+        if (cap > 0) {
+          final now = DateTime.now();
+          final monthExpenses = _localExpenses
+              .where((e) => e.type.toLowerCase() == 'expense' && e.date.year == now.year && e.date.month == now.month)
+              .fold(0.0, (sum, e) => sum + e.amount);
+          
+          await NotificationService().checkBudgetAlert(
+            totalSpent: monthExpenses,
+            budgetCap: cap,
+            currencySymbol: currencySymbol,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error triggering transaction notification: $e');
+    }
+
     return localItem;
   }
 
