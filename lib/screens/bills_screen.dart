@@ -67,7 +67,7 @@ class _BillsScreenState extends State<BillsScreen> {
 
     for (int i = 0; i < _subscriptions.length; i++) {
       final item = _subscriptions[i];
-      
+
       // If a monthly bill was paid in the current month, keep it paid!
       if (item.isPaid && item.lastPaidDate != null) {
         final lastPaidYM = '${item.lastPaidDate!.year}-${item.lastPaidDate!.month.toString().padLeft(2, '0')}';
@@ -167,299 +167,328 @@ class _BillsScreenState extends State<BillsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
+        final isDark = AppTheme.isDark(ctx);
         final currencySymbol = CurrencyService.currencySymbolNotifier.value;
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-                  top: 20,
-                  left: 20,
-                  right: 20,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFD0D5DD),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF131A29) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                top: 20,
+                left: 20,
+                right: 20,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD),
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Row(
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isEdit ? 'Edit Recurring Bill' : 'Add Recurring Bill',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close_rounded, color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Title input
+                    TextField(
+                      controller: titleController,
+                      keyboardType: TextInputType.text,
+                      textCapitalization: TextCapitalization.words,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. Netflix, Rent, Internet, Gym',
+                        hintStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3)),
+                        labelText: 'Bill / Subscription Name',
+                        labelStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Amount
+                    TextField(
+                      controller: amountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        prefixText: '$currencySymbol ',
+                        prefixStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.monexBlue),
+                        hintText: '0.00',
+                        hintStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3)),
+                        labelText: 'Amount Due (Numbers Only)',
+                        labelStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Category Dropdown
+                    DropdownButtonFormField<String>(
+                      initialValue: category,
+                      dropdownColor: isDark ? const Color(0xFF131A29) : Colors.white,
+                      style: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Category',
+                        labelStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                        ),
+                      ),
+                      items: categories.map((cat) {
+                        return DropdownMenuItem(
+                          value: cat,
+                          child: Text(cat, style: GoogleFonts.plusJakartaSans(fontSize: 14, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) setSheetState(() => category = val);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Cycle selector
+                    Text(
+                      'Billing Frequency',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildCycleChip('monthly', 'Monthly', cycle, (val) {
+                          setSheetState(() {
+                            cycle = val;
+                            final now = DateTime.now();
+                            selectedDueDate = DateTime(now.year, now.month + 1, now.day);
+                          });
+                        }),
+                        _buildCycleChip('yearly', 'Yearly', cycle, (val) {
+                          setSheetState(() {
+                            cycle = val;
+                            final now = DateTime.now();
+                            selectedDueDate = DateTime(now.year + 1, now.month, now.day);
+                          });
+                        }),
+                        _buildCycleChip('weekly', 'Weekly', cycle, (val) {
+                          setSheetState(() {
+                            cycle = val;
+                            selectedDueDate = DateTime.now().add(const Duration(days: 7));
+                          });
+                        }),
+                        _buildCycleChip('quarterly', 'Quarterly', cycle, (val) {
+                          setSheetState(() {
+                            cycle = val;
+                            final now = DateTime.now();
+                            selectedDueDate = DateTime(now.year, now.month + 3, now.day);
+                          });
+                        }),
+                        _buildCycleChip('custom', 'Custom Date', cycle, (val) {
+                          setSheetState(() {
+                            cycle = val;
+                          });
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Single Due / Renewal Date Selector
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                      ),
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            isEdit ? 'Edit Recurring Bill' : 'Add Recurring Bill',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Title input
-                      TextField(
-                        controller: titleController,
-                        keyboardType: TextInputType.text,
-                        textCapitalization: TextCapitalization.words,
-                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-                        decoration: InputDecoration(
-                          hintText: 'e.g. Netflix, Rent, Internet, Gym',
-                          labelText: 'Bill / Subscription Name',
-                          filled: true,
-                          fillColor: const Color(0xFFF9FAFB),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Amount
-                      TextField(
-                        controller: amountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
-                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-                        decoration: InputDecoration(
-                          prefixText: '$currencySymbol ',
-                          hintText: '0.00',
-                          labelText: 'Amount Due (Numbers Only)',
-                          filled: true,
-                          fillColor: const Color(0xFFF9FAFB),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Category Dropdown
-                      DropdownButtonFormField<String>(
-                        initialValue: category,
-                        decoration: InputDecoration(
-                          labelText: 'Category',
-                          filled: true,
-                          fillColor: const Color(0xFFF9FAFB),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                          ),
-                        ),
-                        items: categories.map((cat) {
-                          return DropdownMenuItem(value: cat, child: Text(cat, style: GoogleFonts.plusJakartaSans(fontSize: 14)));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setSheetState(() => category = val);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Cycle selector: Monthly / Yearly / Weekly / Custom
-                      Text(
-                        'Billing Frequency',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textSecondary),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _buildCycleChip('monthly', 'Monthly', cycle, (val) {
-                            setSheetState(() {
-                              cycle = val;
-                              final now = DateTime.now();
-                              selectedDueDate = DateTime(now.year, now.month + 1, now.day);
-                            });
-                          }),
-                          _buildCycleChip('yearly', 'Yearly', cycle, (val) {
-                            setSheetState(() {
-                              cycle = val;
-                              final now = DateTime.now();
-                              selectedDueDate = DateTime(now.year + 1, now.month, now.day);
-                            });
-                          }),
-                          _buildCycleChip('weekly', 'Weekly', cycle, (val) {
-                            setSheetState(() {
-                              cycle = val;
-                              selectedDueDate = DateTime.now().add(const Duration(days: 7));
-                            });
-                          }),
-                          _buildCycleChip('quarterly', 'Quarterly', cycle, (val) {
-                            setSheetState(() {
-                              cycle = val;
-                              final now = DateTime.now();
-                              selectedDueDate = DateTime(now.year, now.month + 3, now.day);
-                            });
-                          }),
-                          _buildCycleChip('custom', 'Custom Date', cycle, (val) {
-                            setSheetState(() {
-                              cycle = val;
-                            });
-                          }),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Single Due / Renewal Date Selector
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE4E7EC)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  cycle == 'custom' ? 'Custom Renewal Date' : 'Fixed Renewal Date ($cycle)',
-                                  style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  DateFormat('EEEE, dd MMM yyyy').format(selectedDueDate),
-                                  style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.monexBlue),
-                                ),
-                              ],
-                            ),
-                            if (cycle == 'custom')
-                              OutlinedButton.icon(
-                                onPressed: () async {
-                                  final picked = await showDatePicker(
-                                    context: context,
-                                    initialDate: selectedDueDate,
-                                    firstDate: DateTime(2020),
-                                    lastDate: DateTime.now().add(const Duration(days: 3650)),
-                                  );
-                                  if (picked != null) {
-                                    setSheetState(() => selectedDueDate = picked);
-                                  }
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: AppTheme.monexBlue),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                                icon: const Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.monexBlue),
-                                label: Text('Change', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.monexBlue)),
-                              )
-                            else
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.monexBlue.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'Fixed Date',
-                                  style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.monexBlue),
-                                ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                cycle == 'custom' ? 'Custom Renewal Date' : 'Fixed Renewal Date ($cycle)',
+                                style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary, fontWeight: FontWeight.w600),
                               ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Reminder Notification toggle
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE4E7EC)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.notifications_active_outlined, size: 18, color: AppTheme.monexBlue),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Alert when due is pending',
-                                  style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
-                                ),
-                              ],
+                              const SizedBox(height: 4),
+                              Text(
+                                DateFormat('EEEE, dd MMM yyyy').format(selectedDueDate),
+                                style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.monexBlue),
+                              ),
+                            ],
+                          ),
+                          if (cycle == 'custom')
+                            OutlinedButton.icon(
+                              onPressed: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: selectedDueDate,
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime.now().add(const Duration(days: 3650)),
+                                );
+                                if (picked != null) {
+                                  setSheetState(() => selectedDueDate = picked);
+                                }
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppTheme.monexBlue),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: const Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.monexBlue),
+                              label: Text('Change', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.monexBlue)),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppTheme.monexBlue.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Fixed Date',
+                                style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.monexBlue),
+                              ),
                             ),
-                            Switch.adaptive(
-                              value: remind,
-                              activeTrackColor: AppTheme.monexBlue,
-                              onChanged: (val) => setSheetState(() => remind = val),
-                            ),
-                          ],
-                        ),
+                        ],
                       ),
-                      const SizedBox(height: 20),
+                    ),
+                    const SizedBox(height: 14),
 
-                      // Save Button
-                      ElevatedButton(
-                        onPressed: () {
-                          if (titleController.text.trim().isEmpty || amountController.text.trim().isEmpty) return;
-                          final amount = double.tryParse(amountController.text.trim()) ?? 0.0;
-                          if (amount <= 0) return;
-
-                          final newSub = SubscriptionItem(
-                            id: isEdit ? itemToEdit.id : DateTime.now().millisecondsSinceEpoch.toString(),
-                            title: titleController.text.trim(),
-                            amount: amount,
-                            category: category,
-                            cycle: cycle,
-                            dueDate: selectedDueDate,
-                            remindOnDueDate: remind,
-                            isPaid: isEdit ? itemToEdit.isPaid : false,
-                          );
-
-                          setState(() {
-                            if (isEdit) {
-                              final idx = _subscriptions.indexWhere((s) => s.id == itemToEdit.id);
-                              if (idx != -1) _subscriptions[idx] = newSub;
-                            } else {
-                              _subscriptions.add(newSub);
-                            }
-                          });
-                          _saveSubscriptions();
-                          _checkPendingBillAlerts();
-                          Navigator.pop(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: AppTheme.monexBlue,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                        child: Text(
-                          isEdit ? 'UPDATE BILL' : 'SAVE BILL & REMINDER',
-                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 14),
-                        ),
+                    // Reminder Notification toggle
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.notifications_active_outlined, size: 18, color: AppTheme.monexBlue),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Alert when due is pending',
+                                style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
+                              ),
+                            ],
+                          ),
+                          Switch.adaptive(
+                            value: remind,
+                            activeTrackColor: AppTheme.monexBlue,
+                            onChanged: (val) => setSheetState(() => remind = val),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Save Button
+                    ElevatedButton(
+                      onPressed: () {
+                        if (titleController.text.trim().isEmpty || amountController.text.trim().isEmpty) return;
+                        final amount = double.tryParse(amountController.text.trim()) ?? 0.0;
+                        if (amount <= 0) return;
+
+                        final newSub = SubscriptionItem(
+                          id: isEdit ? itemToEdit.id : DateTime.now().millisecondsSinceEpoch.toString(),
+                          title: titleController.text.trim(),
+                          amount: amount,
+                          category: category,
+                          cycle: cycle,
+                          dueDate: selectedDueDate,
+                          remindOnDueDate: remind,
+                          isPaid: isEdit ? itemToEdit.isPaid : false,
+                        );
+
+                        setState(() {
+                          if (isEdit) {
+                            final idx = _subscriptions.indexWhere((s) => s.id == itemToEdit.id);
+                            if (idx != -1) _subscriptions[idx] = newSub;
+                          } else {
+                            _subscriptions.add(newSub);
+                          }
+                        });
+                        _saveSubscriptions();
+                        _checkPendingBillAlerts();
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: AppTheme.monexBlue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text(
+                        isEdit ? 'UPDATE BILL' : 'SAVE BILL & REMINDER',
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 14),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -470,13 +499,15 @@ class _BillsScreenState extends State<BillsScreen> {
   }
 
   Widget _buildCycleChip(String key, String label, String currentCycle, Function(String) onSelect) {
+    final isDark = AppTheme.isDark(context);
     final isSelected = currentCycle == key;
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
       selectedColor: AppTheme.monexBlue,
+      backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF2F4F7),
       labelStyle: GoogleFonts.plusJakartaSans(
-        color: isSelected ? Colors.white : AppTheme.textPrimary,
+        color: isSelected ? Colors.white : (isDark ? const Color(0xFF94A3B8) : AppTheme.textPrimary),
         fontWeight: FontWeight.w700,
         fontSize: 12,
       ),
@@ -486,19 +517,21 @@ class _BillsScreenState extends State<BillsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
     final currency = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 2);
 
     final canPop = widget.showBackButton ?? (ModalRoute.of(context)?.canPop ?? false);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: canPop
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textPrimary, size: 20),
+                icon: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, size: 20),
                 onPressed: () {
                   if (Navigator.canPop(context)) Navigator.pop(context);
                 },
@@ -507,7 +540,7 @@ class _BillsScreenState extends State<BillsScreen> {
         title: Text(
           'Recurring Bills & Subscriptions',
           style: GoogleFonts.plusJakartaSans(
-            color: AppTheme.textPrimary,
+            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
             fontWeight: FontWeight.w800,
             fontSize: 18,
           ),
@@ -593,7 +626,7 @@ class _BillsScreenState extends State<BillsScreen> {
                                 'No recurring bills yet.\nTap + Add Bill below.',
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.plusJakartaSans(
-                                  color: AppTheme.textSecondary,
+                                  color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -611,21 +644,25 @@ class _BillsScreenState extends State<BillsScreen> {
                                   margin: const EdgeInsets.only(bottom: 12),
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: isDark ? const Color(0xFF131A29) : Colors.white,
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
                                       color: item.isPaid
-                                          ? const Color(0xFFD1FADF)
-                                          : (daysLeft <= 2 ? const Color(0xFFFECDCA) : const Color(0xFFF1F3F9)),
+                                          ? (isDark ? const Color(0xFF0D3320) : const Color(0xFFD1FADF))
+                                          : (daysLeft <= 2
+                                              ? (isDark ? const Color(0xFF4C1D1D) : const Color(0xFFFECDCA))
+                                              : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9))),
                                       width: 1.2,
                                     ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF101828).withValues(alpha: 0.03),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
+                                    boxShadow: isDark
+                                        ? []
+                                        : [
+                                            BoxShadow(
+                                              color: const Color(0xFF101828).withValues(alpha: 0.03),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
                                   ),
                                   child: Row(
                                     children: [
@@ -637,8 +674,10 @@ class _BillsScreenState extends State<BillsScreen> {
                                           height: 44,
                                           decoration: BoxDecoration(
                                             color: item.isPaid
-                                                ? const Color(0xFFECFDF3)
-                                                : (daysLeft <= 2 ? const Color(0xFFFEF3F2) : const Color(0xFFEEF2FF)),
+                                                ? (isDark ? const Color(0xFF0D3320) : const Color(0xFFECFDF3))
+                                                : (daysLeft <= 2
+                                                    ? (isDark ? const Color(0xFF4C1D1D) : const Color(0xFFFEF3F2))
+                                                    : (isDark ? const Color(0xFF1A2234) : const Color(0xFFEEF2FF))),
                                             borderRadius: BorderRadius.circular(14),
                                           ),
                                           child: Icon(
@@ -668,7 +707,7 @@ class _BillsScreenState extends State<BillsScreen> {
                                                       style: GoogleFonts.plusJakartaSans(
                                                         fontSize: 15,
                                                         fontWeight: FontWeight.w700,
-                                                        color: AppTheme.textPrimary,
+                                                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                                                         decoration: item.isPaid ? TextDecoration.lineThrough : null,
                                                       ),
                                                     ),
@@ -677,7 +716,7 @@ class _BillsScreenState extends State<BillsScreen> {
                                                     Container(
                                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                       decoration: BoxDecoration(
-                                                        color: const Color(0xFFECFDF3),
+                                                        color: isDark ? const Color(0xFF0D3320) : const Color(0xFFECFDF3),
                                                         borderRadius: BorderRadius.circular(6),
                                                       ),
                                                       child: Text(
@@ -685,7 +724,7 @@ class _BillsScreenState extends State<BillsScreen> {
                                                         style: GoogleFonts.plusJakartaSans(
                                                           fontSize: 10,
                                                           fontWeight: FontWeight.w800,
-                                                          color: const Color(0xFF027A48),
+                                                          color: const Color(0xFF12B76A),
                                                         ),
                                                       ),
                                                     ),
@@ -700,7 +739,7 @@ class _BillsScreenState extends State<BillsScreen> {
                                                   fontSize: 12,
                                                   color: item.isPaid
                                                       ? const Color(0xFF12B76A)
-                                                      : (daysLeft <= 2 ? AppTheme.dangerRed : const Color(0xFF667085)),
+                                                      : (daysLeft <= 2 ? AppTheme.dangerRed : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
                                                   fontWeight: FontWeight.w600,
                                                 ),
                                               ),
@@ -717,7 +756,7 @@ class _BillsScreenState extends State<BillsScreen> {
                                             style: GoogleFonts.plusJakartaSans(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w800,
-                                              color: AppTheme.textPrimary,
+                                              color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                                             ),
                                           ),
                                           const SizedBox(height: 6),
@@ -752,15 +791,15 @@ class _BillsScreenState extends State<BillsScreen> {
                                                   child: Container(
                                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                                     decoration: BoxDecoration(
-                                                      color: const Color(0xFFECFDF3),
+                                                      color: isDark ? const Color(0xFF0D3320) : const Color(0xFFECFDF3),
                                                       borderRadius: BorderRadius.circular(8),
-                                                      border: Border.all(color: const Color(0xFFD1FADF)),
+                                                      border: Border.all(color: isDark ? const Color(0xFF12B76A).withValues(alpha: 0.3) : const Color(0xFFD1FADF)),
                                                     ),
                                                     child: Text(
                                                       'Pay',
                                                       style: GoogleFonts.plusJakartaSans(
                                                         fontSize: 11,
-                                                        color: const Color(0xFF027A48),
+                                                        color: const Color(0xFF12B76A),
                                                         fontWeight: FontWeight.w700,
                                                       ),
                                                     ),
@@ -777,7 +816,8 @@ class _BillsScreenState extends State<BillsScreen> {
                                                   // Cascade delete all logged expenses for this recurring bill
                                                   await SupabaseService().cascadeDeleteSubscriptionExpenses(deleted.id, deleted.title);
                                                 },
-                                                child: const Icon(Icons.delete_outline_rounded, color: Color(0xFF98A2B3), size: 19),
+                                                child: Icon(Icons.delete_outline_rounded,
+                                                    color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3), size: 19),
                                               ),
                                             ],
                                           ),

@@ -53,6 +53,7 @@ class ExpenseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final isIncome = expense.type == 'income';
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
     final currencyFormatter = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 0);
@@ -76,10 +77,10 @@ class ExpenseTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF131A29) : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFF1F3F9), width: 1.2),
-          boxShadow: [
+          border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9), width: 1.2),
+          boxShadow: isDark ? [] : [
             BoxShadow(
               color: const Color(0xFF101828).withValues(alpha: 0.03),
               blurRadius: 10,
@@ -97,12 +98,14 @@ class ExpenseTile extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: isIncome ? const Color(0xFFECFDF3) : const Color(0xFFF3F4F6),
+                  color: isIncome
+                      ? (isDark ? const Color(0xFF0D3320) : const Color(0xFFECFDF3))
+                      : (isDark ? const Color(0xFF1A2234) : const Color(0xFFF3F4F6)),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   _getCategoryIcon(expense.category),
-                  color: isIncome ? AppTheme.successGreen : const Color(0xFF1E293B),
+                  color: isIncome ? AppTheme.successGreen : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF1E293B)),
                   size: 22,
                 ),
               ),
@@ -118,7 +121,7 @@ class ExpenseTile extends StatelessWidget {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

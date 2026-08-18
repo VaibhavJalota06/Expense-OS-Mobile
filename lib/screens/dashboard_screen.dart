@@ -238,8 +238,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context, activeSymbol, _) {
         final currency = NumberFormat.currency(symbol: activeSymbol, locale: 'en_US', decimalDigits: 0);
 
+        final isDark = AppTheme.isDark(context);
+
         return Scaffold(
-          backgroundColor: AppTheme.background,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: _isLoading
               ? const Center(child: CircularProgressIndicator(color: AppTheme.monexBlue))
               : SafeArea(
@@ -264,14 +266,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
-                                  color: AppTheme.textPrimary,
+                                  color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                                   letterSpacing: -0.3,
                                 ),
                               ),
                               Row(
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.notifications_none_rounded, color: AppTheme.textPrimary, size: 24),
+                                    icon: Icon(Icons.notifications_none_rounded,
+                                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, size: 24),
                                     tooltip: 'Reminders & Alerts',
                                     onPressed: _showRemindersSheet,
                                   ),
@@ -527,9 +530,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF2F4F7),
+                          color: isDark ? const Color(0xFF131A29) : const Color(0xFFF2F4F7),
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFE4E7EC), width: 1.2),
+                          border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC), width: 1.2),
                         ),
                         child: Row(
                           children: [
@@ -564,7 +567,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         style: GoogleFonts.plusJakartaSans(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w800,
-                                          color: _activeEntryType == 'expense' ? Colors.white : const Color(0xFF667085),
+                                          color: _activeEntryType == 'expense'
+                                              ? Colors.white
+                                              : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                                         ),
                                       ),
                                     ],
@@ -605,7 +610,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         style: GoogleFonts.plusJakartaSans(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w800,
-                                          color: _activeEntryType == 'income' ? Colors.white : const Color(0xFF667085),
+                                          color: _activeEntryType == 'income'
+                                              ? Colors.white
+                                              : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                                         ),
                                       ),
                                     ],
@@ -628,7 +635,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
+                              color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                             ),
                           ),
                           Text(
@@ -636,7 +643,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF98A2B3),
+                              color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3),
                             ),
                           ),
                         ],
@@ -654,13 +661,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Icon(
                                 _activeEntryType == 'expense' ? Icons.receipt_long_outlined : Icons.account_balance_wallet_outlined,
                                 size: 44,
-                                color: const Color(0xFFD0D5DD),
+                                color: isDark ? const Color(0xFF334155) : const Color(0xFFD0D5DD),
                               ),
                               const SizedBox(height: 12),
                               Text(
                                 _activeEntryType == 'expense' ? 'No expense logs recorded yet' : 'No extra income logs recorded yet',
                                 style: GoogleFonts.plusJakartaSans(
-                                  color: AppTheme.textSecondary,
+                                  color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -1066,6 +1073,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required IconData icon,
     required bool isHighlighted,
   }) {
+    final isDark = AppTheme.isDark(context);
     final isEditable = index == 0 || index == 2;
 
     return GestureDetector(
@@ -1082,12 +1090,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         width: 155,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isHighlighted ? AppTheme.monexBlue : Colors.white,
+          color: isHighlighted
+              ? AppTheme.monexBlue
+              : (isDark ? const Color(0xFF131A29) : Colors.white),
           borderRadius: BorderRadius.circular(22),
           border: isHighlighted
               ? null
-              : Border.all(color: const Color(0xFFF1F3F9), width: 1.5),
-          boxShadow: isHighlighted ? AppTheme.heroBlueShadow : AppTheme.cardShadow,
+              : Border.all(
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9),
+                  width: 1.5,
+                ),
+          boxShadow: isHighlighted ? AppTheme.heroBlueShadow : (isDark ? [] : AppTheme.cardShadow),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1103,12 +1116,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   decoration: BoxDecoration(
                     color: isHighlighted
                         ? Colors.white.withValues(alpha: 0.2)
-                        : const Color(0xFFF3F4F6),
+                        : (isDark ? const Color(0xFF1A2234) : const Color(0xFFF3F4F6)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     icon,
-                    color: isHighlighted ? Colors.white : AppTheme.textPrimary,
+                    color: isHighlighted
+                        ? Colors.white
+                        : (isDark ? const Color(0xFF38BDF8) : AppTheme.textPrimary),
                     size: 18,
                   ),
                 ),
@@ -1128,7 +1143,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: isHighlighted ? Colors.white70 : AppTheme.textSecondary,
+                    color: isHighlighted
+                        ? Colors.white70
+                        : (isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1138,7 +1155,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: isHighlighted ? Colors.white : AppTheme.textPrimary,
+                    color: isHighlighted
+                        ? Colors.white
+                        : (isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                     letterSpacing: -0.3,
                   ),
                 ),
@@ -1149,7 +1168,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: isHighlighted ? Colors.white.withValues(alpha: 0.8) : const Color(0xFF98A2B3),
+                      color: isHighlighted
+                          ? Colors.white.withValues(alpha: 0.8)
+                          : (isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3)),
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1204,6 +1225,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     IconData? icon,
     bool showCheck = false,
   }) {
+    final isDark = AppTheme.isDark(context);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1213,10 +1236,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFEFF4FF) : Colors.white,
+            color: isSelected
+                ? (isDark ? AppTheme.monexBlue.withValues(alpha: 0.25) : const Color(0xFFEFF4FF))
+                : (isDark ? const Color(0xFF131A29) : Colors.white),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: isSelected ? AppTheme.monexBlue : const Color(0xFFE4E7EC),
+              color: isSelected
+                  ? AppTheme.monexBlue
+                  : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
               width: isSelected ? 1.4 : 1.0,
             ),
             boxShadow: isSelected
@@ -1227,13 +1254,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       offset: const Offset(0, 2),
                     ),
                   ]
-                : [
-                    BoxShadow(
-                      color: const Color(0xFF101828).withValues(alpha: 0.02),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
+                : (isDark
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: const Color(0xFF101828).withValues(alpha: 0.02),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ]),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1242,7 +1271,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const Icon(Icons.check_rounded, size: 14, color: AppTheme.monexBlue),
                 const SizedBox(width: 5),
               ] else if (icon != null) ...[
-                Icon(icon, size: 14, color: isSelected ? AppTheme.monexBlue : AppTheme.textSecondary),
+                Icon(icon, size: 14, color: isSelected ? AppTheme.monexBlue : (isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary)),
                 const SizedBox(width: 5),
               ],
               Text(
@@ -1250,7 +1279,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                  color: isSelected ? AppTheme.monexBlue : AppTheme.textSecondary,
+                  color: isSelected
+                      ? AppTheme.monexBlue
+                      : (isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary),
                 ),
               ),
             ],
@@ -1267,22 +1298,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required VoidCallback onTap,
     String? badge,
   }) {
+    final isDark = AppTheme.isDark(context);
+
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF131A29) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE4E7EC), width: 1.1),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF101828).withValues(alpha: 0.03),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC), width: 1.1),
+            boxShadow: isDark
+                ? []
+                : [
+                    BoxShadow(
+                      color: const Color(0xFF101828).withValues(alpha: 0.03),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1294,7 +1329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
+                      color: color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(icon, color: color, size: 19),
@@ -1326,7 +1361,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+                  color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                 ),
               ),
             ],

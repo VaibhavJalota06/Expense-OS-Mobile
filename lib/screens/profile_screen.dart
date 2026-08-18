@@ -497,7 +497,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
+                            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -505,7 +505,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           'Configure currency, budget limits & security',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
-                            color: const Color(0xFF667085),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -653,17 +653,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     }
                     return ListTile(
                       leading: Icon(modeIcon, color: const Color(0xFF6366F1)),
-                      title: Text('App Theme & Appearance', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-                      subtitle: Text(modeLabel, style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                      title: Text('App Theme & Appearance', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                      subtitle: Text(modeLabel, style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
                       trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF98A2B3)),
                       onTap: _showThemeSelector,
                     );
                   },
                 ),
-                const Divider(height: 1, color: Color(0xFFF1F3F9)),
+                Divider(height: 1, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
                 ListTile(
                   leading: const Icon(Icons.attach_money_rounded, color: AppTheme.monexBlue),
-                  title: Text('Default Currency', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                  title: Text('Default Currency', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -677,19 +677,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   onTap: _showCurrencySelector,
                 ),
-                const Divider(height: 1, color: Color(0xFFF1F3F9)),
+                Divider(height: 1, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
                 ListTile(
                   leading: const Icon(Icons.savings_rounded, color: AppTheme.successGreen),
-                  title: Text('Monthly Budget Limit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-                  subtitle: Text('Set monthly spending threshold & alerts', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  title: Text('Monthly Budget Limit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                  subtitle: Text('Set monthly spending threshold & alerts', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
                   trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF98A2B3)),
                   onTap: _showEditBudgetDialog,
                 ),
-                const Divider(height: 1, color: Color(0xFFF1F3F9)),
+                Divider(height: 1, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
                 ListTile(
                   leading: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF7A5AF8)),
-                  title: Text('Starting Bank Balance', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-                  subtitle: Text('Initial money across accounts & cards', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  title: Text('Starting Bank Balance', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                  subtitle: Text('Initial money across accounts & cards', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
                   trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF98A2B3)),
                   onTap: _showEditStartingBalanceDialog,
                 ),
@@ -706,8 +706,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.system_update_alt_rounded, color: AppTheme.monexBlue),
-                  title: Text('App Version', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-                  subtitle: Text('v${AppUpdateService.currentAppVersion} (Build ${AppUpdateService.currentBuildNumber})', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  title: Text('App Version', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                  subtitle: Text('v${AppUpdateService.currentAppVersion} (Build ${AppUpdateService.currentBuildNumber})', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
                   trailing: OutlinedButton(
                     onPressed: () async {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -742,19 +742,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.download_rounded, color: AppTheme.monexBlue),
-                  title: Text('Export Expenses (CSV)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-                  subtitle: Text('Generate downloadable CSV report of all expenses', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  title: Text('Export Expenses (CSV)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                  subtitle: Text('Generate downloadable CSV report of all expenses', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
                   trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF98A2B3)),
                   onTap: () => _showExportModal(context),
                 ),
-                const Divider(height: 1, color: Color(0xFFF1F3F9)),
+                Divider(height: 1, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
                 ListTile(
                   leading: const Icon(Icons.cleaning_services_rounded, color: Color(0xFFF79009)),
                   title: Text(
                     'Clear All Local App Data',
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFFB54708)),
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFFF79009)),
                   ),
-                  subtitle: Text('Reset local goals, bills, and cached records', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  subtitle: Text('Reset local goals, bills, and cached records', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
                   onTap: () async {
                     final confirm = await showDialog<bool>(
                       context: context,
@@ -786,7 +786,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     }
                   },
                 ),
-                const Divider(height: 1, color: Color(0xFFF1F3F9)),
+                Divider(height: 1, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
                 ListTile(
                   leading: const Icon(Icons.logout_rounded, color: AppTheme.dangerRed),
                   title: Text(

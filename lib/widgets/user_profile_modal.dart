@@ -170,11 +170,13 @@ class _UserProfileModalState extends State<UserProfileModal> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF131A29) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: _isLoading
           ? const SizedBox(
@@ -191,7 +193,7 @@ class _UserProfileModalState extends State<UserProfileModal> {
                     width: 42,
                     height: 4.5,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEAECF0),
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEAECF0),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -206,12 +208,12 @@ class _UserProfileModalState extends State<UserProfileModal> {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
+                          color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded, color: Color(0xFF667085)),
+                        icon: Icon(Icons.close_rounded, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                       ),
                     ],
                   ),
@@ -238,7 +240,7 @@ class _UserProfileModalState extends State<UserProfileModal> {
                             decoration: BoxDecoration(
                               color: AppTheme.monexBlue,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
+                              border: Border.all(color: isDark ? const Color(0xFF131A29) : Colors.white, width: 2),
                             ),
                             child: const Icon(Icons.camera_alt_rounded, size: 14, color: Colors.white),
                           ),
@@ -257,15 +259,13 @@ class _UserProfileModalState extends State<UserProfileModal> {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
+                          color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                         ),
                       ),
                       const SizedBox(width: 6),
-                      IconButton(
-                        onPressed: _editDisplayName,
-                        icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.monexBlue),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                      GestureDetector(
+                        onTap: _editDisplayName,
+                        child: const Icon(Icons.edit_rounded, size: 16, color: AppTheme.monexBlue),
                       ),
                     ],
                   ),
@@ -273,9 +273,9 @@ class _UserProfileModalState extends State<UserProfileModal> {
                   Text(
                     _email,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF667085),
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -317,9 +317,9 @@ class _UserProfileModalState extends State<UserProfileModal> {
                   // Personal Information Section Card
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                      border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0), width: 1.2),
                     ),
                     child: Column(
                       children: [
@@ -328,24 +328,28 @@ class _UserProfileModalState extends State<UserProfileModal> {
                           label: 'Full Name',
                           value: _displayName,
                           onTap: _editDisplayName,
+                          isDark: isDark,
                         ),
-                        const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                        Divider(height: 1, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0)),
                         _buildInfoTile(
                           icon: Icons.email_outlined,
                           label: 'Email Address',
                           value: _email,
+                          isDark: isDark,
                         ),
-                        const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                        Divider(height: 1, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0)),
                         _buildInfoTile(
                           icon: Icons.verified_user_outlined,
                           label: 'Account Status',
                           value: 'Active & Verified',
+                          isDark: isDark,
                         ),
-                        const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                        Divider(height: 1, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0)),
                         _buildInfoTile(
                           icon: Icons.calendar_today_rounded,
                           label: 'Member Since',
                           value: 'August 2026',
+                          isDark: isDark,
                         ),
                       ],
                     ),
@@ -358,13 +362,13 @@ class _UserProfileModalState extends State<UserProfileModal> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFEF3F2),
+                        backgroundColor: isDark ? const Color(0xFF331414) : const Color(0xFFFEF3F2),
                         foregroundColor: AppTheme.expenseRed,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
-                          side: const BorderSide(color: Color(0xFFFECDCA), width: 1.2),
+                          side: BorderSide(color: isDark ? const Color(0xFF5C2222) : const Color(0xFFFECDCA), width: 1.2),
                         ),
                       ),
                       onPressed: () async {
@@ -397,6 +401,7 @@ class _UserProfileModalState extends State<UserProfileModal> {
     required String label,
     required String value,
     VoidCallback? onTap,
+    bool isDark = false,
   }) {
     return ListTile(
       onTap: onTap,
@@ -413,7 +418,7 @@ class _UserProfileModalState extends State<UserProfileModal> {
         style: GoogleFonts.plusJakartaSans(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: const Color(0xFF64748B),
+          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
         ),
       ),
       subtitle: Text(
@@ -421,11 +426,11 @@ class _UserProfileModalState extends State<UserProfileModal> {
         style: GoogleFonts.plusJakartaSans(
           fontSize: 15,
           fontWeight: FontWeight.w700,
-          color: AppTheme.textPrimary,
+          color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
         ),
       ),
       trailing: onTap != null
-          ? const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFF94A3B8))
+          ? Icon(Icons.chevron_right_rounded, size: 20, color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8))
           : null,
     );
   }

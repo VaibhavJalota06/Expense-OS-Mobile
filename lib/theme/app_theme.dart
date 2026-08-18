@@ -275,6 +275,45 @@ class AppTheme {
           color: const Color(0xFF38BDF8),
         ),
       ),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFF1E293B),
+        thickness: 1,
+        space: 1,
+      ),
+      listTileTheme: ListTileThemeData(
+        textColor: const Color(0xFFF8FAFC),
+        iconColor: const Color(0xFF94A3B8),
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFFF8FAFC),
+        ),
+        subtitleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF94A3B8),
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Color(0xFF131A29),
+        modalBackgroundColor: Color(0xFF131A29),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: const Color(0xFF131A29),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontWeight: FontWeight.w800,
+          fontSize: 18,
+          color: const Color(0xFFF8FAFC),
+        ),
+        contentTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 14,
+          color: const Color(0xFF94A3B8),
+        ),
+      ),
     );
   }
 }

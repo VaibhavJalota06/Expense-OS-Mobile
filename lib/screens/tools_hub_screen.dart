@@ -110,16 +110,18 @@ class ToolsHubScreen extends StatelessWidget {
       },
     ];
 
+    final isDark = AppTheme.isDark(context);
     final canPop = showBackButton ?? (ModalRoute.of(context)?.canPop ?? false);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: canPop
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textPrimary, size: 20),
+                icon: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, size: 20),
                 onPressed: () {
                   if (Navigator.canPop(context)) Navigator.pop(context);
                 },
@@ -128,7 +130,7 @@ class ToolsHubScreen extends StatelessWidget {
         title: Text(
           'Tools & Features Hub',
           style: GoogleFonts.plusJakartaSans(
-            color: AppTheme.textPrimary,
+            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
             fontWeight: FontWeight.w800,
             fontSize: 18,
           ),
@@ -148,16 +150,18 @@ class ToolsHubScreen extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF131A29) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFF1F3F9), width: 1.2),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF101828).withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
+                border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9), width: 1.2),
+                boxShadow: isDark
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: const Color(0xFF101828).withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
               ),
               child: Row(
                 children: [
@@ -165,7 +169,7 @@ class ToolsHubScreen extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: (tool['color'] as Color).withValues(alpha: 0.12),
+                      color: (tool['color'] as Color).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -187,7 +191,7 @@ class ToolsHubScreen extends StatelessWidget {
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.textPrimary,
+                                  color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -196,7 +200,7 @@ class ToolsHubScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: (tool['color'] as Color).withValues(alpha: 0.1),
+                                color: (tool['color'] as Color).withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -215,14 +219,15 @@ class ToolsHubScreen extends StatelessWidget {
                           tool['subtitle'] as String,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
-                            color: const Color(0xFF667085),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF98A2B3)),
+                  const SizedBox(width: 8),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3)),
                 ],
               ),
             ),

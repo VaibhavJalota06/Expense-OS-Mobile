@@ -314,18 +314,20 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
     final currency = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 0);
     final canPop = widget.showBackButton ?? (ModalRoute.of(context)?.canPop ?? false);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: canPop
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textPrimary, size: 20),
+                icon: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, size: 20),
                 onPressed: () {
                   if (Navigator.canPop(context)) {
                     Navigator.pop(context);
@@ -336,7 +338,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
         title: Text(
           'Savings & Financial Goals',
           style: GoogleFonts.plusJakartaSans(
-            color: AppTheme.textPrimary,
+            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
             fontWeight: FontWeight.w800,
             fontSize: 18,
           ),
@@ -352,7 +354,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF667085),
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
               ),
             ),
             const SizedBox(height: 16),
@@ -403,16 +405,16 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF131A29) : Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFF1F3F9)),
+                  border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
                 ),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Overall Savings Progress', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
+                        Text('Overall Savings Progress', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary, fontWeight: FontWeight.w600)),
                         Text('${currency.format(_totalCurrentSavings)} / ${currency.format(_totalTargetSavings)}', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.monexBlue)),
                       ],
                     ),
@@ -421,7 +423,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                       borderRadius: BorderRadius.circular(6),
                       child: LinearProgressIndicator(
                         value: _overallProgress,
-                        backgroundColor: const Color(0xFFF3F4F6),
+                        backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF3F4F6),
                         valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.monexBlue),
                         minHeight: 8,
                       ),
@@ -442,13 +444,13 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
+                    color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                   ),
                 ),
                 Text(
                   '${_goals.length} ${_goals.length == 1 ? 'goal' : 'goals'}',
                   style: GoogleFonts.plusJakartaSans(
-                    color: const Color(0xFF98A2B3),
+                    color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3),
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                   ),
@@ -463,9 +465,9 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF131A29) : Colors.white,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFFF1F3F9)),
+                  border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
                 ),
                 child: Column(
                   children: [
@@ -473,13 +475,13 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                     const SizedBox(height: 10),
                     Text(
                       'No Savings Goals Created Yet',
-                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: AppTheme.textPrimary),
+                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Tap a quick starter preset below to create your first goal instantly:',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppTheme.textSecondary),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary),
                     ),
                     const SizedBox(height: 16),
                     Wrap(
@@ -489,26 +491,26 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                       children: [
                         ActionChip(
                           avatar: const Text('🏖️'),
-                          label: Text('Emergency Fund ($currencySymbol 50k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
-                          backgroundColor: const Color(0xFFF0F5FF),
+                          label: Text('Emergency Fund ($currencySymbol 50k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F5FF),
                           onPressed: () => _addPresetGoal('Emergency Fund', 50000, '🏖️'),
                         ),
                         ActionChip(
                           avatar: const Text('💻'),
-                          label: Text('New Laptop ($currencySymbol 80k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
-                          backgroundColor: const Color(0xFFF0F5FF),
+                          label: Text('New Laptop ($currencySymbol 80k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F5FF),
                           onPressed: () => _addPresetGoal('New Laptop', 80000, '💻'),
                         ),
                         ActionChip(
                           avatar: const Text('✈️'),
-                          label: Text('Vacation Trip ($currencySymbol 30k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
-                          backgroundColor: const Color(0xFFF0F5FF),
+                          label: Text('Vacation Trip ($currencySymbol 30k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F5FF),
                           onPressed: () => _addPresetGoal('Vacation Trip', 30000, '✈️'),
                         ),
                         ActionChip(
                           avatar: const Text('🏠'),
-                          label: Text('House Deposit ($currencySymbol 200k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
-                          backgroundColor: const Color(0xFFF0F5FF),
+                          label: Text('House Deposit ($currencySymbol 200k)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F5FF),
                           onPressed: () => _addPresetGoal('House Deposit', 200000, '🏠'),
                         ),
                       ],
@@ -547,6 +549,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
   }
 
   Widget _buildGoalItem(FinancialGoal goal) {
+    final isDark = AppTheme.isDark(context);
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
     final currency = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 0);
 
@@ -557,16 +560,23 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF131A29) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isAchieved ? AppTheme.successGreen.withValues(alpha: 0.4) : const Color(0xFFF1F3F9), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF101828).withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: Border.all(
+          color: isAchieved
+              ? AppTheme.successGreen.withValues(alpha: 0.4)
+              : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
+          width: 1.2,
+        ),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: const Color(0xFF101828).withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
       ),
       child: Column(
         children: [
@@ -577,7 +587,9 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: isAchieved ? const Color(0xFFECFDF3) : const Color(0xFFF3F4F6),
+                  color: isAchieved
+                      ? (isDark ? const Color(0xFF0D3320) : const Color(0xFFECFDF3))
+                      : (isDark ? const Color(0xFF1A2234) : const Color(0xFFF3F4F6)),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Center(
@@ -600,28 +612,34 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
+                              color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                             ),
                           ),
                         ),
                         if (isAchieved)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(color: const Color(0xFFECFDF3), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF0D3320) : const Color(0xFFECFDF3),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             child: Text('🎉 Achieved!', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.successGreen)),
                           )
                         else if (isAlmost)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(color: const Color(0xFFFEF0C7), borderRadius: BorderRadius.circular(8)),
-                            child: Text('🔥 80%+ Done', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFDC6803))),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF3B2406) : const Color(0xFFFEF0C7),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text('🔥 80%+ Done', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFF59E0B))),
                           ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Target Date: ${DateFormat('MMM d, yyyy').format(goal.deadline)} • ${goal.contributionType}',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF667085)),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                     ),
                   ],
                 ),
@@ -639,7 +657,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
             borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
               value: goal.progress.clamp(0.0, 1.0),
-              backgroundColor: const Color(0xFFEAECF0),
+              backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFEAECF0),
               valueColor: AlwaysStoppedAnimation<Color>(isAchieved ? AppTheme.successGreen : AppTheme.monexBlue),
               minHeight: 8,
             ),
