@@ -238,6 +238,7 @@ class ToolsHubScreen extends StatelessWidget {
   }
 
   void _showNotificationManagerModal(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -245,9 +246,9 @@ class ToolsHubScreen extends StatelessWidget {
       builder: (ctx) {
         return Container(
           padding: const EdgeInsets.all(24.0),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131A29) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -258,7 +259,7 @@ class ToolsHubScreen extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE4E7EC),
+                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -270,7 +271,7 @@ class ToolsHubScreen extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF12B76A).withValues(alpha: 0.12),
+                      color: const Color(0xFF12B76A).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(Icons.notifications_active_rounded, color: Color(0xFF12B76A), size: 22),
@@ -285,14 +286,14 @@ class ToolsHubScreen extends StatelessWidget {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 17,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
+                            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                           ),
                         ),
                         Text(
                           'Real-time proactive financial intelligence',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
-                            color: const Color(0xFF667085),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -307,6 +308,7 @@ class ToolsHubScreen extends StatelessWidget {
                 color: const Color(0xFFF04438),
                 title: 'Budget Threshold Warnings',
                 subtitle: 'Alerts at 80% and 100% of your monthly spending cap',
+                isDark: isDark,
               ),
               const SizedBox(height: 12),
               _buildChannelRow(
@@ -314,6 +316,7 @@ class ToolsHubScreen extends StatelessWidget {
                 color: const Color(0xFF7A5AF8),
                 title: 'Bill & Subscription Due Dates',
                 subtitle: 'Automatic reminders 24h before recurring bill renewals',
+                isDark: isDark,
               ),
               const SizedBox(height: 12),
               _buildChannelRow(
@@ -321,6 +324,7 @@ class ToolsHubScreen extends StatelessWidget {
                 color: const Color(0xFFF79009),
                 title: 'Daily Streak Reminders',
                 subtitle: 'Evening alerts to log expenses & maintain your streak',
+                isDark: isDark,
               ),
               const SizedBox(height: 12),
               _buildChannelRow(
@@ -328,6 +332,7 @@ class ToolsHubScreen extends StatelessWidget {
                 color: const Color(0xFF2E90FA),
                 title: 'Fraud & Anomaly Detection',
                 subtitle: 'Instant warnings for duplicate charges and spike expenses',
+                isDark: isDark,
               ),
               const SizedBox(height: 24),
               Row(
@@ -337,7 +342,7 @@ class ToolsHubScreen extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        side: const BorderSide(color: Color(0xFFD0D5DD)),
+                        side: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD)),
                       ),
                       onPressed: () async {
                         final granted = await NotificationService().requestPermissions();
@@ -353,10 +358,10 @@ class ToolsHubScreen extends StatelessWidget {
                           );
                         }
                       },
-                      icon: const Icon(Icons.verified_user_rounded, size: 18, color: AppTheme.textPrimary),
+                      icon: Icon(Icons.verified_user_rounded, size: 18, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                       label: Text(
                         'Permissions',
-                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                       ),
                     ),
                   ),
@@ -405,13 +410,14 @@ class ToolsHubScreen extends StatelessWidget {
     required Color color,
     required String title,
     required String subtitle,
+    required bool isDark,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FC),
+        color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF8F9FC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFEAECF0)),
+        border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEAECF0)),
       ),
       child: Row(
         children: [
@@ -419,7 +425,7 @@ class ToolsHubScreen extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 18),
@@ -434,14 +440,14 @@ class ToolsHubScreen extends StatelessWidget {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                   ),
                 ),
                 Text(
                   subtitle,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
-                    color: const Color(0xFF667085),
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

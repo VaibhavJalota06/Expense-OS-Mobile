@@ -177,17 +177,19 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
   }
 
   void _showQuickDepositDialog(FinancialGoal goal) {
+    final isDark = AppTheme.isDark(context);
     final controller = TextEditingController();
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF131A29) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         padding: EdgeInsets.only(
           left: 20,
           right: 20,
@@ -198,6 +200,17 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Text(goal.icon, style: const TextStyle(fontSize: 24)),
@@ -205,7 +218,11 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                 Expanded(
                   child: Text(
                     'Deposit to ${goal.title}',
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16, color: AppTheme.textPrimary),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                    ),
                   ),
                 ),
               ],
@@ -213,7 +230,11 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
             const SizedBox(height: 16),
             Text(
               'Quick Deposit Presets:',
-              style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary,
+              ),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -222,7 +243,8 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
                 return ActionChip(
                   label: Text('+$currencySymbol$amt'),
                   labelStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.monexBlue),
-                  backgroundColor: AppTheme.monexBlue.withValues(alpha: 0.1),
+                  backgroundColor: isDark ? const Color(0xFF1A2234) : AppTheme.monexBlue.withValues(alpha: 0.1),
+                  side: BorderSide(color: isDark ? const Color(0xFF1E293B) : Colors.transparent),
                   onPressed: () {
                     controller.text = amt.toString();
                   },
@@ -236,10 +258,25 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
               ],
+              style: GoogleFonts.plusJakartaSans(
+                color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
                 labelText: 'Deposit Amount ($currencySymbol)',
+                labelStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                 hintText: 'Enter amount to add',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                hintStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3)),
+                filled: true,
+                fillColor: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -760,14 +797,19 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
   }
 
   void _showFrequencyPicker() {
+    final isDark = AppTheme.isDark(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => SafeArea(
-        child: Padding(
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131A29) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -778,7 +820,9 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
                   freq,
                   style: GoogleFonts.plusJakartaSans(
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? AppTheme.monexBlue : AppTheme.textPrimary,
+                    color: isSelected
+                        ? AppTheme.monexBlue
+                        : (isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                   ),
                 ),
                 trailing: isSelected
@@ -797,6 +841,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
   }
 
   Future<void> _pickDeadline() async {
+    final isDark = AppTheme.isDark(context);
     final picked = await showDatePicker(
       context: context,
       initialDate: _deadline,
@@ -805,11 +850,19 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppTheme.monexBlue,
-              onPrimary: Colors.white,
-              onSurface: AppTheme.textPrimary,
-            ),
+            colorScheme: isDark
+                ? const ColorScheme.dark(
+                    primary: AppTheme.monexBlue,
+                    onPrimary: Colors.white,
+                    surface: Color(0xFF131A29),
+                    onSurface: Color(0xFFF8FAFC),
+                  )
+                : const ColorScheme.light(
+                    primary: AppTheme.monexBlue,
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: AppTheme.textPrimary,
+                  ),
           ),
           child: child!,
         );
@@ -851,15 +904,30 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
   }
 
   void _confirmDelete() {
+    final isDark = AppTheme.isDark(context);
     showDialog(
       context: context,
       builder: (dCtx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF131A29) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Delete Goal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
-        content: Text('Are you sure you want to delete "${widget.goalToEdit?.title}"?', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF667085))),
+        title: Text(
+          'Delete Goal',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to delete "${widget.goalToEdit?.title}"?',
+          style: GoogleFonts.plusJakartaSans(
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(dCtx),
+            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dCtx);
@@ -876,16 +944,17 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final isEditing = widget.goalToEdit != null;
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, size: 20),
           onPressed: () {
             if (Navigator.canPop(context)) Navigator.pop(context);
           },
@@ -893,7 +962,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
         title: Text(
           isEditing ? 'Edit Goal' : 'Add Goal',
           style: GoogleFonts.plusJakartaSans(
-            color: AppTheme.textPrimary,
+            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
             fontWeight: FontWeight.w800,
             fontSize: 18,
           ),
@@ -910,7 +979,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF667085),
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
               ),
             ),
             const SizedBox(height: 8),
@@ -929,10 +998,14 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: isSelected ? AppTheme.monexBlue.withValues(alpha: 0.15) : Colors.white,
+                        color: isSelected
+                            ? AppTheme.monexBlue.withValues(alpha: 0.15)
+                            : (isDark ? const Color(0xFF131A29) : Colors.white),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isSelected ? AppTheme.monexBlue : const Color(0xFFD0D5DD),
+                          color: isSelected
+                              ? AppTheme.monexBlue
+                              : (isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD)),
                           width: isSelected ? 2 : 1,
                         ),
                       ),
@@ -953,13 +1026,14 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF667085),
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
               ),
             ),
             const SizedBox(height: 8),
             _buildInputField(
               controller: _titleController,
               hint: 'e.g. New Bike, iPhone 16',
+              isDark: isDark,
             ),
 
             const SizedBox(height: 20),
@@ -970,7 +1044,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF667085),
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
               ),
             ),
             const SizedBox(height: 8),
@@ -979,6 +1053,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               hint: 'Target goal cost',
               suffixText: currencySymbol,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              isDark: isDark,
             ),
 
             const SizedBox(height: 20),
@@ -989,7 +1064,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF667085),
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
               ),
             ),
             const SizedBox(height: 8),
@@ -998,6 +1073,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               hint: '0',
               suffixText: currencySymbol,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              isDark: isDark,
             ),
 
             const SizedBox(height: 20),
@@ -1008,7 +1084,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF667085),
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
               ),
             ),
             const SizedBox(height: 8),
@@ -1017,9 +1093,9 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFD0D5DD), width: 1.2),
+                  border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC), width: 1.2),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1029,10 +1105,10 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
+                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                       ),
                     ),
-                    const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFF667085)),
+                    Icon(Icons.arrow_drop_down_rounded, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                   ],
                 ),
               ),
@@ -1046,7 +1122,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF667085),
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
               ),
             ),
             const SizedBox(height: 8),
@@ -1055,9 +1131,9 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFD0D5DD), width: 1.2),
+                  border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC), width: 1.2),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1067,7 +1143,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
+                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                       ),
                     ),
                     const Icon(Icons.calendar_today_rounded, size: 18, color: AppTheme.monexBlue),
@@ -1130,12 +1206,13 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
     required String hint,
     String? suffixText,
     TextInputType? keyboardType,
+    required bool isDark,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD0D5DD), width: 1.2),
+        border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC), width: 1.2),
       ),
       child: TextFormField(
         controller: controller,
@@ -1146,12 +1223,18 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
         style: GoogleFonts.plusJakartaSans(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: AppTheme.textPrimary,
+          color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
         ),
         decoration: InputDecoration(
           hintText: hint,
+          hintStyle: GoogleFonts.plusJakartaSans(
+            color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3),
+          ),
           suffixText: suffixText,
-          suffixStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: const Color(0xFF667085)),
+          suffixStyle: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w700,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
+          ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           border: InputBorder.none,
         ),

@@ -103,17 +103,22 @@ class AppUpdateService {
       return;
     }
 
+    final isDark = AppTheme.isDark(context);
     showModalBottomSheet(
       context: context,
       isDismissible: !info.isMandatory,
       enableDrag: !info.isMandatory,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (ctx) {
         return SafeArea(
-          child: Padding(
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF131A29) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            ),
             padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -124,7 +129,7 @@ class AppUpdateService {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD0D5DD),
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -136,7 +141,7 @@ class AppUpdateService {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: AppTheme.monexBlue.withValues(alpha: 0.1),
+                        color: AppTheme.monexBlue.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Icon(Icons.system_update_rounded, color: AppTheme.monexBlue, size: 26),
@@ -151,14 +156,14 @@ class AppUpdateService {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
+                              color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                             ),
                           ),
                           Text(
                             'Version ${info.latestVersion} is ready to install',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 13,
-                              color: const Color(0xFF667085),
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -171,9 +176,9 @@ class AppUpdateService {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
+                    color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFEAECF0)),
+                    border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEAECF0)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,7 +188,7 @@ class AppUpdateService {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                          color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -191,7 +196,7 @@ class AppUpdateService {
                         info.releaseNotes,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
-                          color: const Color(0xFF475467),
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475467),
                           height: 1.4,
                         ),
                       ),

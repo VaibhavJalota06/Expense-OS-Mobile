@@ -165,9 +165,11 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
 
   void _showSetBudgetRequiredDialog() {
     final controller = TextEditingController();
+    final isDark = AppTheme.isDark(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF131A29) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
@@ -176,7 +178,11 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
             Expanded(
               child: Text(
                 'Set Monthly Budget First',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16),
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                ),
               ),
             ),
           ],
@@ -187,7 +193,10 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
           children: [
             Text(
               'Please set your monthly budget limit before logging expenses so Expense OS can track your budget progress!',
-              style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary),
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary,
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -198,10 +207,25 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
               ],
+              style: GoogleFonts.plusJakartaSans(
+                color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
                 labelText: 'Monthly Budget Limit (${CurrencyService.currencySymbolNotifier.value})',
+                labelStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                 hintText: 'e.g. 10000',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                hintStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3)),
+                filled: true,
+                fillColor: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                ),
               ),
             ),
           ],
@@ -209,7 +233,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: Colors.grey.shade600)),
+            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : Colors.grey.shade600)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -234,6 +258,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
 
   Future<void> _pickDate() async {
     FocusScope.of(context).unfocus();
+    final isDark = AppTheme.isDark(context);
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -242,11 +267,19 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppTheme.monexBlue,
-              onPrimary: Colors.white,
-              onSurface: AppTheme.textPrimary,
-            ),
+            colorScheme: isDark
+                ? const ColorScheme.dark(
+                    primary: AppTheme.monexBlue,
+                    onPrimary: Colors.white,
+                    surface: Color(0xFF131A29),
+                    onSurface: Color(0xFFF8FAFC),
+                  )
+                : const ColorScheme.light(
+                    primary: AppTheme.monexBlue,
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: AppTheme.textPrimary,
+                  ),
           ),
           child: child!,
         );
@@ -259,6 +292,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final isExpense = _selectedType == 'expense';
     final activeColor = isExpense ? AppTheme.monexBlue : const Color(0xFF10B981);
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
@@ -271,9 +305,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       child: Container(
         height: MediaQuery.of(context).size.height * 0.90,
         padding: EdgeInsets.only(bottom: keyboardHeight),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF131A29) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: SafeArea(
           top: false,
@@ -286,7 +320,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD0D5DD),
+                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -305,7 +339,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: AppTheme.textPrimary,
+                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                       ),
                     ),
                     Row(
@@ -324,13 +358,13 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                               ),
                             ),
                             style: TextButton.styleFrom(
-                              backgroundColor: AppTheme.monexBlue.withValues(alpha: 0.1),
+                              backgroundColor: AppTheme.monexBlue.withValues(alpha: 0.15),
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                           ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Color(0xFF667085)),
+                          icon: Icon(Icons.close_rounded, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
@@ -339,7 +373,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                 ),
               ),
 
-              const Divider(height: 1, color: Color(0xFFEAECF0)),
+              Divider(height: 1, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEAECF0)),
 
               // Form Body
               Expanded(
@@ -356,9 +390,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF2F4F7),
+                            color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF2F4F7),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFE4E7EC)),
+                            border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
                           ),
                           child: Row(
                             children: [
@@ -393,7 +427,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                             style: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w800,
                                               fontSize: 14,
-                                              color: isExpense ? Colors.white : const Color(0xFF667085),
+                                              color: isExpense ? Colors.white : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                                             ),
                                           ),
                                         ],
@@ -435,7 +469,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                             style: GoogleFonts.plusJakartaSans(
                                               fontWeight: FontWeight.w800,
                                               fontSize: 14,
-                                              color: !isExpense ? Colors.white : const Color(0xFF667085),
+                                              color: !isExpense ? Colors.white : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                                             ),
                                           ),
                                         ],
@@ -456,7 +490,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF667085),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -467,6 +501,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           textInputAction: TextInputAction.next,
                           accentColor: activeColor,
+                          isDark: isDark,
                         ),
 
                         const SizedBox(height: 20),
@@ -480,14 +515,14 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF667085),
+                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                               ),
                             ),
                             Text(
                               'Select one',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 12,
-                                color: const Color(0xFF98A2B3),
+                                color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3),
                               ),
                             ),
                           ],
@@ -510,10 +545,14 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                 duration: const Duration(milliseconds: 150),
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? activeColor : const Color(0xFFF9FAFB),
+                                  color: isSelected
+                                      ? activeColor
+                                      : (isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB)),
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: isSelected ? activeColor : const Color(0xFFE4E7EC),
+                                    color: isSelected
+                                        ? activeColor
+                                        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
                                     width: isSelected ? 1.5 : 1.0,
                                   ),
                                   boxShadow: isSelected
@@ -536,7 +575,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 13,
                                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                                        color: isSelected ? Colors.white : AppTheme.textPrimary,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : (isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                                       ),
                                     ),
                                   ],
@@ -554,7 +595,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF667085),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -566,6 +607,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                           textInputAction: TextInputAction.done,
                           onSubmitted: (_) => FocusScope.of(context).unfocus(),
                           accentColor: activeColor,
+                          isDark: isDark,
                         ),
 
                         const SizedBox(height: 20),
@@ -576,16 +618,16 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF667085),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                           ),
                         ),
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF9FAFB),
+                            color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFFE4E7EC)),
+                            border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
@@ -593,14 +635,23 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                   ? _selectedPaymentMethod
                                   : _currentPaymentMethods.first,
                               isExpanded: true,
-                              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF667085)),
+                              dropdownColor: isDark ? const Color(0xFF131A29) : Colors.white,
+                              icon: Icon(Icons.keyboard_arrow_down_rounded, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                               style: GoogleFonts.plusJakartaSans(
-                                color: AppTheme.textPrimary,
+                                color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
                               ),
                               items: _currentPaymentMethods.map((m) {
-                                return DropdownMenuItem(value: m, child: Text(m));
+                                return DropdownMenuItem(
+                                  value: m,
+                                  child: Text(
+                                    m,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                                    ),
+                                  ),
+                                );
                               }).toList(),
                               onChanged: (val) {
                                 FocusScope.of(context).unfocus();
@@ -618,7 +669,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF667085),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -627,9 +678,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF9FAFB),
+                              color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFE4E7EC)),
+                              border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -638,11 +689,11 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                   DateFormat('dd MMM yyyy').format(_selectedDate),
                                   style: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimary,
+                                    color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                                     fontSize: 14,
                                   ),
                                 ),
-                                const Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF667085)),
+                                Icon(Icons.calendar_today_outlined, size: 18, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
                               ],
                             ),
                           ),
@@ -696,12 +747,13 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     TextInputAction? textInputAction,
     ValueChanged<String>? onSubmitted,
     required Color accentColor,
+    required bool isDark,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
+        border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
       ),
       child: TextFormField(
         controller: controller,
@@ -714,11 +766,14 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
         style: GoogleFonts.plusJakartaSans(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: AppTheme.textPrimary,
+          color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.plusJakartaSans(color: const Color(0xFF98A2B3), fontSize: 13),
+          hintStyle: GoogleFonts.plusJakartaSans(
+            color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3),
+            fontSize: 13,
+          ),
           prefixText: prefixText,
           prefixStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: accentColor),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

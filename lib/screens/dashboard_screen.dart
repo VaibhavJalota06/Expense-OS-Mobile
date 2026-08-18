@@ -706,13 +706,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showRemindersSheet() {
+    final isDark = AppTheme.isDark(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (rCtx) {
         bool dailyLogReminder = true;
         bool billDueReminder = true;
@@ -720,104 +718,125 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(color: const Color(0xFFD0D5DD), borderRadius: BorderRadius.circular(2)),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Expense OS Reminders',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF131A29) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: const Color(0xFFECFDF3), borderRadius: BorderRadius.circular(8)),
-                          child: Text('ACTIVE', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.successGreen)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      secondary: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(10)),
-                        child: const Icon(Icons.edit_calendar_rounded, color: AppTheme.monexBlue, size: 20),
                       ),
-                      title: Text('Daily Spending Log Reminder', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
-                      subtitle: Text('Remind me at 9:00 PM to record today\'s expenses', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF667085))),
-                      value: dailyLogReminder,
-                      activeTrackColor: AppTheme.monexBlue,
-                      onChanged: (val) => setSheetState(() => dailyLogReminder = val),
-                    ),
-                    const Divider(height: 16, color: Color(0xFFF1F3F9)),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      secondary: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: const Color(0xFFFEF3F2), borderRadius: BorderRadius.circular(10)),
-                        child: const Icon(Icons.event_repeat_rounded, color: AppTheme.dangerRed, size: 20),
-                      ),
-                      title: Text('Bill Due Date Alert', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
-                      subtitle: Text('Alert 2 days before recurring bills and rent', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF667085))),
-                      value: billDueReminder,
-                      activeTrackColor: AppTheme.monexBlue,
-                      onChanged: (val) => setSheetState(() => billDueReminder = val),
-                    ),
-                    const Divider(height: 16, color: Color(0xFFF1F3F9)),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      secondary: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: const Color(0xFFFEF0C7), borderRadius: BorderRadius.circular(10)),
-                        child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFF79009), size: 20),
-                      ),
-                      title: Text('80% Budget Cap Warning', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
-                      subtitle: Text('Notify when nearing monthly limit threshold', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF667085))),
-                      value: budgetWarning,
-                      activeTrackColor: AppTheme.monexBlue,
-                      onChanged: (val) => setSheetState(() => budgetWarning = val),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(rCtx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Notification preferences saved!', style: GoogleFonts.plusJakartaSans()),
-                              backgroundColor: AppTheme.monexBlue,
+                      const SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Expense OS Reminders',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.monexBlue,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: Text('SAVE PREFERENCES', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13)),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF0D3320) : const Color(0xFFECFDF3),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text('ACTIVE', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.successGreen)),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        secondary: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1A2234) : const Color(0xFFEEF2FF),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.edit_calendar_rounded, color: AppTheme.monexBlue, size: 20),
+                        ),
+                        title: Text('Daily Spending Log Reminder', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                        subtitle: Text('Remind me at 9:00 PM to record today\'s expenses', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
+                        value: dailyLogReminder,
+                        activeTrackColor: AppTheme.monexBlue,
+                        onChanged: (val) => setSheetState(() => dailyLogReminder = val),
+                      ),
+                      Divider(height: 16, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        secondary: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF3B1515) : const Color(0xFFFEF3F2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.event_repeat_rounded, color: AppTheme.dangerRed, size: 20),
+                        ),
+                        title: Text('Bill Due Date Alert', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                        subtitle: Text('Alert 2 days before recurring bills and rent', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
+                        value: billDueReminder,
+                        activeTrackColor: AppTheme.monexBlue,
+                        onChanged: (val) => setSheetState(() => billDueReminder = val),
+                      ),
+                      Divider(height: 16, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        secondary: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF332008) : const Color(0xFFFEF0C7),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFF79009), size: 20),
+                        ),
+                        title: Text('80% Budget Cap Warning', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary)),
+                        subtitle: Text('Notify when nearing monthly limit threshold', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
+                        value: budgetWarning,
+                        activeTrackColor: AppTheme.monexBlue,
+                        onChanged: (val) => setSheetState(() => budgetWarning = val),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(rCtx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Notification preferences saved!', style: GoogleFonts.plusJakartaSans()),
+                                backgroundColor: AppTheme.monexBlue,
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.monexBlue,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: Text('SAVE PREFERENCES', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13)),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -828,17 +847,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showSetTotalMoneyDialog() {
+    final isDark = AppTheme.isDark(context);
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
     final controller = TextEditingController(text: _totalIncome.toStringAsFixed(0));
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF131A29) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
           'Total Money (Bank Balance)',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary, fontSize: 18),
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, fontSize: 18),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -846,7 +866,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Text(
               'Enter your total bank account money (overall available funds):',
-              style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary),
+              style: GoogleFonts.plusJakartaSans(fontSize: 13, color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -859,10 +879,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 prefixText: '$currencySymbol ',
                 prefixStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.monexBlue),
                 filled: true,
-                fillColor: const Color(0xFFF9FAFB),
+                fillColor: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+                  borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
                 ),
               ),
             ),
@@ -871,7 +895,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF667085), fontWeight: FontWeight.w600)),
+            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085), fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -904,6 +928,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showSetBudgetDialog() {
+    final isDark = AppTheme.isDark(context);
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
     final controller = TextEditingController(text: _monthlyBudgetCap.toStringAsFixed(0));
     String? errorMessage;
@@ -912,11 +937,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? const Color(0xFF131A29) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(
             'Set Monthly Budget',
-            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary, fontSize: 18),
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, fontSize: 18),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -924,7 +949,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               Text(
                 'Enter the spending budget taken out from your total bank money ($currencySymbol${_totalIncome.toStringAsFixed(0)} available):',
-                style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary),
+                style: GoogleFonts.plusJakartaSans(fontSize: 13, color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -957,14 +982,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     color: errorMessage != null ? AppTheme.dangerRed : AppTheme.monexBlue,
                   ),
                   filled: true,
-                  fillColor: errorMessage != null ? const Color(0xFFFEF3F2) : const Color(0xFFF9FAFB),
+                  fillColor: errorMessage != null
+                      ? (isDark ? const Color(0xFF3B1515) : const Color(0xFFFEF3F2))
+                      : (isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: errorMessage != null ? AppTheme.dangerRed : const Color(0xFFE4E7EC)),
+                    borderSide: BorderSide(color: errorMessage != null ? AppTheme.dangerRed : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC))),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: errorMessage != null ? AppTheme.dangerRed : const Color(0xFFE4E7EC)),
+                    borderSide: BorderSide(color: errorMessage != null ? AppTheme.dangerRed : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC))),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -996,7 +1023,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF667085), fontWeight: FontWeight.w600)),
+              child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085), fontWeight: FontWeight.w600)),
             ),
             ElevatedButton(
               onPressed: () async {

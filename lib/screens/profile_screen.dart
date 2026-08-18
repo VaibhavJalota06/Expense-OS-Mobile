@@ -114,19 +114,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showCurrencySelector() {
+    final isDark = AppTheme.isDark(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) => SafeArea(
         child: Container(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.60,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131A29) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,13 +137,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   width: 40,
                   height: 4,
-                  decoration: BoxDecoration(color: const Color(0xFFD0D5DD), borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 'Select Default Currency',
-                style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                ),
               ),
               const SizedBox(height: 8),
               Expanded(
@@ -157,7 +166,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         curr['name']!,
                         style: GoogleFonts.plusJakartaSans(
                           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected ? AppTheme.monexBlue : AppTheme.textPrimary,
+                          color: isSelected
+                              ? AppTheme.monexBlue
+                              : (isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                         ),
                       ),
                       trailing: isSelected
@@ -182,6 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showEditBudgetDialog() async {
+    final isDark = AppTheme.isDark(context);
     final prefs = await SharedPreferences.getInstance();
     final currentCap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
     final controller = TextEditingController(text: currentCap > 0 ? currentCap.toStringAsFixed(0) : '');
@@ -191,30 +203,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF131A29) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Monthly Budget Limit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+        title: Text(
+          'Monthly Budget Limit',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Set your total monthly spending cap:', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary)),
+            Text(
+              'Set your total monthly spending cap:',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary,
+              ),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
               autofocus: true,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+              style: GoogleFonts.plusJakartaSans(
+                color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
                 prefixText: '$_selectedCurrencySymbol ',
+                prefixStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.monexBlue),
                 hintText: 'e.g. 50000',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                hintStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3)),
+                filled: true,
+                fillColor: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                ),
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.monexBlue, foregroundColor: Colors.white),
             onPressed: () async {
@@ -232,6 +274,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showEditStartingBalanceDialog() async {
+    final isDark = AppTheme.isDark(context);
     final prefs = await SharedPreferences.getInstance();
     final currentBal = prefs.getDouble('user_starting_balance') ?? 0.0;
     final controller = TextEditingController(text: currentBal != 0 ? currentBal.toStringAsFixed(0) : '');
@@ -241,30 +284,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF131A29) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Starting Bank Balance', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+        title: Text(
+          'Starting Bank Balance',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Enter your initial bank / wallet balance:', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary)),
+            Text(
+              'Enter your initial bank / wallet balance:',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                color: isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary,
+              ),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
               autofocus: true,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+              style: GoogleFonts.plusJakartaSans(
+                color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
                 prefixText: '$_selectedCurrencySymbol ',
+                prefixStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.monexBlue),
                 hintText: 'e.g. 25000',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                hintStyle: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3)),
+                filled: true,
+                fillColor: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                ),
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.monexBlue, foregroundColor: Colors.white),
             onPressed: () async {
@@ -756,14 +829,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   subtitle: Text('Reset local goals, bills, and cached records', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
                   onTap: () async {
+                    final isDarkDialog = AppTheme.isDark(context);
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
+                        backgroundColor: isDarkDialog ? const Color(0xFF131A29) : Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        title: Text('Clear All Local Data?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
-                        content: Text('This will clear all locally saved goals, recurring bills, and budget caps.', style: GoogleFonts.plusJakartaSans(fontSize: 14)),
+                        title: Text(
+                          'Clear All Local Data?',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w800,
+                            color: isDarkDialog ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                          ),
+                        ),
+                        content: Text(
+                          'This will clear all locally saved goals, recurring bills, and budget caps.',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            color: isDarkDialog ? const Color(0xFF94A3B8) : const Color(0xFF667085),
+                          ),
+                        ),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: Text('Cancel', style: GoogleFonts.plusJakartaSans(color: isDarkDialog ? const Color(0xFF94A3B8) : const Color(0xFF667085))),
+                          ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.dangerRed, foregroundColor: Colors.white),
                             onPressed: () => Navigator.pop(ctx, true),
@@ -895,6 +985,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showExportModal(BuildContext context) async {
+    final isDark = AppTheme.isDark(context);
     final list = await _supabaseService.getExpenses();
     final expenses = list.isNotEmpty ? list : _supabaseService.localExpenses;
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
@@ -918,9 +1009,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (ctx) {
         return Container(
           padding: const EdgeInsets.all(24.0),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131A29) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -931,7 +1022,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE4E7EC),
+                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -943,7 +1034,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: AppTheme.monexBlue.withValues(alpha: 0.12),
+                      color: AppTheme.monexBlue.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(Icons.file_download_outlined, color: AppTheme.monexBlue, size: 24),
@@ -958,14 +1049,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
+                            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
                           ),
                         ),
                         Text(
                           '${expenses.length} total transactions ready for export',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
-                            color: const Color(0xFF667085),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -980,9 +1071,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FC),
+                  color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF8F9FC),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFEAECF0)),
+                  border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEAECF0)),
                 ),
                 child: Row(
                   children: [
@@ -990,19 +1081,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Total Income', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF667085), fontWeight: FontWeight.w600)),
+                          Text('Total Income', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085), fontWeight: FontWeight.w600)),
                           const SizedBox(height: 2),
                           Text('$currencySymbol${totalIncome.toStringAsFixed(2)}', style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.successGreen)),
                         ],
                       ),
                     ),
-                    Container(width: 1, height: 32, color: const Color(0xFFEAECF0)),
+                    Container(width: 1, height: 32, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEAECF0)),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Total Expenses', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF667085), fontWeight: FontWeight.w600)),
+                          Text('Total Expenses', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085), fontWeight: FontWeight.w600)),
                           const SizedBox(height: 2),
                           Text('$currencySymbol${totalExpense.toStringAsFixed(2)}', style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: const Color(0xFFF04438))),
                         ],
@@ -1069,7 +1160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        side: const BorderSide(color: Color(0xFFD0D5DD)),
+                        side: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD)),
                       ),
                       onPressed: () async {
                         final rawCsv = ExportService().generateCSV(expenses);
@@ -1086,10 +1177,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           );
                         }
                       },
-                      icon: const Icon(Icons.copy_rounded, size: 16, color: AppTheme.textPrimary),
+                      icon: Icon(Icons.copy_rounded, size: 16, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                       label: Text(
                         'Copy CSV',
-                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                       ),
                     ),
                   ),
@@ -1099,16 +1190,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        side: const BorderSide(color: Color(0xFFD0D5DD)),
+                        side: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD)),
                       ),
                       onPressed: () {
                         Navigator.pop(ctx);
                         _showStatementPreviewModal(context, expenses);
                       },
-                      icon: const Icon(Icons.receipt_long_rounded, size: 16, color: AppTheme.textPrimary),
+                      icon: Icon(Icons.receipt_long_rounded, size: 16, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                       label: Text(
                         'Statement',
-                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                       ),
                     ),
                   ),
@@ -1123,6 +1214,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showStatementPreviewModal(BuildContext context, List<Expense> expenses) {
+    final isDark = AppTheme.isDark(context);
     final statement = ExportService().generateExecutiveStatementText(expenses);
 
     showModalBottomSheet(
@@ -1133,9 +1225,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return Container(
           height: MediaQuery.of(context).size.height * 0.75,
           padding: const EdgeInsets.all(24.0),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131A29) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1145,10 +1237,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Text(
                     'Executive Statement',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w800),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                    ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.copy_rounded, size: 20),
+                    icon: Icon(Icons.copy_rounded, size: 20, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
                     onPressed: () async {
                       await Clipboard.setData(ClipboardData(text: statement));
                       if (ctx.mounted) {
@@ -1170,6 +1266,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F172A),
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.transparent),
                   ),
                   child: SingleChildScrollView(
                     child: Text(
