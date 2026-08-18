@@ -154,6 +154,18 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> {
               darkTheme: AppTheme.darkTheme,
               themeMode: currentThemeMode,
               home: initialScreen,
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (context) => initialScreen,
+                  settings: settings,
+                );
+              },
+              onUnknownRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (context) => initialScreen,
+                  settings: settings,
+                );
+              },
             );
           },
         );
