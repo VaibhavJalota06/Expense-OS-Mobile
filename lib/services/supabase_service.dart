@@ -188,7 +188,6 @@ class SupabaseService {
             if (response.user != null) {
               debugPrint('[GoogleSignIn] Supabase token auth SUCCESS for: ${response.user!.email}');
               await cacheUserData(response.user);
-              final prefs = await SharedPreferences.getInstance();
               await prefs.setBool('persistent_user_logged_in', true);
               return true;
             }
@@ -198,7 +197,6 @@ class SupabaseService {
         }
 
         // Native Google session fallback: Persist authenticated user directly
-        final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('persistent_user_logged_in', true);
         await prefs.setString('google_user_email', googleUser.email);
         await prefs.setString('custom_user_name', googleUser.displayName ?? googleUser.email.split('@').first);
