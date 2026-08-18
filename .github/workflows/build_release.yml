@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Release APK
         run: |
-          flutter build apk --release --no-tree-shake-icons
+          flutter build apk --release
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
@@ -49,7 +49,7 @@ jobs:
 
   build-ios:
     name: Build iOS IPA
-    runs-on: macos-latest
+    runs-on: macos-14
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -73,13 +73,9 @@ jobs:
 
       - name: Build iOS App (Unsigned IPA)
         run: |
-          flutter build ipa --no-codesign --no-tree-shake-icons
+          flutter build ios --release --no-codesign
           mkdir -p Payload
-          if [ -d "build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app" ]; then
-            cp -r build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app Payload/
-          elif [ -d "build/ios/iphoneos/Runner.app" ]; then
-            cp -r build/ios/iphoneos/Runner.app Payload/
-          fi
+          cp -r build/ios/iphoneos/Runner.app Payload/
           zip -9 -r ExpenseOS-iOS.ipa Payload
 
       - name: Upload iOS IPA
