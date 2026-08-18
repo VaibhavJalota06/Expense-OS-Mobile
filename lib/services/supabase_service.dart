@@ -143,12 +143,11 @@ class SupabaseService {
   Future<bool> signInWithGoogle() async {
     debugPrint('[GoogleSignIn] Starting Google Sign-In flow...');
 
-    // 1. On Mobile (Android / iOS): Try Native Google Sign-In with GoogleSignIn SDK
-    if (!kIsWeb) {
+    // 1. Android: Use Native GoogleSignIn SDK with Server Client ID
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       try {
-        debugPrint('[GoogleSignIn] Attempting Native Google Sign-In via GoogleSignIn SDK...');
+        debugPrint('[GoogleSignIn] Attempting Android Native Google Sign-In...');
         final GoogleSignIn googleSignIn = GoogleSignIn(
-          clientId: defaultTargetPlatform == TargetPlatform.iOS ? googleIosClientId : null,
           serverClientId: googleServerClientId,
           scopes: const [
             'email',
@@ -156,22 +155,15 @@ class SupabaseService {
           ],
         );
 
-        // Sign out any cached local credentials to prompt fresh account chooser
-        try {
-          await googleSignIn.signOut();
-        } catch (_) {}
-
         final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
         if (googleUser == null) {
-          debugPrint('[GoogleSignIn] User cancelled Google Sign-In prompt.');
+          debugPrint('[GoogleSignIn] User cancelled Android Google Sign-In prompt.');
           return false;
         }
 
         final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
         final String? idToken = googleAuth.idToken;
         final String? accessToken = googleAuth.accessToken;
-
-        debugPrint('[GoogleSignIn] Native credentials obtained. idToken: ${idToken != null}, accessToken: ${accessToken != null}');
 
         if (idToken != null) {
           final AuthResponse response = await client.auth.signInWithIdToken(
@@ -181,17 +173,17 @@ class SupabaseService {
           );
 
           if (response.user != null) {
-            debugPrint('[GoogleSignIn] Native Google Sign-In successful for: ${response.user!.email}');
+            debugPrint('[GoogleSignIn] Native Android Google Sign-In successful for: ${response.user!.email}');
             await cacheUserData(response.user);
             return true;
           }
         }
       } catch (nativeError) {
-        debugPrint('[GoogleSignIn] Native Google Sign-In exception / fallback to OAuth: $nativeError');
+        debugPrint('[GoogleSignIn] Android native sign-in error: $nativeError');
       }
     }
 
-    // 2. Fallback / Web / Desktop: Supabase OAuth Flow with External Browser
+    // 2. iOS, Web & Desktop: Direct Single-Step Supabase OAuth
     try {
       final String redirectUrl = kIsWeb
           ? Uri.base.origin
@@ -199,7 +191,7 @@ class SupabaseService {
               ? 'io.supabase.expenseos://login-callback'
               : 'com.expensecalculator.expenseosmobile://login-callback');
 
-      debugPrint('[GoogleSignIn] Using Supabase OAuth flow with redirectUrl: $redirectUrl');
+      debugPrint('[GoogleSignIn] Using direct Single-Step Supabase OAuth with redirectUrl: $redirectUrl');
 
       final success = await client.auth.signInWithOAuth(
         OAuthProvider.google,
@@ -212,7 +204,7 @@ class SupabaseService {
             : (kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication),
       );
 
-      debugPrint('[GoogleSignIn] OAuth browser launched: $success');
+      debugPrint('[GoogleSignIn] Single-step OAuth launched: $success');
       return success;
     } catch (e) {
       debugPrint('[GoogleSignIn] OAuth Exception: $e');
