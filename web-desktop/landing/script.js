@@ -431,8 +431,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const mobileToggle = document.getElementById('mobile-menu-toggle');
   const navLinks = document.getElementById('nav-links');
   if (mobileToggle && navLinks) {
-    mobileToggle.addEventListener('click', () => {
+    mobileToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
       navLinks.classList.toggle('active');
+    });
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+      });
     });
   }
 
@@ -462,21 +468,6 @@ document.addEventListener('DOMContentLoaded', () => {
         navbar.style.background = 'rgba(12, 16, 26, 0.75)';
         navbar.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.5)';
       }
-    });
-  }
-
-  // Mobile Menu Toggle
-  const mobileToggle = document.getElementById('mobile-menu-toggle');
-  const navLinks = document.getElementById('nav-links');
-  if (mobileToggle && navLinks) {
-    mobileToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      navLinks.classList.toggle('active');
-    });
-    navLinks.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-      });
     });
   }
 });

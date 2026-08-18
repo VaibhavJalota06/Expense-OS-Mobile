@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- Custom Stylesheet with Cache Buster -->
-  <link rel="stylesheet" href="style.css?v=3.8.1">
+  <link rel="stylesheet" href="style.css?v=2.9.6">
 </head>
 <body>
 
@@ -310,7 +310,36 @@
       
       <!-- Feature Screen Dynamic Container -->
       <div class="mockup-screen-container" id="gallery-view-container">
-        <!-- Injected dynamically by script.js -->
+        <div class="mockup-ui-wrapper">
+          <div class="mockup-ui-topbar">
+            <div class="mockup-ui-title"><i class="fa-solid fa-chart-pie" style="color:var(--primary-bright);"></i> Main Financial Dashboard</div>
+            <div class="mockup-ui-status"><span class="status-dot"></span> Active Session</div>
+          </div>
+          <div class="mockup-stats-grid">
+            <div class="mockup-stat-card">
+              <div class="stat-label">Net Balance</div>
+              <div class="stat-value" style="color:var(--primary-bright);">$14,850.00</div>
+              <div class="stat-sub">+12.4% this month</div>
+            </div>
+            <div class="mockup-stat-card">
+              <div class="stat-label">Monthly Income</div>
+              <div class="stat-value" style="color:var(--accent-cyan);">$6,200.00</div>
+              <div class="stat-sub">2 Income Sources</div>
+            </div>
+            <div class="mockup-stat-card">
+              <div class="stat-label">Total Expenses</div>
+              <div class="stat-value" style="color:#f87171;">$2,150.00</div>
+              <div class="stat-sub">18 Transactions</div>
+            </div>
+          </div>
+          <div class="mockup-chart-box">
+            <div style="font-weight:600; margin-bottom:12px; font-size:0.9rem;">Category Breakdown &amp; Spending Distribution</div>
+            <div class="mockup-bar-row"><span style="width:100px;">🍔 Dining</span><div class="mockup-bar"><div style="width:38%; background:var(--primary); height:100%;"></div></div><span>$817.00 (38%)</span></div>
+            <div class="mockup-bar-row"><span style="width:100px;">✈️ Travel</span><div class="mockup-bar"><div style="width:26%; background:var(--accent-cyan); height:100%;"></div></div><span>$559.00 (26%)</span></div>
+            <div class="mockup-bar-row"><span style="width:100px;">⚡ Utilities</span><div class="mockup-bar"><div style="width:20%; background:#f59e0b; height:100%;"></div></div><span>$430.00 (20%)</span></div>
+            <div class="mockup-bar-row"><span style="width:100px;">🛍️ Shopping</span><div class="mockup-bar"><div style="width:16%; background:var(--accent-purple); height:100%;"></div></div><span>$344.00 (16%)</span></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -667,6 +696,6 @@
   </footer>
 
   <!-- Custom Script with Cache Buster -->
-  <script src="script.js?v=3.8.1"></script>
+  <script src="script.js?v=2.9.6"></script>
 </body>
 </html>
