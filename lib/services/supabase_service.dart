@@ -203,7 +203,12 @@ class SupabaseService {
         if (googleUser.photoUrl != null) {
           await prefs.setString('google_user_avatar', googleUser.photoUrl!);
         }
-        await prefs.setString('supabase_user_id', googleUser.id);
+        final userEmail = googleUser.email.toLowerCase().trim();
+        if (userEmail == 'vaibhavjalota06@gmail.com') {
+          await prefs.setString('supabase_user_id', '00458a9c-bef7-4663-81da-831e45969349');
+        } else {
+          await prefs.setString('supabase_user_id', googleUser.id);
+        }
         debugPrint('[GoogleSignIn] Native In-App Login SUCCESS for: ${googleUser.email}');
         return true;
       } catch (nativeError) {
@@ -294,23 +299,19 @@ class SupabaseService {
       return currentUser!.id;
     }
     final prefs = await SharedPreferences.getInstance();
-    final cached = prefs.getString('supabase_user_id');
-    if (cached != null && cached.length == 36 && cached.contains('-')) {
-      return cached;
-    }
-    // Auto-discover the active user UUID from Supabase user_data table
-    try {
-      final rows = await client
-          .from('user_data')
-          .select('user_id')
-          .order('updated_at', ascending: false)
-          .limit(1);
-      if (rows.isNotEmpty && rows.first['user_id'] != null) {
-        final foundId = rows.first['user_id'].toString();
-        await prefs.setString('supabase_user_id', foundId);
-        return foundId;
+    final email = prefs.getString('google_user_email')?.toLowerCase().trim();
+    if (email != null && email.isNotEmpty) {
+      if (email == 'vaibhavjalota06@gmail.com') {
+        return '00458a9c-bef7-4663-81da-831e45969349';
       }
-    } catch (_) {}
+      final cachedId = prefs.getString('supabase_user_id');
+      if (cachedId != null && cachedId.isNotEmpty && cachedId != '00458a9c-bef7-4663-81da-831e45969349') {
+        return cachedId;
+      }
+      return email;
+    }
+
+    final cached = prefs.getString('supabase_user_id');
     if (cached != null && cached.isNotEmpty) return cached;
     return '00458a9c-bef7-4663-81da-831e45969349';
   }
@@ -675,7 +676,7 @@ class SupabaseService {
         debugPrint('Error fetching from expenses table: $e');
       }
 
-      // --- Source 2: user_data JSON document (Web App writes here) ---
+      // --- Source 2: user_data JSON document strictly for THIS user ---
       Map<String, dynamic>? response;
       try {
         response = await client
@@ -684,26 +685,6 @@ class SupabaseService {
             .eq('user_id', userId)
             .maybeSingle();
       } catch (_) {}
-
-      // Fallback: If not found or empty, fetch the active populated dataset from the database
-      if (response == null || (response['expenses'] is List && (response['expenses'] as List).isEmpty)) {
-        try {
-          final populatedUserData = await client
-              .from('user_data')
-              .select()
-              .or('user_id.eq.00458a9c-bef7-4663-81da-831e45969349,budget.gt.0')
-              .order('updated_at', ascending: false)
-              .limit(1);
-          if (populatedUserData.isNotEmpty) {
-            response = Map<String, dynamic>.from(populatedUserData.first);
-            final foundId = response['user_id']?.toString();
-            if (foundId != null && foundId.isNotEmpty) {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('supabase_user_id', foundId);
-            }
-          }
-        } catch (_) {}
-      }
 
       if (response != null) {
         final prefs = await SharedPreferences.getInstance();
