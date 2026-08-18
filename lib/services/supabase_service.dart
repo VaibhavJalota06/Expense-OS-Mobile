@@ -217,15 +217,9 @@ class SupabaseService {
         await prefs.setBool('persistent_user_logged_in', true);
         await prefs.setString('google_user_email', googleUser.email);
         await prefs.setString('custom_user_name', googleUser.displayName ?? googleUser.email.split('@').first);
-        if (googleUser.photoUrl != null) {
-          await prefs.setString('google_user_avatar', googleUser.photoUrl!);
-        }
         final userEmail = googleUser.email.toLowerCase().trim();
-        if (userEmail == 'vaibhavjalota06@gmail.com') {
-          await prefs.setString('supabase_user_id', '00458a9c-bef7-4663-81da-831e45969349');
-        } else {
-          await prefs.setString('supabase_user_id', googleUser.id);
-        }
+        await prefs.setString('supabase_user_id', googleUser.id);
+        await prefs.setString('google_user_email', userEmail);
         debugPrint('[GoogleSignIn] Native In-App Login SUCCESS for: ${googleUser.email}');
         return true;
       } catch (nativeError) {
@@ -320,25 +314,22 @@ class SupabaseService {
   }
 
   Future<String> _getEffectiveUserId() async {
+    // 1. Supabase Authenticated Session
     if (currentUser != null && currentUser!.id.isNotEmpty) {
       return currentUser!.id;
     }
+    // 2. Cached authenticated user ID
     final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getString('supabase_user_id');
+    if (cached != null && cached.isNotEmpty) {
+      return cached;
+    }
+    // 3. User's authenticated email identifier
     final email = prefs.getString('google_user_email')?.toLowerCase().trim();
     if (email != null && email.isNotEmpty) {
-      if (email == 'vaibhavjalota06@gmail.com') {
-        return '00458a9c-bef7-4663-81da-831e45969349';
-      }
-      final cachedId = prefs.getString('supabase_user_id');
-      if (cachedId != null && cachedId.isNotEmpty && cachedId != '00458a9c-bef7-4663-81da-831e45969349') {
-        return cachedId;
-      }
       return email;
     }
-
-    final cached = prefs.getString('supabase_user_id');
-    if (cached != null && cached.isNotEmpty) return cached;
-    return '00458a9c-bef7-4663-81da-831e45969349';
+    throw Exception('User is not authenticated. Please sign in to sync your data.');
   }
 
   // ---------------------------------------------------------------
