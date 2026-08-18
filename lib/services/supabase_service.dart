@@ -1311,11 +1311,15 @@ class SupabaseService {
     await prefs.remove('monthly_budget_cap');
     await prefs.remove('user_starting_balance');
     await prefs.remove('saved_group_expenses');
+    await prefs.remove('app_cached_expenses');
+    await prefs.remove('user_emerald_points');
+    await prefs.remove('custom_user_name');
+    await prefs.remove('custom_avatar_path');
     
     try {
       final userId = await _getEffectiveUserId();
 
-      // Reset user_data document
+      // Reset user_data document in Supabase
       await client.from('user_data').upsert({
         'user_id': userId,
         'budget': 0.0,
@@ -1329,9 +1333,11 @@ class SupabaseService {
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id');
 
-      // Clear relational tables
+      // Clear all relational tables
       try { await client.from('expenses').delete().eq('user_id', userId); } catch (_) {}
+      try { await client.from('incomes').delete().eq('user_id', userId); } catch (_) {}
       try { await client.from('subscriptions').delete().eq('user_id', userId); } catch (_) {}
+      try { await client.from('savings_goals').delete().eq('user_id', userId); } catch (_) {}
       try { await client.from('split_bills').delete().eq('user_id', userId); } catch (_) {}
       try { await client.from('budgets').delete().eq('user_id', userId); } catch (_) {}
       try { await client.from('user_emerald_rewards').delete().eq('user_id', userId); } catch (_) {}

@@ -959,6 +959,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     if (confirm == true) {
                       await _supabaseService.resetAllFinancialData();
+                      if (mounted) {
+                        await _loadUserData();
+                        await _loadUserStatistics();
+                        setState(() {});
+                      }
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
