@@ -38,6 +38,17 @@ class AppTheme {
   static const Color purple = Color(0xFF7A5AF8);
   static const Color sky = Color(0xFF0BA5EC);
 
+  // Dynamic Theme Helpers
+  static bool isDark(BuildContext context) => Theme.of(context).brightness == Brightness.dark;
+  static Color getBg(BuildContext context) => isDark(context) ? const Color(0xFF090D16) : const Color(0xFFF8F9FE);
+  static Color getCardBg(BuildContext context) => isDark(context) ? const Color(0xFF131A29) : Colors.white;
+  static Color getCardElevatedBg(BuildContext context) => isDark(context) ? const Color(0xFF1A2234) : const Color(0xFFF8F9FC);
+  static Color getTxtPrimary(BuildContext context) => isDark(context) ? const Color(0xFFF8FAFC) : const Color(0xFF101828);
+  static Color getTxtSecondary(BuildContext context) => isDark(context) ? const Color(0xFF94A3B8) : const Color(0xFF667085);
+  static Color getTxtMuted(BuildContext context) => isDark(context) ? const Color(0xFF64748B) : const Color(0xFF98A2B3);
+  static Color getBorder(BuildContext context) => isDark(context) ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9);
+  static Color getCardBorder(BuildContext context) => isDark(context) ? const Color(0xFF1E293B) : const Color(0xFFEAECF0);
+
   // Backward-compatible color aliases for existing modules
   static const Color primaryEmerald = monexBlue;
   static const Color primaryCyan = monexBlue;

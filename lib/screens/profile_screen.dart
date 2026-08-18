@@ -283,6 +283,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showThemeSelector() {
+    final isDarkNow = AppTheme.isDark(context);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -290,11 +292,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return ValueListenableBuilder<ThemeMode>(
           valueListenable: ThemeService.themeModeNotifier,
           builder: (context, activeMode, _) {
+            final isDark = activeMode == ThemeMode.dark ||
+                (activeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
+
             return Container(
               padding: const EdgeInsets.all(24.0),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF131A29) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -305,7 +310,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE4E7EC),
+                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE4E7EC),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -316,14 +321,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
+                      color: isDark ? Colors.white : AppTheme.textPrimary,
                     ),
                   ),
                   Text(
                     'Choose your preferred visual theme',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
-                      color: const Color(0xFF667085),
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -333,6 +338,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: 'Clean white canvas with blue accents',
                     mode: ThemeMode.light,
                     currentMode: activeMode,
+                    isDark: isDark,
                     ctx: ctx,
                   ),
                   const SizedBox(height: 10),
@@ -341,6 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: 'Deep charcoal & glassmorphic dark palette',
                     mode: ThemeMode.dark,
                     currentMode: activeMode,
+                    isDark: isDark,
                     ctx: ctx,
                   ),
                   const SizedBox(height: 10),
@@ -349,6 +356,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: 'Automatically match device system theme',
                     mode: ThemeMode.system,
                     currentMode: activeMode,
+                    isDark: isDark,
                     ctx: ctx,
                   ),
                   const SizedBox(height: 16),
@@ -366,6 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String subtitle,
     required ThemeMode mode,
     required ThemeMode currentMode,
+    required bool isDark,
     required BuildContext ctx,
   }) {
     final isSelected = mode == currentMode;
@@ -378,10 +387,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.monexBlue.withValues(alpha: 0.08) : const Color(0xFFF8F9FC),
+          color: isSelected
+              ? AppTheme.monexBlue.withValues(alpha: 0.15)
+              : (isDark ? const Color(0xFF1A2234) : const Color(0xFFF8F9FC)),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppTheme.monexBlue : const Color(0xFFEAECF0),
+            color: isSelected
+                ? AppTheme.monexBlue
+                : (isDark ? const Color(0xFF2E3A52) : const Color(0xFFEAECF0)),
             width: isSelected ? 1.8 : 1.0,
           ),
         ),
@@ -396,14 +409,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: isSelected ? AppTheme.monexBlue : AppTheme.textPrimary,
+                      color: isSelected
+                          ? AppTheme.monexBlue
+                          : (isDark ? Colors.white : AppTheme.textPrimary),
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
-                      color: const Color(0xFF667085),
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -413,7 +428,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (isSelected)
               const Icon(Icons.check_circle_rounded, color: AppTheme.monexBlue, size: 20)
             else
-              const Icon(Icons.radio_button_unchecked_rounded, color: Color(0xFFD0D5DD), size: 20),
+              Icon(Icons.radio_button_unchecked_rounded,
+                  color: isDark ? const Color(0xFF475569) : const Color(0xFFD0D5DD), size: 20),
           ],
         ),
       ),
@@ -421,18 +437,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final activeSymbol = CurrencyService.currencySymbolNotifier.value;
     final currencyFormatter = NumberFormat.currency(symbol: activeSymbol, locale: 'en_US', decimalDigits: 0);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Settings & Profile',
           style: GoogleFonts.plusJakartaSans(
-            color: AppTheme.textPrimary,
+            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
             fontWeight: FontWeight.w800,
             fontSize: 18,
           ),
@@ -448,10 +465,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF131A29) : Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFF1F3F9), width: 1.2),
-                boxShadow: [
+                border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9), width: 1.2),
+                boxShadow: isDark ? [] : [
                   BoxShadow(
                     color: const Color(0xFF101828).withValues(alpha: 0.04),
                     blurRadius: 14,
@@ -542,10 +559,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF131A29) : Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFF1F3F9), width: 1.2),
-                boxShadow: [
+                border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9), width: 1.2),
+                boxShadow: isDark ? [] : [
                   BoxShadow(
                     color: const Color(0xFF101828).withValues(alpha: 0.03),
                     blurRadius: 10,
@@ -561,7 +578,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
+                      color: isDark ? Colors.white : AppTheme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -797,12 +814,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required IconData icon,
     required Color color,
   }) {
+    final isDark = AppTheme.isDark(context);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: isDark ? const Color(0xFF1A2234) : const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEAECF0)),
+        border: Border.all(color: isDark ? const Color(0xFF2E3A52) : const Color(0xFFEAECF0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -816,7 +834,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF667085),
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
                 ),
               ),
             ],
@@ -827,7 +845,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: AppTheme.textPrimary,
+              color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
             ),
           ),
         ],
@@ -836,11 +854,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildSectionCard({required String title, required List<Widget> children}) {
+    final isDark = AppTheme.isDark(context);
     return Container(
       decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF131A29) : Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF1F3F9), width: 1.2),
-        boxShadow: [
+        border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9), width: 1.2),
+        boxShadow: isDark ? [] : [
           BoxShadow(
             color: const Color(0xFF101828).withValues(alpha: 0.03),
             blurRadius: 10,
@@ -849,7 +869,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       child: Material(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF131A29) : Colors.white,
         borderRadius: BorderRadius.circular(22),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -862,7 +882,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF98A2B3),
+                  color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3),
                   letterSpacing: 0.5,
                 ),
               ),

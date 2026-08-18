@@ -15,21 +15,23 @@ class SpendlyNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
         height: 68,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF131A29) : Colors.white,
           borderRadius: BorderRadius.circular(36),
           border: Border.all(
-            color: const Color(0xFFF1F3F9),
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF101828).withValues(alpha: 0.08),
+              color: isDark ? Colors.black.withValues(alpha: 0.4) : const Color(0xFF101828).withValues(alpha: 0.08),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
