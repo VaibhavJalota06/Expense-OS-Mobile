@@ -119,7 +119,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _startingBalance = bal;
       _monthlyBudgetCap = budget;
       if (local.isNotEmpty) {
-        _expenses = local;
+        _expenses = List<Expense>.from(local);
       }
     });
   }
@@ -147,31 +147,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  Future<void> _loadStartingBalance() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    final bal = prefs.getDouble('user_starting_balance') ?? 0.0;
-    setState(() {
-      _startingBalance = bal;
-    });
-  }
-
-  Future<void> _loadBudgetCap() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _monthlyBudgetCap = prefs.getDouble('monthly_budget_cap') ?? 0.0;
-    });
-  }
-
   Future<void> _loadExpenses() async {
     try {
       final list = await _supabaseService.getExpenses();
-      await _loadBudgetCap();
-      await _loadStartingBalance();
+      final prefs = await SharedPreferences.getInstance();
+      final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+      final bal = prefs.getDouble('user_starting_balance') ?? 0.0;
       if (!mounted) return;
       setState(() {
         _expenses = list;
+        _monthlyBudgetCap = budget;
+        _startingBalance = bal;
       });
 
       // Automatically evaluate AI Smart Budget Rules and push device notifications
