@@ -143,11 +143,12 @@ class SupabaseService {
   Future<bool> signInWithGoogle() async {
     debugPrint('[GoogleSignIn] Starting Google Sign-In flow...');
 
-    // 1. Android: Use Native GoogleSignIn SDK with Server Client ID
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    // 1. Mobile (Android & iOS): Native In-App Google Sign-In with ID Token (No Web/Browser Redirects)
+    if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
       try {
-        debugPrint('[GoogleSignIn] Attempting Android Native Google Sign-In...');
+        debugPrint('[GoogleSignIn] Starting 100% Native In-App Google Sign-In on $defaultTargetPlatform...');
         final GoogleSignIn googleSignIn = GoogleSignIn(
+          clientId: defaultTargetPlatform == TargetPlatform.iOS ? googleIosClientId : null,
           serverClientId: googleServerClientId,
           scopes: const [
             'email',
@@ -157,7 +158,7 @@ class SupabaseService {
 
         final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
         if (googleUser == null) {
-          debugPrint('[GoogleSignIn] User cancelled Android Google Sign-In prompt.');
+          debugPrint('[GoogleSignIn] User cancelled Google Sign-In prompt.');
           return false;
         }
 
@@ -173,35 +174,28 @@ class SupabaseService {
           );
 
           if (response.user != null) {
-            debugPrint('[GoogleSignIn] Native Android Google Sign-In successful for: ${response.user!.email}');
+            debugPrint('[GoogleSignIn] Native In-App Sign-In SUCCESS for: ${response.user!.email}');
             await cacheUserData(response.user);
             return true;
           }
         }
       } catch (nativeError) {
-        debugPrint('[GoogleSignIn] Android native sign-in error: $nativeError');
+        debugPrint('[GoogleSignIn] Native in-app sign-in error: $nativeError');
       }
     }
 
-    // 2. iOS, Web & Desktop: Direct Single-Step Supabase OAuth
+    // 2. Web & Desktop Fallback: Direct OAuth
     try {
-      final String redirectUrl = kIsWeb
-          ? Uri.base.origin
-          : (defaultTargetPlatform == TargetPlatform.iOS
-              ? 'io.supabase.expenseos://login-callback'
-              : 'com.expensecalculator.expenseosmobile://login-callback');
-
-      debugPrint('[GoogleSignIn] Using direct Single-Step Supabase OAuth with redirectUrl: $redirectUrl');
+      final String redirectUrl = kIsWeb ? Uri.base.origin : 'com.expensecalculator.expenseosmobile://login-callback';
+      debugPrint('[GoogleSignIn] Using direct OAuth fallback for Web/Desktop: $redirectUrl');
 
       final success = await client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: redirectUrl,
-        authScreenLaunchMode: defaultTargetPlatform == TargetPlatform.iOS
-            ? LaunchMode.platformDefault
-            : (kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication),
+        authScreenLaunchMode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
       );
 
-      debugPrint('[GoogleSignIn] Single-step OAuth launched: $success');
+      debugPrint('[GoogleSignIn] OAuth launched: $success');
       return success;
     } catch (e) {
       debugPrint('[GoogleSignIn] OAuth Exception: $e');
