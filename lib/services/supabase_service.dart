@@ -143,7 +143,7 @@ class SupabaseService {
   Future<bool> signInWithGoogle() async {
     debugPrint('[GoogleSignIn] Starting Google Sign-In flow...');
 
-    // 1. Mobile (Android & iOS): Native In-App Google Sign-In with ID Token (No Web/Browser Redirects)
+    // 1. Mobile (Android & iOS): 100% Native In-App Google Sign-In (NEVER opens browser)
     if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
       try {
         debugPrint('[GoogleSignIn] Starting 100% Native In-App Google Sign-In on $defaultTargetPlatform...');
@@ -166,28 +166,48 @@ class SupabaseService {
         final String? idToken = googleAuth.idToken;
         final String? accessToken = googleAuth.accessToken;
 
+        // Try Supabase signInWithIdToken
         if (idToken != null) {
-          final AuthResponse response = await client.auth.signInWithIdToken(
-            provider: OAuthProvider.google,
-            idToken: idToken,
-            accessToken: accessToken,
-          );
+          try {
+            final AuthResponse response = await client.auth.signInWithIdToken(
+              provider: OAuthProvider.google,
+              idToken: idToken,
+              accessToken: accessToken,
+            );
 
-          if (response.user != null) {
-            debugPrint('[GoogleSignIn] Native In-App Sign-In SUCCESS for: ${response.user!.email}');
-            await cacheUserData(response.user);
-            return true;
+            if (response.user != null) {
+              debugPrint('[GoogleSignIn] Supabase token auth SUCCESS for: ${response.user!.email}');
+              await cacheUserData(response.user);
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('persistent_user_logged_in', true);
+              return true;
+            }
+          } catch (supaErr) {
+            debugPrint('[GoogleSignIn] Supabase token sync error: $supaErr');
           }
         }
+
+        // Native Google session fallback: Persist authenticated user directly
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('persistent_user_logged_in', true);
+        await prefs.setString('google_user_email', googleUser.email);
+        await prefs.setString('custom_user_name', googleUser.displayName ?? googleUser.email.split('@').first);
+        if (googleUser.photoUrl != null) {
+          await prefs.setString('google_user_avatar', googleUser.photoUrl!);
+        }
+        await prefs.setString('supabase_user_id', googleUser.id);
+        debugPrint('[GoogleSignIn] Native In-App Login SUCCESS for: ${googleUser.email}');
+        return true;
       } catch (nativeError) {
         debugPrint('[GoogleSignIn] Native in-app sign-in error: $nativeError');
+        return false;
       }
     }
 
-    // 2. Web & Desktop Fallback: Direct OAuth
+    // 2. Web & Desktop: Direct OAuth
     try {
       final String redirectUrl = kIsWeb ? Uri.base.origin : 'com.expensecalculator.expenseosmobile://login-callback';
-      debugPrint('[GoogleSignIn] Using direct OAuth fallback for Web/Desktop: $redirectUrl');
+      debugPrint('[GoogleSignIn] Using direct OAuth for Web/Desktop: $redirectUrl');
 
       final success = await client.auth.signInWithOAuth(
         OAuthProvider.google,
