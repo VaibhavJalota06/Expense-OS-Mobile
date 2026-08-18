@@ -780,9 +780,9 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
   void initState() {
     super.initState();
     final g = widget.goalToEdit;
-    _titleController = TextEditingController(text: g?.title ?? 'New Goal');
-    _targetAmountController = TextEditingController(text: g != null ? g.targetAmount.toStringAsFixed(0) : '10000');
-    _currentAmountController = TextEditingController(text: g != null ? g.currentAmount.toStringAsFixed(0) : '0');
+    _titleController = TextEditingController(text: g?.title ?? '');
+    _targetAmountController = TextEditingController(text: g != null && g.targetAmount > 0 ? g.targetAmount.toStringAsFixed(0) : '');
+    _currentAmountController = TextEditingController(text: g != null && g.currentAmount > 0 ? g.currentAmount.toStringAsFixed(0) : '');
     _contributionType = g?.contributionType ?? 'Monthly';
     _deadline = g?.deadline ?? DateTime.now().add(const Duration(days: 180));
     _selectedIcon = g?.icon ?? '🎯';

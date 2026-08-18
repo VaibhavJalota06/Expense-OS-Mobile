@@ -849,7 +849,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _showSetTotalMoneyDialog() {
     final isDark = AppTheme.isDark(context);
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
-    final controller = TextEditingController(text: _totalIncome.toStringAsFixed(0));
+    final controller = TextEditingController(text: _totalIncome > 0 ? _totalIncome.toStringAsFixed(0) : '');
 
     showDialog(
       context: context,
@@ -878,6 +878,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decoration: InputDecoration(
                 prefixText: '$currencySymbol ',
                 prefixStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.monexBlue),
+                hintText: 'e.g. 50000',
+                hintStyle: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3),
+                ),
                 filled: true,
                 fillColor: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
                 border: OutlineInputBorder(
@@ -930,7 +936,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _showSetBudgetDialog() {
     final isDark = AppTheme.isDark(context);
     final currencySymbol = CurrencyService.currencySymbolNotifier.value;
-    final controller = TextEditingController(text: _monthlyBudgetCap.toStringAsFixed(0));
+    final controller = TextEditingController(text: _monthlyBudgetCap > 0 ? _monthlyBudgetCap.toStringAsFixed(0) : '');
     String? errorMessage;
 
     showDialog(
@@ -980,6 +986,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     fontWeight: FontWeight.w700,
                     fontSize: 18,
                     color: errorMessage != null ? AppTheme.dangerRed : AppTheme.monexBlue,
+                  ),
+                  hintText: 'e.g. 20000',
+                  hintStyle: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                    color: isDark ? const Color(0xFF64748B) : const Color(0xFF98A2B3),
                   ),
                   filled: true,
                   fillColor: errorMessage != null
