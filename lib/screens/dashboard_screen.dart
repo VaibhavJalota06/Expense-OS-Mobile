@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,7 +14,6 @@ import 'calendar_expenses_screen.dart';
 import 'gamification_screen.dart';
 import 'ocr_scanner_screen.dart';
 import 'split_bill_screen.dart';
-import '../widgets/user_profile_modal.dart';
 import '../services/budget_rules_engine.dart';
 import '../services/currency_service.dart';
 
@@ -35,8 +33,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Expense> _expenses = [];
   double _monthlyBudgetCap = 0.0;
   double _startingBalance = 0.0;
-  String? _avatarUrl;
-  String? _customAvatarPath;
   int _activeStatIndex = 1; // Default highlighted card: 1 = Total Expense
   String _activeEntryType = 'expense'; // 'expense' or 'income'
 
@@ -120,23 +116,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
     final user = _supabaseService.currentUser;
 
     if (user != null) {
       await SupabaseService.cacheUserData(user);
       await SupabaseService.loadFinancialProfileFromCloud();
-    }
-
-    final googleAvatar = prefs.getString('google_user_avatar');
-    final customAvatar = prefs.getString('custom_avatar_path');
-    String? photoUrl = googleAvatar ?? user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
-
-    if (mounted) {
-      setState(() {
-        _avatarUrl = photoUrl;
-        _customAvatarPath = customAvatar;
-      });
     }
   }
 

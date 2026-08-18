@@ -32,10 +32,7 @@ class SupabaseService {
   static Future<void> initialize() async {
     await Supabase.initialize(
       url: supabaseUrl,
-      publishableKey: supabaseAnonKey,
-      authOptions: const FlutterAuthOptions(
-        authFlowType: AuthFlowType.pkce,
-      ),
+      anonKey: supabaseAnonKey,
     );
   }
 
