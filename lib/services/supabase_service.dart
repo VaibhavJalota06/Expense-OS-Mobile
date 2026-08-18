@@ -162,6 +162,16 @@ class SupabaseService {
           return false;
         }
 
+        // Reset previous local state before authenticating new account
+        _localExpenses.clear();
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('local_offline_expenses');
+        await prefs.remove('user_starting_balance');
+        await prefs.remove('monthly_budget_cap');
+        await prefs.remove('user_saved_subscriptions');
+        await prefs.remove('monex_goals');
+        await prefs.remove('saved_group_expenses');
+
         final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
         final String? idToken = googleAuth.idToken;
         final String? accessToken = googleAuth.accessToken;
@@ -224,6 +234,7 @@ class SupabaseService {
   }
 
   Future<void> signOut() async {
+    _localExpenses.clear();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('persistent_user_logged_in');
     await prefs.remove('google_user_email');
@@ -231,9 +242,16 @@ class SupabaseService {
     await prefs.remove('google_user_avatar');
     await prefs.remove('custom_avatar_path');
     await prefs.remove('supabase_user_id');
+    await prefs.remove('local_offline_expenses');
+    await prefs.remove('user_starting_balance');
+    await prefs.remove('monthly_budget_cap');
+    await prefs.remove('user_saved_subscriptions');
+    await prefs.remove('monex_goals');
+    await prefs.remove('saved_group_expenses');
     try {
       final googleSignIn = GoogleSignIn();
       await googleSignIn.signOut();
+      await googleSignIn.disconnect();
     } catch (_) {}
     try {
       await client.auth.signOut();
