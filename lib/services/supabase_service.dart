@@ -156,10 +156,27 @@ class SupabaseService {
           ],
         );
 
-        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        GoogleSignInAccount? googleUser;
+        try {
+          googleUser = await googleSignIn.signIn();
+        } catch (signInErr) {
+          debugPrint('[GoogleSignIn] Native GoogleSignIn error: $signInErr. Retrying without serverClientId...');
+          try {
+            final fallbackGoogleSignIn = GoogleSignIn(scopes: const ['email', 'profile']);
+            googleUser = await fallbackGoogleSignIn.signIn();
+          } catch (fallbackErr) {
+            debugPrint('[GoogleSignIn] Fallback native sign-in error: $fallbackErr');
+          }
+        }
+
         if (googleUser == null) {
-          debugPrint('[GoogleSignIn] User cancelled Google Sign-In prompt.');
-          return false;
+          debugPrint('[GoogleSignIn] Native sign-in did not complete, falling back to Supabase OAuth...');
+          final String redirectUrl = 'io.supabase.expenseos://login-callback';
+          final success = await client.auth.signInWithOAuth(
+            OAuthProvider.google,
+            redirectTo: redirectUrl,
+          );
+          return success;
         }
 
         // Reset previous local state before authenticating new account
@@ -212,8 +229,16 @@ class SupabaseService {
         debugPrint('[GoogleSignIn] Native In-App Login SUCCESS for: ${googleUser.email}');
         return true;
       } catch (nativeError) {
-        debugPrint('[GoogleSignIn] Native in-app sign-in error: $nativeError');
-        return false;
+        debugPrint('[GoogleSignIn] Native in-app sign-in error: $nativeError. Attempting OAuth fallback...');
+        try {
+          final success = await client.auth.signInWithOAuth(
+            OAuthProvider.google,
+            redirectTo: 'io.supabase.expenseos://login-callback',
+          );
+          return success;
+        } catch (_) {
+          return false;
+        }
       }
     }
 
