@@ -60,8 +60,9 @@ jobs:
       - name: Build iOS App (Unsigned IPA)
         run: |
           flutter pub get
+          flutter precache --ios
           cd ios
-          pod install
+          pod install --repo-update || pod install
           cd ..
           flutter build ios --release --no-codesign
           mkdir -p Payload
