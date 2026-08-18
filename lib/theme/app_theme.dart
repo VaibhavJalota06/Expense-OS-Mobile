@@ -210,8 +210,8 @@ class AppTheme {
         labelStyle: GoogleFonts.plusJakartaSans(color: textPrimary, fontWeight: FontWeight.w600),
         secondaryLabelStyle: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700),
         brightness: Brightness.light,
-        side: const BorderSide(color: Color(0xFFD0D5DD), width: 1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        side: BorderSide.none,
+        shape: const StadiumBorder(),
       ),
     );
   }
@@ -225,7 +225,7 @@ class AppTheme {
       primaryColor: monexBlue,
       cardColor: const Color(0xFF131A29),
       chipTheme: ChipThemeData(
-        backgroundColor: const Color(0xFF0D1322),
+        backgroundColor: const Color(0xFF1E293B),
         disabledColor: const Color(0xFF131A29),
         selectedColor: monexBlue.withValues(alpha: 0.2),
         secondarySelectedColor: monexBlue,
@@ -233,8 +233,8 @@ class AppTheme {
         labelStyle: GoogleFonts.plusJakartaSans(color: const Color(0xFFF8FAFC), fontWeight: FontWeight.w600),
         secondaryLabelStyle: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700),
         brightness: Brightness.dark,
-        side: const BorderSide(color: Color(0xFF1E293B), width: 1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        side: BorderSide.none,
+        shape: const StadiumBorder(),
       ),
       colorScheme: const ColorScheme.dark(
         primary: Color(0xFF38BDF8),
