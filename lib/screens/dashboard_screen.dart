@@ -14,6 +14,7 @@ import 'calendar_expenses_screen.dart';
 import 'gamification_screen.dart';
 import 'ocr_scanner_screen.dart';
 import 'split_bill_screen.dart';
+import '../services/app_update_service.dart';
 import '../services/budget_rules_engine.dart';
 import '../services/currency_service.dart';
 
@@ -107,6 +108,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       });
     }
+    Future.delayed(const Duration(seconds: 3), () async {
+      if (!mounted) return;
+      try {
+        final updateInfo = await AppUpdateService().checkForUpdate();
+        if (updateInfo.isUpdateAvailable && mounted) {
+          AppUpdateService().showUpdateModal(context, updateInfo);
+        }
+      } catch (_) {}
+    });
   }
 
   Future<void> _loadFromLocalCacheImmediate() async {

@@ -1,6 +1,6 @@
 {
   "name": "expense-calculator-desktop",
-  "version": "2.9.6",
+  "version": "3.3.5",
   "description": "Expense OS - Futuristic Dark Glassmorphic Desktop App",
   "main": "main.js",
   "scripts": {

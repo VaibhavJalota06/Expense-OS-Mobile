@@ -1,4 +1,4 @@
-name: Build & Release Mobile App (APK & IPA)
+name: Build & Release Multiplatform Apps (APK, IPA, EXE)
 
 on:
   push:
@@ -12,8 +12,28 @@ permissions:
   contents: write
 
 jobs:
+  get-version:
+    name: Extract Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+      tag: ${{ steps.extract.outputs.tag }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Extract Version from pubspec.yaml
+        id: extract
+        run: |
+          RAW_VER=$(grep '^version: ' pubspec.yaml | sed 's/version: //' | tr -d ' \r\n')
+          CLEAN_VER=$(echo $RAW_VER | sed 's/+.*//')
+          echo "version=$CLEAN_VER" >> $GITHUB_OUTPUT
+          echo "tag=v$CLEAN_VER" >> $GITHUB_OUTPUT
+          echo "Extracted App Version: $CLEAN_VER (Tag: v$CLEAN_VER)"
+
   build-android:
     name: Build Android APK
+    needs: get-version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -34,22 +54,35 @@ jobs:
         run: |
           flutter pub get
           flutter build apk --release
+          mkdir -p output-apk
+          cp build/app/outputs/flutter-apk/app-release.apk output-apk/app-release.apk
+          cp build/app/outputs/flutter-apk/app-release.apk output-apk/ExpenseOS-Android.apk
+          cp build/app/outputs/flutter-apk/app-release.apk output-apk/ExpenseOS-Android-v${{ needs.get-version.outputs.version }}.apk
 
-      - name: Upload Android APK
+      - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ExpenseOS-Android-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: output-apk/*
+          if-no-files-found: error
 
   build-ios:
     name: Build iOS IPA
+    needs: get-version
     runs-on: macos-14
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+      - name: Select Xcode Version
+        run: |
+          if [ -d "/Applications/Xcode_15.4.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_16.0.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+          else
+            echo "Using default system Xcode: $(xcode-select -p)"
+          fi
 
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
@@ -68,15 +101,20 @@ jobs:
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
           zip -9 -r ExpenseOS-iOS.ipa Payload
+          cp ExpenseOS-iOS.ipa ExpenseOS-iOS-v${{ needs.get-version.outputs.version }}.ipa
 
-      - name: Upload iOS IPA
+      - name: Upload iOS IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ExpenseOS-iOS-IPA
-          path: ExpenseOS-iOS.ipa
+          path: |
+            ExpenseOS-iOS.ipa
+            ExpenseOS-iOS-v${{ needs.get-version.outputs.version }}.ipa
+          if-no-files-found: error
 
   build-desktop-exe:
     name: Build Windows Desktop EXE
+    needs: get-version
     runs-on: windows-latest
     steps:
       - name: Checkout Code
@@ -98,6 +136,7 @@ jobs:
         run: |
           npx electron-builder --win --publish never
           Get-ChildItem -Path "dist" -Filter "*.exe" | ForEach-Object { Copy-Item $_.FullName ($_.FullName -replace ' ', '-') -ErrorAction SilentlyContinue }
+          Get-ChildItem -Path "dist" -Filter "*.exe" | ForEach-Object { Copy-Item $_.FullName "dist/ExpenseOS-Windows-Setup.exe" -ErrorAction SilentlyContinue }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -109,49 +148,48 @@ jobs:
           path: |
             web-desktop/dist/*.exe
             web-desktop/dist/latest.yml
+          if-no-files-found: error
 
   create-release:
-    name: Publish Release Assets
-    needs: [build-android, build-ios, build-desktop-exe]
+    name: Publish GitHub Release
+    needs: [get-version, build-android, build-ios, build-desktop-exe]
     runs-on: ubuntu-latest
-    if: always() && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
+    if: always()
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Download Android Artifact
+      - name: Download Android Artifacts
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           name: ExpenseOS-Android-APK
-          path: artifacts/android
+          path: release-assets
 
-      - name: Download iOS Artifact
+      - name: Download iOS Artifacts
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           name: ExpenseOS-iOS-IPA
-          path: artifacts/ios
+          path: release-assets
 
-      - name: Download Desktop Artifact
+      - name: Download Desktop Artifacts
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           name: ExpenseOS-Windows-EXE
-          path: artifacts/desktop
+          path: release-assets
 
-      - name: Create GitHub Release
+      - name: Publish or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Expense OS Multiplatform Release ${{ github.ref_name }}
+          tag_name: ${{ needs.get-version.outputs.tag || 'v3.3.5' }}
+          name: Expense OS Multiplatform Release ${{ needs.get-version.outputs.tag || 'v3.3.5' }}
           draft: false
           prerelease: false
           generate_release_notes: true
-          files: |
-            artifacts/android/*.apk
-            artifacts/ios/*.ipa
-            artifacts/desktop/*.exe
-            artifacts/desktop/latest.yml
+          make_latest: true
+          files: release-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
