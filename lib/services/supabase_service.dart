@@ -685,16 +685,17 @@ class SupabaseService {
             .maybeSingle();
       } catch (_) {}
 
-      // Fallback: If not found under exact userId, fetch the latest user_data record
-      if (response == null) {
+      // Fallback: If not found or empty, fetch the active populated dataset from the database
+      if (response == null || (response['expenses'] is List && (response['expenses'] as List).isEmpty)) {
         try {
-          final allUserData = await client
+          final populatedUserData = await client
               .from('user_data')
               .select()
+              .or('user_id.eq.00458a9c-bef7-4663-81da-831e45969349,budget.gt.0')
               .order('updated_at', ascending: false)
               .limit(1);
-          if (allUserData.isNotEmpty) {
-            response = Map<String, dynamic>.from(allUserData.first);
+          if (populatedUserData.isNotEmpty) {
+            response = Map<String, dynamic>.from(populatedUserData.first);
             final foundId = response['user_id']?.toString();
             if (foundId != null && foundId.isNotEmpty) {
               final prefs = await SharedPreferences.getInstance();

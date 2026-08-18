@@ -37,7 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _activeEntryType = 'expense'; // 'expense' or 'income'
 
   DateTime _selectedDashboardDate = DateTime.now();
-  bool _filterDashboardByDate = true;
+  bool _filterDashboardByDate = false;
 
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
