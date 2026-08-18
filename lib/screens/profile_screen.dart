@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/expense_model.dart';
 import '../services/app_update_service.dart';
 import '../services/currency_service.dart';
+import '../services/export_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/user_profile_modal.dart';
@@ -595,27 +596,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   leading: const Icon(Icons.download_rounded, color: AppTheme.monexBlue),
                   title: Text('Export Expenses (CSV)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
                   subtitle: Text('Generate downloadable CSV report of all expenses', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
-                  onTap: () async {
-                    final list = await _supabaseService.getExpenses();
-                    final expenses = list.isNotEmpty ? list : _supabaseService.localExpenses;
-
-                    final StringBuffer csv = StringBuffer();
-                    csv.writeln('Date,Category,Title,Amount,Type,PaymentMethod,Notes');
-                    for (var e in expenses) {
-                      csv.writeln('${DateFormat('yyyy-MM-dd').format(e.date)},"${e.category}","${e.title}",${e.amount},"${e.type}","${e.paymentMethod}","${e.notes ?? ''}"');
-                    }
-
-                    await Clipboard.setData(ClipboardData(text: csv.toString()));
-
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('📋 ${expenses.length} expenses exported & copied to clipboard!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-                          backgroundColor: AppTheme.monexBlue,
-                        ),
-                      );
-                    }
-                  },
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF98A2B3)),
+                  onTap: () => _showExportModal(context),
                 ),
                 const Divider(height: 1, color: Color(0xFFF1F3F9)),
                 ListTile(
@@ -758,6 +740,302 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showExportModal(BuildContext context) async {
+    final list = await _supabaseService.getExpenses();
+    final expenses = list.isNotEmpty ? list : _supabaseService.localExpenses;
+    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+
+    double totalIncome = 0;
+    double totalExpense = 0;
+    for (var e in expenses) {
+      if (e.type.toLowerCase() == 'income') {
+        totalIncome += e.amount;
+      } else {
+        totalExpense += e.amount;
+      }
+    }
+
+    if (!context.mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(24.0),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE4E7EC),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppTheme.monexBlue.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.file_download_outlined, color: AppTheme.monexBlue, size: 24),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Export Financial Records',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '${expenses.length} total transactions ready for export',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: const Color(0xFF667085),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Summary Stats Box
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFEAECF0)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Total Income', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF667085), fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 2),
+                          Text('$currencySymbol${totalIncome.toStringAsFixed(2)}', style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.successGreen)),
+                        ],
+                      ),
+                    ),
+                    Container(width: 1, height: 32, color: const Color(0xFFEAECF0)),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Total Expenses', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF667085), fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 2),
+                          Text('$currencySymbol${totalExpense.toStringAsFixed(2)}', style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: const Color(0xFFF04438))),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Main Download Button
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.monexBlue,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  final file = await ExportService().saveCsvFile(expenses);
+                  if (context.mounted) {
+                    if (file != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '✅ CSV File saved to Downloads: ${file.path.split("/").last}',
+                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                          ),
+                          backgroundColor: AppTheme.successGreen,
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                    } else {
+                      final rawCsv = ExportService().generateCSV(expenses);
+                      await Clipboard.setData(ClipboardData(text: rawCsv));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '📋 ${expenses.length} records copied to clipboard!',
+                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                          ),
+                          backgroundColor: AppTheme.monexBlue,
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.download_rounded, size: 20),
+                label: Text(
+                  'Download CSV File',
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        side: const BorderSide(color: Color(0xFFD0D5DD)),
+                      ),
+                      onPressed: () async {
+                        final rawCsv = ExportService().generateCSV(expenses);
+                        await Clipboard.setData(ClipboardData(text: rawCsv));
+                        if (ctx.mounted) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '📋 Raw CSV copied to clipboard!',
+                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+                              ),
+                              backgroundColor: AppTheme.monexBlue,
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.copy_rounded, size: 16, color: AppTheme.textPrimary),
+                      label: Text(
+                        'Copy CSV',
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        side: const BorderSide(color: Color(0xFFD0D5DD)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showStatementPreviewModal(context, expenses);
+                      },
+                      icon: const Icon(Icons.receipt_long_rounded, size: 16, color: AppTheme.textPrimary),
+                      label: Text(
+                        'Statement',
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showStatementPreviewModal(BuildContext context, List<Expense> expenses) {
+    final statement = ExportService().generateExecutiveStatementText(expenses);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          padding: const EdgeInsets.all(24.0),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Executive Statement',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w800),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy_rounded, size: 20),
+                    onPressed: () async {
+                      await Clipboard.setData(ClipboardData(text: statement));
+                      if (ctx.mounted) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(
+                            content: Text('📋 Statement copied to clipboard!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                            backgroundColor: AppTheme.monexBlue,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F172A),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Text(
+                      statement,
+                      style: GoogleFonts.ibmPlexMono(
+                        fontSize: 11,
+                        color: const Color(0xFF38BDF8),
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
