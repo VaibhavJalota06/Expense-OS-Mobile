@@ -39,7 +39,10 @@ class _AuthScreenState extends State<AuthScreen> {
     super.initState();
     if (_supabaseService.safeClient != null) {
       _authSub = _supabaseService.safeClient!.auth.onAuthStateChange.listen((data) async {
-        if ((data.event == AuthChangeEvent.signedIn || data.event == AuthChangeEvent.initialSession) &&
+        if ((data.event == AuthChangeEvent.signedIn ||
+                data.event == AuthChangeEvent.initialSession ||
+                data.event == AuthChangeEvent.tokenRefreshed ||
+                data.event == AuthChangeEvent.userUpdated) &&
             data.session?.user != null &&
             mounted) {
           await SupabaseService.cacheUserData(data.session!.user);

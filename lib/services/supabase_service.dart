@@ -186,7 +186,7 @@ class SupabaseService {
       }
     }
 
-    // 2. OAuth In-App Browser Fallback
+    // 2. OAuth Flow (Launch browser and redirect to app scheme)
     try {
       final String redirectUrl = kIsWeb
           ? Uri.base.origin
@@ -195,7 +195,7 @@ class SupabaseService {
       final success = await client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: redirectUrl,
-        authScreenLaunchMode: LaunchMode.inAppBrowserView,
+        authScreenLaunchMode: LaunchMode.externalApplication,
       );
       return success;
     } catch (e) {
