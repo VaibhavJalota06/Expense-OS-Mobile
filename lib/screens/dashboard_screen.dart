@@ -257,7 +257,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Top Header: "Overview" + Reminders & User Profile
+                          // Top Header: "Overview" + Reminders & Alerts
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -270,72 +270,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   letterSpacing: -0.3,
                                 ),
                               ),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.notifications_none_rounded,
-                                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, size: 24),
-                                    tooltip: 'Reminders & Alerts',
-                                    onPressed: _showRemindersSheet,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  GestureDetector(
-                                    onTap: () {
-                                      showModalBottomSheet(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        backgroundColor: Colors.transparent,
-                                        builder: (_) => UserProfileModal(
-                                          onSignOut: () {
-                                            if (widget.onSignOut != null) {
-                                              widget.onSignOut!();
-                                            } else if (mounted) {
-                                              setState(() {});
-                                            }
-                                          },
-                                        ),
-                                      ).then((_) {
-                                        if (mounted) setState(() {});
-                                      });
-                                    },
-                                    child: Stack(
-                                      children: [
-                                        Container(
-                                          width: 44,
-                                          height: 44,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: AppTheme.monexBlue,
-                                            border: Border.all(color: Colors.white, width: 2),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: AppTheme.monexBlue.withValues(alpha: 0.25),
-                                                blurRadius: 10,
-                                                offset: const Offset(0, 3),
-                                              ),
-                                            ],
-                                          ),
-                                          child: ClipOval(
-                                            child: _buildAvatarContent(),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          top: 1,
-                                          right: 1,
-                                          child: Container(
-                                            width: 12,
-                                            height: 12,
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFF12B76A),
-                                              shape: BoxShape.circle,
-                                              border: Border.all(color: Colors.white, width: 2),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                              IconButton(
+                                icon: Icon(Icons.notifications_none_rounded,
+                                    color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, size: 24),
+                                tooltip: 'Reminders & Alerts',
+                                onPressed: _showRemindersSheet,
                               ),
                             ],
                           ),

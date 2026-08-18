@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -26,6 +27,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final SupabaseService _supabaseService = SupabaseService();
 
   String _selectedCurrencySymbol = '\$';
+  String _userName = 'User';
+  String _userEmail = '';
+  String? _avatarUrl;
+  String? _customAvatarPath;
 
   int _totalTransactions = 0;
   double _totalIncome = 0.0;
@@ -74,10 +79,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final savedSymbol = prefs.getString('app_currency_symbol') ?? CurrencyService.currencySymbolNotifier.value;
+    final user = _supabaseService.currentUser;
+
+    final googleEmail = prefs.getString('google_user_email');
+    final googleAvatar = prefs.getString('google_user_avatar');
+    final customName = prefs.getString('custom_user_name');
+    final customAvatar = prefs.getString('custom_avatar_path');
+
+    String email = user?.email ?? googleEmail ?? 'Member';
+    String name = customName ??
+        (user?.userMetadata?['full_name'] ??
+            user?.userMetadata?['name'] ??
+            (email.contains('@') ? email.split('@').first : 'Expense User'));
+    String? photoUrl = googleAvatar ?? user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
 
     if (mounted) {
       setState(() {
         _selectedCurrencySymbol = savedSymbol;
+        _userName = name;
+        _userEmail = email;
+        _avatarUrl = photoUrl;
+        _customAvatarPath = customAvatar;
       });
     }
   }
@@ -508,6 +530,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
+  Widget _buildUserAvatar(bool isDark) {
+    Widget avatarContent;
+    if (_customAvatarPath != null && File(_customAvatarPath!).existsSync()) {
+      avatarContent = Image.file(File(_customAvatarPath!), fit: BoxFit.cover);
+    } else if (_avatarUrl != null && _avatarUrl!.isNotEmpty) {
+      avatarContent = Image.network(
+        _avatarUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildFallbackAvatarText(),
+      );
+    } else {
+      avatarContent = _buildFallbackAvatarText();
+    }
+
+    return Stack(
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppTheme.monexBlue,
+            border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.monexBlue.withValues(alpha: 0.25),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: ClipOval(child: avatarContent),
+        ),
+        Positioned(
+          top: 1,
+          right: 1,
+          child: Container(
+            width: 13,
+            height: 13,
+            decoration: BoxDecoration(
+              color: const Color(0xFF12B76A),
+              shape: BoxShape.circle,
+              border: Border.all(color: isDark ? const Color(0xFF131A29) : Colors.white, width: 2),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFallbackAvatarText() {
+    return Center(
+      child: Text(
+        _userName.isNotEmpty ? _userName[0].toUpperCase() : 'U',
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
@@ -533,83 +619,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           children: [
             // ------------------------------------------------------------
-            // 1. APP SETTINGS HEADER BANNER
+            // 1. APP SETTINGS & USER PROFILE HEADER BANNER
             // ------------------------------------------------------------
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF131A29) : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9), width: 1.2),
-                boxShadow: isDark ? [] : [
-                  BoxShadow(
-                    color: const Color(0xFF101828).withValues(alpha: 0.04),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
+            InkWell(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => UserProfileModal(
+                    onSignOut: widget.onSignOut,
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: AppTheme.monexBlue.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
+                ).then((_) => _loadUserData());
+              },
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF131A29) : Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9), width: 1.2),
+                  boxShadow: isDark ? [] : [
+                    BoxShadow(
+                      color: const Color(0xFF101828).withValues(alpha: 0.04),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
                     ),
-                    child: const Icon(Icons.settings_suggest_rounded, color: AppTheme.monexBlue, size: 28),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'App Settings & Preferences',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    _buildUserAvatar(isDark),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _userName,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Configure currency, budget limits & security',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
-                            fontWeight: FontWeight.w500,
+                          const SizedBox(height: 3),
+                          Text(
+                            _userEmail.isNotEmpty ? _userEmail : 'PRO Member • Cloud Synced',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => UserProfileModal(
-                          onSignOut: widget.onSignOut,
-                        ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         color: AppTheme.monexBlue.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.monexBlue),
                           const SizedBox(width: 4),
                           Text(
-                            'Profile',
+                            'Edit',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -619,8 +700,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
