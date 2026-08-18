@@ -247,7 +247,7 @@ class NotificationService {
 
   /// 2. Upcoming Subscription & Recurring Bill Alerts
   Future<void> checkUpcomingBills(
-    List<Subscription> subscriptions, {
+    List<SubscriptionItem> subscriptions, {
     String currencySymbol = '\$',
   }) async {
     final now = DateTime.now();
