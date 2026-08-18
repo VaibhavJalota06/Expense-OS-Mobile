@@ -9,6 +9,7 @@ import 'screens/onboarding_screen.dart';
 import 'services/currency_service.dart';
 import 'services/notification_service.dart';
 import 'services/supabase_service.dart';
+import 'services/theme_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -34,9 +35,10 @@ void main() async {
   final results = await Future.wait([prefsFuture, supabaseFuture]);
   final prefs = results[0] as SharedPreferences;
 
-  // Initialize currency & notifications in background non-blocking
+  // Initialize currency, theme & notifications in background non-blocking
   CurrencyService().initialize().catchError((_) {});
   NotificationService().initialize().catchError((_) {});
+  ThemeService.initialize().catchError((_) {});
 
   final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
   final isPersistentLoggedIn = prefs.getBool('persistent_user_logged_in') ?? false;
@@ -112,41 +114,48 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<String>(
-      valueListenable: CurrencyService.currencySymbolNotifier,
-      builder: (context, currentCurrencySymbol, _) {
-        Widget initialScreen;
-        if (!_hasSeenOnboarding) {
-          initialScreen = OnboardingScreen(
-            onFinish: () {
-              setState(() {
-                _hasSeenOnboarding = true;
-              });
-            },
-          );
-        } else if (_isAuthenticated) {
-          initialScreen = MainNavigationScreen(
-            onSignOut: () {
-              setState(() {
-                _isAuthenticated = false;
-              });
-            },
-          );
-        } else {
-          initialScreen = AuthScreen(
-            onAuthSuccess: () {
-              setState(() {
-                _isAuthenticated = true;
-              });
-            },
-          );
-        }
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeModeNotifier,
+      builder: (context, currentThemeMode, _) {
+        return ValueListenableBuilder<String>(
+          valueListenable: CurrencyService.currencySymbolNotifier,
+          builder: (context, currentCurrencySymbol, _) {
+            Widget initialScreen;
+            if (!_hasSeenOnboarding) {
+              initialScreen = OnboardingScreen(
+                onFinish: () {
+                  setState(() {
+                    _hasSeenOnboarding = true;
+                  });
+                },
+              );
+            } else if (_isAuthenticated) {
+              initialScreen = MainNavigationScreen(
+                onSignOut: () {
+                  setState(() {
+                    _isAuthenticated = false;
+                  });
+                },
+              );
+            } else {
+              initialScreen = AuthScreen(
+                onAuthSuccess: () {
+                  setState(() {
+                    _isAuthenticated = true;
+                  });
+                },
+              );
+            }
 
-        return MaterialApp(
-          title: 'Expense OS',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          home: initialScreen,
+            return MaterialApp(
+              title: 'Expense OS',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: currentThemeMode,
+              home: initialScreen,
+            );
+          },
         );
       },
     );

@@ -10,6 +10,7 @@ import '../services/app_update_service.dart';
 import '../services/currency_service.dart';
 import '../services/export_service.dart';
 import '../services/supabase_service.dart';
+import '../services/theme_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/user_profile_modal.dart';
 
@@ -281,7 +282,143 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  @override
+  void _showThemeSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, activeMode, _) {
+            return Container(
+              padding: const EdgeInsets.all(24.0),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE4E7EC),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'App Appearance & Theme',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Choose your preferred visual theme',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: const Color(0xFF667085),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildThemeOption(
+                    title: '☀️ Light Mode',
+                    subtitle: 'Clean white canvas with blue accents',
+                    mode: ThemeMode.light,
+                    currentMode: activeMode,
+                    ctx: ctx,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildThemeOption(
+                    title: '🌙 Dark Mode',
+                    subtitle: 'Deep charcoal & glassmorphic dark palette',
+                    mode: ThemeMode.dark,
+                    currentMode: activeMode,
+                    ctx: ctx,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildThemeOption(
+                    title: '📱 System Default',
+                    subtitle: 'Automatically match device system theme',
+                    mode: ThemeMode.system,
+                    currentMode: activeMode,
+                    ctx: ctx,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildThemeOption({
+    required String title,
+    required String subtitle,
+    required ThemeMode mode,
+    required ThemeMode currentMode,
+    required BuildContext ctx,
+  }) {
+    final isSelected = mode == currentMode;
+    return GestureDetector(
+      onTap: () async {
+        await ThemeService.setThemeMode(mode);
+        if (mounted) setState(() {});
+        Navigator.pop(ctx);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.monexBlue.withValues(alpha: 0.08) : const Color(0xFFF8F9FC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppTheme.monexBlue : const Color(0xFFEAECF0),
+            width: isSelected ? 1.8 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? AppTheme.monexBlue : AppTheme.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: const Color(0xFF667085),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle_rounded, color: AppTheme.monexBlue, size: 20)
+            else
+              const Icon(Icons.radio_button_unchecked_rounded, color: Color(0xFFD0D5DD), size: 20),
+          ],
+        ),
+      ),
+    );
+  }
   Widget build(BuildContext context) {
     final activeSymbol = CurrencyService.currencySymbolNotifier.value;
     final currencyFormatter = NumberFormat.currency(symbol: activeSymbol, locale: 'en_US', decimalDigits: 0);
@@ -484,6 +621,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildSectionCard(
               title: 'Preferences & Financial Controls',
               children: [
+                ValueListenableBuilder<ThemeMode>(
+                  valueListenable: ThemeService.themeModeNotifier,
+                  builder: (context, currentMode, _) {
+                    String modeLabel = 'System Default';
+                    IconData modeIcon = Icons.brightness_auto_rounded;
+                    if (currentMode == ThemeMode.dark) {
+                      modeLabel = 'Dark Mode';
+                      modeIcon = Icons.dark_mode_rounded;
+                    } else if (currentMode == ThemeMode.light) {
+                      modeLabel = 'Light Mode';
+                      modeIcon = Icons.light_mode_rounded;
+                    }
+                    return ListTile(
+                      leading: Icon(modeIcon, color: const Color(0xFF6366F1)),
+                      title: Text('App Theme & Appearance', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                      subtitle: Text(modeLabel, style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                      trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF98A2B3)),
+                      onTap: _showThemeSelector,
+                    );
+                  },
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F3F9)),
                 ListTile(
                   leading: const Icon(Icons.attach_money_rounded, color: AppTheme.monexBlue),
                   title: Text('Default Currency', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),

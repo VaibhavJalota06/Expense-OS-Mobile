@@ -194,5 +194,76 @@ class AppTheme {
   }
 
   // Dark Theme support
-  static ThemeData get darkTheme => lightTheme;
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF090D16),
+      primaryColor: monexBlue,
+      cardColor: const Color(0xFF131A29),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF38BDF8),
+        secondary: Color(0xFF1E293B),
+        surface: Color(0xFF131A29),
+        error: dangerRed,
+        onSurface: Color(0xFFF8FAFC),
+        onPrimary: Colors.white,
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Color(0xFFF8FAFC), size: 20),
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFFF8FAFC),
+        ),
+      ),
+      textTheme: TextTheme(
+        displayLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          color: const Color(0xFFF8FAFC),
+          letterSpacing: -0.5,
+        ),
+        headlineMedium: GoogleFonts.plusJakartaSans(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFFF8FAFC),
+          letterSpacing: -0.2,
+        ),
+        titleLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFFF8FAFC),
+        ),
+        titleMedium: GoogleFonts.plusJakartaSans(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFFF8FAFC),
+        ),
+        bodyLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFFF8FAFC),
+        ),
+        bodyMedium: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF94A3B8),
+        ),
+        bodySmall: GoogleFonts.plusJakartaSans(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF64748B),
+        ),
+        labelLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF38BDF8),
+        ),
+      ),
+    );
+  }
 }

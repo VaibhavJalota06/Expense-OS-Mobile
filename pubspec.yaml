@@ -27,6 +27,7 @@ dependencies:
   fl_chart: ^0.68.0
   flutter_local_notifications: ^22.3.0
   url_launcher: ^6.3.0
+  google_mlkit_text_recognition: ^0.17.1
 
 dev_dependencies:
   flutter_test:
