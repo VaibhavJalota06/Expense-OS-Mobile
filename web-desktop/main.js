@@ -29,8 +29,14 @@ const safeUserDataPath = path.join(os.homedir(), 'AppData', 'Roaming', 'ExpenseO
 app.setPath('userData', safeUserDataPath);
 app.setPath('logs', path.join(safeUserDataPath, 'logs'));
 
-// Register the redirect URL already configured in Supabase.
-if (app.isPackaged) app.setAsDefaultProtocolClient(DESKTOP_AUTH_SCHEME);
+// Register the custom desktop protocol scheme for OAuth return
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient(DESKTOP_AUTH_SCHEME, process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient(DESKTOP_AUTH_SCHEME);
+}
 
 // Self-healing: clean corrupted/empty QuotaManager files on startup
 function cleanCorruptedCache() {
@@ -182,8 +188,8 @@ const webRoot = (fs.existsSync(webSubDir) && fs.existsSync(path.join(webSubDir, 
   : __dirname;
 
 const AUTH_SUCCESS_HTML = `<!DOCTYPE html><html><head><title>Authentication Successful - Expense OS</title>
-<style>body{font-family:system-ui,sans-serif;background:#050811;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}.card{background:#0f172a;padding:2.5rem;border-radius:1rem;border:1px solid rgba(255,255,255,0.1);max-width:400px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5)}.icon{font-size:3rem;margin-bottom:1rem}h2{color:#10b981;margin:0 0 .5rem 0}p{color:#94a3b8;font-size:.95rem;line-height:1.5}</style></head>
-<body><div class="card"><div class="icon">✅</div><h2>Authentication Successful!</h2><p>Your Google account has been connected to <strong>Expense OS Desktop</strong>.</p><p style="font-size:.85rem;color:#64748b">You can close this browser tab now.</p></div>
+<style>body{font-family:system-ui,sans-serif;background:#050811;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}.card{background:#0f172a;padding:2.5rem;border-radius:1rem;border:1px solid rgba(255,255,255,0.1);max-width:400px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5)}.icon{font-size:3rem;margin-bottom:1rem}h2{color:#10b981;margin:0 0 .5rem 0}p{color:#94a3b8;font-size:.95rem;line-height:1.5}.btn{display:inline-block;margin-top:1rem;padding:0.6rem 1.2rem;background:#2563eb;color:#fff;border-radius:0.5rem;text-decoration:none;font-weight:600;font-size:0.9rem}</style></head>
+<body><div class="card"><div class="icon">✅</div><h2>Authentication Successful!</h2><p>Your Google account has been connected to <strong>Expense OS Desktop</strong>.</p><a href="com.expensecalculator.expenseosmobile://login-callback" id="open-app-btn" class="btn">Return to Desktop App</a><p style="font-size:.85rem;color:#64748b;margin-top:1rem">You can close this browser tab now.</p></div>
 <script>
 (function(){
   try {
@@ -194,15 +200,26 @@ const AUTH_SUCCESS_HTML = `<!DOCTYPE html><html><head><title>Authentication Succ
     var access_token = p.get('access_token') || '';
     var refresh_token = p.get('refresh_token') || '';
     var code = p.get('code') || '';
+
+    var protocolUrl = 'com.expensecalculator.expenseosmobile://login-callback' + (hash || search || '');
+    var btn = document.getElementById('open-app-btn');
+    if (btn) btn.href = protocolUrl;
+
     if (access_token || code) {
       fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access_token: access_token, refresh_token: refresh_token, code: code })
-      }).catch(function(e){ console.error(e); });
+      }).then(function(){
+        try { window.location.href = protocolUrl; } catch(e){}
+      }).catch(function(e){ 
+        try { window.location.href = protocolUrl; } catch(err){}
+      });
+    } else {
+      try { window.location.href = protocolUrl; } catch(e){}
     }
   } catch(err) { console.error(err); }
-  setTimeout(function(){ try{ window.close(); }catch(e){} }, 2500);
+  setTimeout(function(){ try{ window.close(); }catch(e){} }, 3000);
 })();
 </script></body></html>`;
 

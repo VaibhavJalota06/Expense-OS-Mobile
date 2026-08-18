@@ -1066,6 +1066,8 @@ window.closeEditProfileModal = function(e) {
               code = p.get('code') || '';
             }
             if (access_token || code) {
+              const protocolUri = `com.expensecalculator.expenseosmobile://login-callback#access_token=${encodeURIComponent(access_token)}&refresh_token=${encodeURIComponent(refresh_token)}&code=${encodeURIComponent(code)}`;
+              try { window.location.href = protocolUri; } catch(e) {}
               ['58420', '58421'].forEach(port => {
                 fetch(`http://127.0.0.1:${port}/api/session`, {
                   method: 'POST',
