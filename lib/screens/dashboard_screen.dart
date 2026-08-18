@@ -1161,41 +1161,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildAvatarContent() {
-    if (_customAvatarPath != null && File(_customAvatarPath!).existsSync()) {
-      return Image.file(
-        File(_customAvatarPath!),
-        width: 44,
-        height: 44,
-        fit: BoxFit.cover,
-      );
-    } else if (_avatarUrl != null && _avatarUrl!.isNotEmpty) {
-      return Image.network(
-        _avatarUrl!,
-        width: 44,
-        height: 44,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildInitialAvatar(),
-      );
-    }
-    return _buildInitialAvatar();
-  }
-
-  Widget _buildInitialAvatar() {
-    final email = _supabaseService.currentUser?.email ?? 'User';
-    final initial = email.isNotEmpty ? email[0].toUpperCase() : 'U';
-    return Center(
-      child: Text(
-        initial,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
   Widget _buildDateFilterPill({
     required String label,
     required bool isSelected,
