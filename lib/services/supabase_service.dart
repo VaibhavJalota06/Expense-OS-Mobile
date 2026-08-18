@@ -170,13 +170,8 @@ class SupabaseService {
         }
 
         if (googleUser == null) {
-          debugPrint('[GoogleSignIn] Native sign-in did not complete, falling back to Supabase OAuth...');
-          final String redirectUrl = 'io.supabase.expenseos://login-callback';
-          final success = await client.auth.signInWithOAuth(
-            OAuthProvider.google,
-            redirectTo: redirectUrl,
-          );
-          return success;
+          debugPrint('[GoogleSignIn] User dismissed Google Sign-In prompt.');
+          return false;
         }
 
         // Reset previous local state before authenticating new account
