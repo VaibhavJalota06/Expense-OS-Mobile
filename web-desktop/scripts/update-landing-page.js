@@ -22,6 +22,7 @@ if (fs.existsSync(landingHtmlPath)) {
   const updatedContent = content
     .replace(/href="(\/landing\/)?style\.css\?v=[0-9.]+"/g, `href="/landing/style.css?v=${version}"`)
     .replace(/src="(\/landing\/)?script\.js\?v=[0-9.]+"/g, `src="/landing/script.js?v=${version}"`)
+    .replace(/<span class="brand-tag">v[0-9.]+<\/span>/g, `<span class="brand-tag">v${version}</span>`)
     .replace(/Expense OS v[0-9.]+ Released/g, `Expense OS v${version} Released`)
     .replace(
       /releases\/download\/v[0-9.]+\/Expense-OS-Setup-[0-9.]+\.exe/g,

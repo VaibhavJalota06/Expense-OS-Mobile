@@ -3,169 +3,184 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Expense OS — Futuristic 3D Expense Tracker & Financial Operating System</title>
-  <meta name="description" content="Expense OS is a futuristic glassmorphic desktop and web app for effortless expense tracking, AI auto-categorization, multi-currency conversion, and cloud DB sync.">
+  <title>Expense OS — Next-Gen Financial Command Center & 3D Operating System</title>
+  <meta name="description" content="Expense OS is a futuristic glassmorphic personal finance command center with real-time cloud sync, AI categorization, multi-currency conversion, and cross-platform native apps.">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/icon.png">
+  <link rel="shortcut icon" href="/icon.ico">
 
   <!-- Google Fonts & Font Awesome Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Custom Stylesheet with Cache Buster -->
+  <!-- Custom Cinematic Space Stylesheet -->
   <link rel="stylesheet" href="/landing/style.css?v=3.3.5">
 </head>
 <body>
 
-  <!-- Background Particle Canvas -->
+  <!-- Background Starfield Canvas -->
   <canvas id="bg-canvas"></canvas>
+  <div class="ambient-glow-top"></div>
 
-  <!-- Glassmorphic Navbar -->
-  <nav class="navbar">
-    <a href="#" class="nav-brand">
-      <div class="brand-icon"><i class="fa-solid fa-wallet"></i></div>
-      <span>Expense <span class="gradient-text">OS</span></span>
-    </a>
-
-    <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle Navigation Menu">
-      <i class="fa-solid fa-bars"></i>
-    </button>
-
-    <ul class="nav-links" id="nav-links">
-      <li><a href="#downloads" class="nav-link">Download App</a></li>
-      <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
-      <li><a href="#features" class="nav-link">Features</a></li>
-      <li><a href="#gallery" class="nav-link">App Preview</a></li>
-      <li><a href="#interactive-widgets" class="nav-link">Live Demos</a></li>
-      <li><a href="#comparison" class="nav-link">Compare</a></li>
-      <li><a href="#faq" class="nav-link">FAQ</a></li>
-      <li><a href="#contact" class="nav-link">Contact</a></li>
-    </ul>
-
-  </nav>
-
-  <!-- Hero Section -->
-  <header class="hero">
-    <div class="hero-badge">
-      <i class="fa-solid fa-sparkles"></i> Welcome to Expense OS • Track Spending, Save Money &amp; Master Your Finances
-    </div>
-
-    <h1 class="hero-title">Take Full Control of Your <span class="gradient-text">Money &amp; Daily Expenses</span></h1>
-    <p class="hero-subtitle">Welcome aboard! Easily track your daily spending, set monthly budget caps, earn Emerald rewards as you save, and see exactly where your money goes — simple, fast, and 100% private.</p>
-
-    <div class="hero-ctas">
-      <a href="/" class="btn btn-primary btn-lg" target="_blank">
-        <i class="fa-solid fa-rocket"></i> Launch Web App
+  <!-- 1. Minimal Cosmic Pill Navbar -->
+  <header class="navbar-container">
+    <nav class="navbar">
+      <a href="#" class="nav-brand">
+        <span class="brand-dot"></span>
+        <span>EXPENSE <span style="color: var(--planet-blue);">OS</span></span>
+        <span class="brand-tag">v3.3.5</span>
       </a>
-      <a href="#downloads" class="btn btn-secondary btn-lg">
-        <i class="fa-solid fa-circle-arrow-down"></i> Download for Windows &amp; Android
-      </a>
-    </div>
 
-    <!-- Quick Stats Bar in Hero -->
-    <div class="hero-stats-bar" style="display: flex; align-items: center; justify-content: center; gap: 2.5rem; margin-top: 3rem; flex-wrap: wrap;">
-      <div style="text-align: center;">
-        <div style="font-size: 1.6rem; font-weight: 800; color: #34d399;">100% Free</div>
-        <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Private &amp; Secure</div>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#downloads" class="nav-link">Downloads</a></li>
+        <li><a href="#features" class="nav-link">Features</a></li>
+        <li><a href="#live-demos" class="nav-link">Live Demos</a></li>
+        <li><a href="#showcase" class="nav-link">Showcase</a></li>
+        <li><a href="#comparison" class="nav-link">Compare</a></li>
+        <li><a href="#faq" class="nav-link">FAQ</a></li>
+      </ul>
+
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <a href="/index.html" target="_blank" class="nav-cta-btn">
+          <i class="fa-solid fa-rocket"></i> Launch App
+        </a>
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle Menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
       </div>
-      <div style="width: 1px; height: 32px; background: rgba(255,255,255,0.12);"></div>
-      <div style="text-align: center;">
-        <div style="font-size: 1.6rem; font-weight: 800; color: #38bdf8;">15 Level Stages</div>
-        <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Gamified Rewards 💎</div>
-      </div>
-      <div style="width: 1px; height: 32px; background: rgba(255,255,255,0.12);"></div>
-      <div style="text-align: center;">
-        <div style="font-size: 1.6rem; font-weight: 800; color: #a78bfa;">Instant Sync</div>
-        <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Desktop &amp; Cloud</div>
-      </div>
-    </div>
+    </nav>
   </header>
 
-  <!-- Download Platforms Section -->
-  <section id="downloads" class="section" style="padding-top: 5rem; padding-bottom: 3rem;">
-    <div class="section-header">
-      <div class="section-tag">Cross-Platform Availability</div>
-      <h2 class="section-title">Download <span class="gradient-text">Expense OS</span> Everywhere</h2>
-      <p class="section-desc">Get Expense OS on your Android phone, Windows PC, or use our instant web app in any browser.</p>
+  <!-- 2. Cinematic Hero Section (Direct Planetary Design Reference Match) -->
+  <section class="hero-cosmos" id="hero">
+    
+    <!-- Left Floating Celestial Node -->
+    <a href="#downloads" class="orbital-node left" title="Offline-First & Cloud Sync">
+      <div class="planet-orb orb-cyan"></div>
+      <div class="orbital-label">
+        <span class="orbital-tag">DUAL SYNC</span>
+        <span class="orbital-desc">Offline &amp; Cloud DB</span>
+      </div>
+    </a>
+
+    <!-- Right Floating Celestial Node -->
+    <a href="#downloads" class="orbital-node right" title="AI Receipt & Bank Scanner">
+      <div class="planet-orb orb-emerald"></div>
+      <div class="orbital-label">
+        <span class="orbital-tag">AI OCR</span>
+        <span class="orbital-desc">Smart Narration Parser</span>
+      </div>
+    </a>
+
+    <!-- Central Hero Content -->
+    <div class="hero-content">
+      <span class="hero-eyebrow">Financial Operating System</span>
+      <h1 class="hero-title">EXPENSE OS</h1>
+      <div class="hero-title-underline"></div>
+      
+      <p class="hero-subtitle">
+        Take complete command over your personal finances. Track daily expenses, set budget caps, convert global currencies in real-time, and sync seamlessly across all your devices.
+      </p>
+
+      <div class="hero-actions">
+        <a href="/index.html" target="_blank" class="btn-hero-primary">
+          <i class="fa-solid fa-bolt"></i> Get Started
+        </a>
+        <a href="#downloads" class="btn-hero-secondary">
+          <i class="fa-solid fa-download"></i> Download Suite
+        </a>
+      </div>
     </div>
 
-    <div class="download-platforms-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
+    <!-- 3. Majestic Glowing Planetary Horizon Curvature (Bottom of Hero) -->
+    <div class="planet-horizon-wrapper">
+      <a href="#downloads" class="scroll-indicator-down" aria-label="Scroll to content">
+        <i class="fa-solid fa-arrow-down"></i>
+      </a>
+      <div class="planet-globe" id="planet-globe">
+        <div class="planet-atmosphere-glow"></div>
+        <div class="planet-texture-overlay"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Cross-Platform Ecosystem & Download Suite -->
+  <section id="downloads" class="section">
+    <div class="section-header">
+      <div class="section-tag"><i class="fa-solid fa-cubes"></i> Multi-Platform Ecosystem</div>
+      <h2 class="section-title">Download <span class="gradient-text">Expense OS</span> Everywhere</h2>
+      <p class="section-desc">Zero platform friction. Run natively on your Android phone, Windows workstation, Apple iOS, or open directly in your browser.</p>
+    </div>
+
+    <div class="platforms-grid">
       
-      <!-- Android APK Card -->
-      <div class="glass-panel platform-card" style="padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
-        <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-          <div class="platform-icon" style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399;">
+      <!-- Android Package Card -->
+      <div class="glass-panel platform-card android">
+        <div>
+          <div class="platform-icon-box">
             <i class="fa-brands fa-android"></i>
           </div>
-          <div style="display: inline-block; padding: 4px 12px; background: rgba(52, 211, 153, 0.12); color: #34d399; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem;">
-            Android Package
-          </div>
-          <h3 style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Android (.apk)</h3>
-          <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem;">
-            Direct APK install for all Android phones &amp; tablets. Fast, lightweight, and offline-ready with Google Sign-in.
+          <span class="platform-badge">Android Package</span>
+          <h3 class="platform-title">Android (.apk)</h3>
+          <p class="platform-desc">
+            Direct APK install for all Android devices. 60/120 FPS GPU rendering, biometric lock, and offline-first dual sync.
           </p>
         </div>
-        <a href="/app-release.apk" download="Expense-OS.apk" class="btn btn-emerald btn-block" style="width: 100%; padding: 0.85rem; font-size: 0.95rem; text-decoration: none;">
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.5/ExpenseOS-Android.apk" download="ExpenseOS-Android.apk" class="btn-download btn-emerald-dl">
           <i class="fa-solid fa-download"></i> Download APK
         </a>
       </div>
 
-      <!-- iOS App Card -->
-      <div class="glass-panel platform-card" style="padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
-        <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-          <div class="platform-icon" style="background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185;">
-            <i class="fa-brands fa-apple"></i>
-          </div>
-          <div style="display: inline-block; padding: 4px 12px; background: rgba(244, 63, 94, 0.12); color: #fb7185; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem;">
-            iOS Package
-          </div>
-          <h3 style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Apple iOS (.ipa)</h3>
-          <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem;">
-            Compatible with iPhone &amp; iPad. Sideload with AltStore, Sideloadly, or install via TestFlight.
-          </p>
-        </div>
-        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/actions" target="_blank" class="btn btn-secondary btn-block" style="width: 100%; padding: 0.85rem; font-size: 0.95rem; text-decoration: none; border-color: rgba(244, 63, 94, 0.4);">
-          <i class="fa-brands fa-apple"></i> Get iOS IPA
-        </a>
-      </div>
-
       <!-- Windows Desktop Card -->
-      <div class="glass-panel platform-card" style="padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
-        <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-          <div class="platform-icon" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8;">
+      <div class="glass-panel platform-card windows">
+        <div>
+          <div class="platform-icon-box">
             <i class="fa-brands fa-windows"></i>
           </div>
-          <div style="display: inline-block; padding: 4px 12px; background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem;">
-            Windows Installer
-          </div>
-          <h3 style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Windows Setup (.exe)</h3>
-          <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem;">
-            Official setup installer for Windows 10 &amp; 11 with keyboard shortcuts, system tray, and dark glass UI.
+          <span class="platform-badge">Windows Installer</span>
+          <h3 class="platform-title">Windows Setup (.exe)</h3>
+          <p class="platform-desc">
+            Official installer for Windows 10 &amp; 11. System tray integration, global keyboard shortcuts, and auto-updater.
           </p>
         </div>
-        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.5/Expense-OS-Setup-3.3.5.exe" class="btn btn-secondary btn-block" style="width: 100%; padding: 0.85rem; font-size: 0.95rem; text-decoration: none;">
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.5/Expense-OS-Setup-3.3.5.exe" download="Expense-OS-Setup-3.3.5.exe" class="btn-download btn-secondary-dl">
           <i class="fa-solid fa-download"></i> Download Setup (.exe)
         </a>
       </div>
 
-      <!-- Web App Card -->
-      <div class="glass-panel platform-card" style="padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
-        <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-          <div class="platform-icon" style="background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.3); color: #a78bfa;">
-            <i class="fa-solid fa-globe"></i>
+      <!-- iOS App Card -->
+      <div class="glass-panel platform-card ios">
+        <div>
+          <div class="platform-icon-box">
+            <i class="fa-brands fa-apple"></i>
           </div>
-          <div style="display: inline-block; padding: 4px 12px; background: rgba(167, 139, 250, 0.12); color: #a78bfa; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem;">
-            Browser &amp; PWA
-          </div>
-          <h3 style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem;">Web Application</h3>
-          <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem;">
-            Zero installation required. Launch immediately in Chrome, Safari, Firefox, or Edge on any device.
+          <span class="platform-badge">iOS Package</span>
+          <h3 class="platform-title">Apple iOS (.ipa)</h3>
+          <p class="platform-desc">
+            Compatible with iPhone and iPad. Install directly via AltStore, Sideloadly, or Apple Developer profiles.
           </p>
         </div>
-        <a href="/" target="_blank" class="btn btn-primary btn-block" style="width: 100%; padding: 0.85rem; font-size: 0.95rem; text-decoration: none;">
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.5/ExpenseOS-iOS.ipa" download="ExpenseOS-iOS.ipa" class="btn-download btn-secondary-dl" style="border-color: rgba(244, 63, 94, 0.4);">
+          <i class="fa-brands fa-apple"></i> Download iOS IPA
+        </a>
+      </div>
+
+      <!-- Web Application Card -->
+      <div class="glass-panel platform-card web">
+        <div>
+          <div class="platform-icon-box">
+            <i class="fa-solid fa-globe"></i>
+          </div>
+          <span class="platform-badge">Instant PWA</span>
+          <h3 class="platform-title">Web Application</h3>
+          <p class="platform-desc">
+            Zero installation required. Instant access on Chrome, Safari, Edge, and Firefox with offline caching.
+          </p>
+        </div>
+        <a href="/index.html" target="_blank" class="btn-download btn-secondary-dl" style="background: rgba(167, 139, 250, 0.2); border-color: rgba(167, 139, 250, 0.4); color: #fff;">
           <i class="fa-solid fa-rocket"></i> Launch Web App
         </a>
       </div>
@@ -173,529 +188,218 @@
     </div>
   </section>
 
-  <!-- How It Works Section -->
-  <section id="how-it-works" class="section" style="padding-top: 6rem; padding-bottom: 4rem;">
-    <!-- 3 Easy Steps Grid -->
+  <!-- 5. Interactive Cyber-Finance HUD & Live Demos -->
+  <section id="live-demos" class="section">
     <div class="section-header">
-      <div class="section-tag">Simple 3-Step Process</div>
-      <h2 class="section-title">How Expense OS Works <span class="gradient-text">In Seconds</span></h2>
-      <p class="section-desc">Get started in 3 simple steps — no complicated setup required.</p>
+      <div class="section-tag"><i class="fa-solid fa-microchip"></i> Flight-Deck HUD</div>
+      <h2 class="section-title">Interactive <span class="gradient-text">Live Calculators</span></h2>
+      <p class="section-desc">Experience our high-speed calculation engines directly from this landing page.</p>
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
-      <div class="glass-panel" style="padding: 2rem; border-radius: 16px; position: relative;">
-        <div style="width: 42px; height: 42px; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 800; color: #34d399; margin-bottom: 1.25rem;">1</div>
-        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #f8fafc;"><i class="fa-solid fa-plus-circle text-emerald"></i> Log Daily Expenses &amp; Incomes</h3>
-        <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6;">Add daily spending with custom categories, payment methods, and notes in seconds. Expense OS instantly updates your net balance.</p>
-      </div>
-
-      <div class="glass-panel" style="padding: 2rem; border-radius: 16px; position: relative;">
-        <div style="width: 42px; height: 42px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 800; color: #38bdf8; margin-bottom: 1.25rem;">2</div>
-        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #f8fafc;"><i class="fa-solid fa-wand-magic-sparkles text-sky"></i> Auto-Categorize &amp; Organize</h3>
-        <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6;">Smart rules tag your transactions into Food, Travel, Utilities, and Shopping automatically so your ledger stays organized.</p>
-      </div>
-
-      <div class="glass-panel" style="padding: 2rem; border-radius: 16px; position: relative;">
-        <div style="width: 42px; height: 42px; background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 800; color: #a78bfa; margin-bottom: 1.25rem;">3</div>
-        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #f8fafc;"><i class="fa-solid fa-trophy text-purple"></i> Level Up &amp; Earn Emeralds 💎</h3>
-        <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6;">Build daily tracking streaks, complete savings targets, unlock 16 collectible stickers, and level up through 15 stages.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Grid Section -->
-  <section id="features" class="section">
-    <div class="section-header">
-      <div class="section-tag">Simple &amp; Friendly Tools</div>
-      <h2 class="section-title">Everything You Need to <span class="gradient-text">Master Your Money</span></h2>
-      <p class="section-desc">Designed to make managing your daily income, monthly bills, and savings goals effortless — on your phone, tablet, or desktop.</p>
-    </div>
-
-    <div class="features-grid">
-
-      <div class="glass-panel feature-card">
-        <div class="feature-icon-wrapper"><i class="fa-solid fa-trophy text-amber"></i></div>
-        <h3>Gamified Leaderboard &amp; Emeralds 💎</h3>
-        <p>Earn Emeralds for completing savings goals and building expense logging streaks. Progress across 15 level stages, unlock 16 collectible stickers, and shop in the Emerald Marketplace!</p>
-      </div>
-
-      <div class="glass-panel feature-card">
-        <div class="feature-icon-wrapper"><i class="fa-solid fa-bullseye text-purple"></i></div>
-        <h3>Savings Goals &amp; Target Trackers</h3>
-        <p>Set custom savings targets, track progress visual bars, receive milestone notifications, and earn +500 Emeralds upon goal completion.</p>
-      </div>
-
-      <div class="glass-panel feature-card">
-        <div class="feature-icon-wrapper"><i class="fa-solid fa-wand-magic-sparkles text-sky"></i></div>
-        <h3>AI Smart Budget Rules &amp; Alerts</h3>
-        <p>Automate financial discipline with real-time budget threshold warnings (80% spending cap), net balance savings protection, and leisure spending guards.</p>
-      </div>
-
-      <div class="glass-panel feature-card">
-        <div class="feature-icon-wrapper"><i class="fa-solid fa-wallet text-emerald"></i></div>
-        <h3>Accounts &amp; Multi-Wallet Liquidity</h3>
-        <p>Manage and track liquid funds across Cash, Savings, Checking Accounts, Credit Cards, and Digital Wallets with real-time net balance calculations.</p>
-      </div>
-
-      <div class="glass-panel feature-card">
-        <div class="feature-icon-wrapper"><i class="fa-solid fa-coins text-amber"></i></div>
-        <h3>Multi-Currency Support</h3>
-        <p>Easily track spending in Rupees (₹), Dollars ($), Euros (€), Pounds (£), and more with live automatic exchange rates.</p>
-      </div>
-
-      <div class="glass-panel feature-card">
-        <div class="feature-icon-wrapper"><i class="fa-solid fa-cloud text-sky"></i></div>
-        <h3>Cloud &amp; 100% Offline Sync</h3>
-        <p>No internet connection? Track expenses anytime offline with local storage, and sync seamlessly to PostgreSQL cloud DB when reconnected.</p>
-      </div>
-
-      <div class="glass-panel feature-card">
-        <div class="feature-icon-wrapper"><i class="fa-solid fa-bolt text-amber"></i></div>
-        <h3>Lightning Fast &amp; Zero Bloat</h3>
-        <p>Engineered for maximum performance. A clean, optimized codebase with zero unnecessary bloat ensures instant load times and seamless interactions.</p>
-      </div>
-
-      <div class="glass-panel feature-card">
-        <div class="feature-icon-wrapper"><i class="fa-solid fa-shield-halved text-emerald"></i></div>
-        <h3>Bug-Free &amp; Rock Solid</h3>
-        <p>Thoroughly audited and battle-tested. Enjoy a smooth, reliable experience with fixed CSV exporters and flawless search functionality.</p>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Interactive Gallery Section -->
-  <section id="gallery" class="gallery-section">
-    <div class="section-header">
-      <div class="section-tag">App Tour</div>
-      <h2 class="section-title">See How Easy <span class="gradient-text">Money Management</span> Can Be</h2>
-      <p class="section-desc">Click through the feature buttons below to preview the screens inside Expense OS.</p>
-    </div>
-
-    <div class="tabs-container">
-      <button class="tab-btn active" data-tab="dashboard"><i class="fa-solid fa-chart-pie"></i> Monthly Overview</button>
-      <button class="tab-btn" data-tab="leaderboard"><i class="fa-solid fa-trophy text-amber"></i> Leaderboard 💎</button>
-      <button class="tab-btn" data-tab="transactions"><i class="fa-solid fa-receipt"></i> Transaction History</button>
-      <button class="tab-btn" data-tab="budgeting"><i class="fa-solid fa-calculator"></i> Budget Limits</button>
-      <button class="tab-btn" data-tab="currency"><i class="fa-solid fa-globe"></i> Currency Converter</button>
-      <button class="tab-btn" data-tab="sync"><i class="fa-solid fa-shield-halved"></i> Offline &amp; Cloud Sync</button>
-      <button class="tab-btn" data-tab="export"><i class="fa-solid fa-file-export"></i> Download Reports</button>
-    </div>
-
-    <div class="glass-panel tab-preview-card">
-      <div style="margin-bottom:20px; text-align:center;">
-        <h3 id="gallery-preview-title" style="font-size:1.5rem; margin-bottom:8px;">Clean Monthly Overview</h3>
-        <p id="gallery-preview-desc" style="color:var(--text-med); font-size:0.95rem; max-width:750px; margin:0 auto; margin-bottom:14px;">Instant breakdown of monthly income vs expenses, category spending progress, net savings trends, and bill trackers.</p>
-        
-        <!-- Feature Highlights Pills -->
-        <div class="preview-pills-container" id="preview-pills">
-          <span class="preview-pill"><i class="fa-solid fa-chart-simple"></i> Income vs Expense Split</span>
-          <span class="preview-pill"><i class="fa-solid fa-wallet"></i> Net Savings Metric</span>
-          <span class="preview-pill"><i class="fa-solid fa-arrows-rotate"></i> Bill Reminder Tracker</span>
-          <span class="preview-pill"><i class="fa-solid fa-bolt"></i> Quick Expense Bar</span>
-        </div>
-      </div>
-
-      <div class="mockup-header" style="border-radius:10px 10px 0 0;">
-        <div class="mockup-dots">
-          <span class="dot dot-red"></span>
-          <span class="dot dot-yellow"></span>
-          <span class="dot dot-green"></span>
-        </div>
-        <div class="mockup-title" id="gallery-url-title"><i class="fa-solid fa-lock" style="font-size:0.7rem;"></i> https://expenseos.app/dashboard</div>
-        <div class="preview-header-actions">
-          <a href="/" target="_blank" class="btn btn-outline" style="padding:4px 12px; font-size:0.75rem;"><i class="fa-solid fa-up-right-from-square"></i> Open Live Web App</a>
-        </div>
-      </div>
+    <div class="hud-grid">
       
-      <!-- Feature Screen Dynamic Container -->
-      <div class="mockup-screen-container" id="gallery-view-container">
-        <div class="mockup-ui-wrapper">
-          <div class="mockup-ui-topbar">
-            <div class="mockup-ui-title"><i class="fa-solid fa-chart-pie" style="color:var(--primary-bright);"></i> Main Financial Dashboard</div>
-            <div class="mockup-ui-status"><span class="status-dot"></span> Active Session</div>
+      <!-- Live FX Currency Matrix Widget -->
+      <div class="glass-panel hud-panel">
+        <div class="hud-topbar">
+          <div class="hud-title">
+            <i class="fa-solid fa-coins" style="color: var(--planet-blue);"></i>
+            <span>Live FX Currency Converter</span>
           </div>
-          <div class="mockup-stats-grid">
-            <div class="mockup-stat-card">
-              <div class="stat-label">Net Balance</div>
-              <div class="stat-value" style="color:var(--primary-bright);">$14,850.00</div>
-              <div class="stat-sub">+12.4% this month</div>
-            </div>
-            <div class="mockup-stat-card">
-              <div class="stat-label">Monthly Income</div>
-              <div class="stat-value" style="color:var(--accent-cyan);">$6,200.00</div>
-              <div class="stat-sub">2 Income Sources</div>
-            </div>
-            <div class="mockup-stat-card">
-              <div class="stat-label">Total Expenses</div>
-              <div class="stat-value" style="color:#f87171;">$2,150.00</div>
-              <div class="stat-sub">18 Transactions</div>
-            </div>
+          <span class="hud-status-chip">LIVE API</span>
+        </div>
+
+        <p style="font-size: 0.88rem; color: var(--text-dim);">
+          Realtime global exchange rate engine supporting 30+ international fiat currencies.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-med); margin-bottom: 4px; display: block;">Amount</label>
+            <input type="number" id="fx-amount" value="100" min="1" class="widget-input">
           </div>
-          <div class="mockup-chart-box">
-            <div style="font-weight:600; margin-bottom:12px; font-size:0.9rem;">Category Breakdown &amp; Spending Distribution</div>
-            <div class="mockup-bar-row"><span style="width:100px;">🍔 Dining</span><div class="mockup-bar"><div style="width:38%; background:var(--primary); height:100%;"></div></div><span>$817.00 (38%)</span></div>
-            <div class="mockup-bar-row"><span style="width:100px;">✈️ Travel</span><div class="mockup-bar"><div style="width:26%; background:var(--accent-cyan); height:100%;"></div></div><span>$559.00 (26%)</span></div>
-            <div class="mockup-bar-row"><span style="width:100px;">⚡ Utilities</span><div class="mockup-bar"><div style="width:20%; background:#f59e0b; height:100%;"></div></div><span>$430.00 (20%)</span></div>
-            <div class="mockup-bar-row"><span style="width:100px;">🛍️ Shopping</span><div class="mockup-bar"><div style="width:16%; background:var(--accent-purple); height:100%;"></div></div><span>$344.00 (16%)</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Additional App Interface Highlights Grid -->
-    <div style="margin-top:50px; text-align:center;">
-      <h3 style="font-size:1.6rem; margin-bottom:12px;">Core App View Highlights</h3>
-      <p style="color:var(--text-med); font-size:0.95rem; margin-bottom:30px;">Deep dive into the specialized tools inside Expense OS</p>
-    </div>
-
-    <div class="app-highlights-grid">
-      
-      <div class="glass-panel highlight-card">
-        <div class="highlight-badge"><i class="fa-solid fa-desktop"></i> Main Dashboard</div>
-        <h4>Clean Monthly Overview</h4>
-        <p>Comprehensive financial overview displaying total balance, monthly budget progress, and quick expense entry shortcuts.</p>
-        <div class="highlight-tags">
-          <span>Income / Expense</span>
-          <span>Category Breakdown</span>
-          <span>Recent Activity</span>
-        </div>
-      </div>
-
-      <div class="glass-panel highlight-card">
-        <div class="highlight-badge"><i class="fa-solid fa-trophy text-amber"></i> Leaderboard</div>
-        <h4>Gamified Rewards &amp; Emeralds 💎</h4>
-        <p>Level up through 15 stages, unlock 16 collectible stickers, and buy themes &amp; streak shields in the Emerald Shop.</p>
-        <div class="highlight-tags">
-          <span>15 Level Stages</span>
-          <span>16 Collectible Stickers</span>
-          <span>Emerald Shop</span>
-        </div>
-      </div>
-
-      <div class="glass-panel highlight-card">
-        <div class="highlight-badge"><i class="fa-solid fa-bullseye text-purple"></i> Target Goals</div>
-        <h4>Savings Goals &amp; Targets</h4>
-        <p>Define custom targets, track deposit progress bars, and earn +500 Emeralds upon achieving each milestone.</p>
-        <div class="highlight-tags">
-          <span>Target Milestones</span>
-          <span>Visual Progress</span>
-          <span>Goal Rewards</span>
-        </div>
-      </div>
-
-      <div class="glass-panel highlight-card">
-        <div class="highlight-badge"><i class="fa-solid fa-list-check"></i> Transaction Log</div>
-        <h4>Full Transaction History</h4>
-        <p>Search, filter by category or date range, edit transactions inline, and export data in formatted CSV or JSON.</p>
-        <div class="highlight-tags">
-          <span>Multi-Filter</span>
-          <span>Instant Search</span>
-          <span>CSV / JSON Download</span>
-        </div>
-      </div>
-
-      <div class="glass-panel highlight-card">
-        <div class="highlight-badge"><i class="fa-solid fa-sliders"></i> Budget Caps</div>
-        <h4>Monthly Budget Limits</h4>
-        <p>Configure custom category targets and set monthly spending limits with helpful threshold alerts before overspending.</p>
-        <div class="highlight-tags">
-          <span>Auto Tagging</span>
-          <span>Budget Limits</span>
-          <span>Warning Alerts</span>
-        </div>
-      </div>
-
-      <div class="glass-panel highlight-card">
-        <div class="highlight-badge"><i class="fa-solid fa-globe"></i> Multi-Currency</div>
-        <h4>Global Currency Converter</h4>
-        <p>Track expenses in Rupees (₹), Dollars ($), Euros (€), Pounds (£), Yen (¥), and CAD with automated exchange rate conversion.</p>
-        <div class="highlight-tags">
-          <span>Multiple Currencies</span>
-          <span>Live Exchange Rates</span>
-          <span>Auto Conversion</span>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Live Interactive Mini-Widgets Section -->
-  <section id="interactive-widgets" class="section">
-    <div class="section-header">
-      <div class="section-tag">Try It Live</div>
-      <h2 class="section-title">Test Our Interactive Tools <span class="gradient-text">Right Here</span></h2>
-      <p class="section-desc">Experience real-time financial calculations using our live embedded mini-widgets below.</p>
-    </div>
-
-    <div class="widgets-grid">
-
-      <!-- Live FX Calculator Demo -->
-      <div class="glass-panel widget-card">
-        <div class="widget-header">
-          <i class="fa-solid fa-calculator widget-icon"></i>
-          <h3>Live Currency Converter Demo</h3>
-        </div>
-        <p style="font-size:0.9rem; color:var(--text-med); margin-bottom:16px;">Test our live exchange rate engine directly on this page.</p>
-
-        <div class="widget-form">
-          <div class="form-group-inline">
-            <input type="number" id="demo-fx-amount" value="100" min="1" class="widget-input" placeholder="Amount" aria-label="Currency exchange amount input">
-            <select id="demo-fx-from" class="widget-select" aria-label="Source currency selection">
-              <option value="USD" selected>USD ($)</option>
+          <div>
+            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-med); margin-bottom: 4px; display: block;">From</label>
+            <select id="fx-from" class="widget-select">
+              <option value="USD">USD ($)</option>
               <option value="EUR">EUR (€)</option>
               <option value="INR">INR (₹)</option>
               <option value="GBP">GBP (£)</option>
               <option value="CAD">CAD ($)</option>
             </select>
           </div>
-          <div class="widget-output-box" id="demo-fx-output">
-            <div style="font-size:0.85rem; color:var(--text-dim);">Equivalent Value</div>
-            <div style="font-size:1.4rem; font-weight:700; color:var(--primary-bright);" id="demo-fx-result">₹8,350.00 INR</div>
-          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-med); margin-bottom: 4px; display: block;">Convert To</label>
+          <select id="fx-to" class="widget-select">
+            <option value="INR">INR (₹ Indian Rupee)</option>
+            <option value="USD">USD ($ US Dollar)</option>
+            <option value="EUR">EUR (€ Euro)</option>
+            <option value="GBP">GBP (£ British Pound)</option>
+            <option value="JPY">JPY (¥ Japanese Yen)</option>
+          </select>
+        </div>
+
+        <div class="widget-output-box">
+          <div style="font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Calculated Value</div>
+          <div id="fx-result" style="font-size: 1.6rem; font-weight: 800; color: var(--planet-blue); font-family: var(--font-display); margin-top: 4px;">₹8,350.00 INR</div>
         </div>
       </div>
 
-      <!-- Live Budget Progress Demo -->
-      <div class="glass-panel widget-card">
-        <div class="widget-header">
-          <i class="fa-solid fa-chart-pie widget-icon"></i>
-          <h3>Category Budget Alerts Demo</h3>
+      <!-- AI Auto-Category Parser Widget -->
+      <div class="glass-panel hud-panel">
+        <div class="hud-topbar">
+          <div class="hud-title">
+            <i class="fa-solid fa-brain" style="color: var(--planet-emerald);"></i>
+            <span>AI Narration Classifier</span>
+          </div>
+          <span class="hud-status-chip" style="background: rgba(56, 189, 248, 0.12); color: var(--planet-blue); border-color: rgba(56, 189, 248, 0.3);">99.4% CONF</span>
         </div>
-        <p style="font-size:0.9rem; color:var(--text-med); margin-bottom:16px;">Real-time category spending limits and warning alerts.</p>
 
-        <div class="widget-progress-list">
-          <div class="progress-item">
-            <div class="progress-label"><span>🍔 Dining &amp; Food</span><span>$360 / $500 (72%)</span></div>
-            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:72%; background:var(--primary);"></div></div>
-          </div>
-          <div class="progress-item">
-            <div class="progress-label"><span>✈️ Travel &amp; Flights</span><span>$450 / $1000 (45%)</span></div>
-            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:45%; background:var(--accent-cyan);"></div></div>
-          </div>
-          <div class="progress-item">
-            <div class="progress-label"><span>⚡ Electricity &amp; Bills</span><span>$264 / $300 (88%)</span></div>
-            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:88%; background:#f59e0b;"></div></div>
-          </div>
+        <p style="font-size: 0.88rem; color: var(--text-dim);">
+          Type any transaction description to see our AI categorize it in milliseconds.
+        </p>
+
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-med); margin-bottom: 4px; display: block;">Expense Description</label>
+          <input type="text" id="ai-sim-input" value="Starbucks Iced Caramel Macchiato" class="widget-input" placeholder="e.g. Uber ride to airport">
         </div>
-      </div>
 
-      <!-- Live Quick Expense Simulator -->
-      <div class="glass-panel widget-card">
-        <div class="widget-header">
-          <i class="fa-solid fa-bolt widget-icon"></i>
-          <h3>Quick Expense Simulator</h3>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="btn-secondary-dl" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 20px;" onclick="document.getElementById('ai-sim-input').value='Netflix 4K Ultra Subscription'; document.getElementById('ai-sim-input').dispatchEvent(new Event('input'));">Netflix</button>
+          <button type="button" class="btn-secondary-dl" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 20px;" onclick="document.getElementById('ai-sim-input').value='Shell Petrol Pump Fuel'; document.getElementById('ai-sim-input').dispatchEvent(new Event('input'));">Fuel</button>
+          <button type="button" class="btn-secondary-dl" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 20px;" onclick="document.getElementById('ai-sim-input').value='Whole Foods Organic Grocery'; document.getElementById('ai-sim-input').dispatchEvent(new Event('input'));">Groceries</button>
         </div>
-        <p style="font-size:0.9rem; color:var(--text-med); margin-bottom:16px;">See how smart rules auto-detect spending category and tags.</p>
 
-        <div class="widget-form">
-          <input type="text" id="demo-sim-name" value="Starbucks Coffee" class="widget-input" placeholder="Expense description" aria-label="Expense description simulator input">
-          <div class="widget-output-box" id="demo-sim-result">
-            <div style="font-size:0.85rem; color:var(--text-dim);">Auto-Detected Category</div>
-            <div style="font-size:1.1rem; font-weight:700; color:var(--accent-cyan);"><i class="fa-solid fa-utensils"></i> Food &amp; Dining (Auto-Rule)</div>
-          </div>
+        <div class="widget-output-box" id="ai-sim-output">
+          <div style="font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Predicted Category &amp; Emoji</div>
+          <div id="ai-sim-result" style="font-size: 1.4rem; font-weight: 800; color: var(--planet-emerald); font-family: var(--font-display); margin-top: 4px;">☕ Food &amp; Dining</div>
         </div>
       </div>
 
     </div>
   </section>
 
-  <!-- Comparison Matrix Section -->
-  <section id="comparison" class="section">
+  <!-- 6. Interactive 3D Feature Showcase Mockup -->
+  <section id="showcase" class="section">
     <div class="section-header">
-      <div class="section-tag">Side-by-Side Comparison</div>
-      <h2 class="section-title">Why Choose <span class="gradient-text">Expense OS</span>?</h2>
-      <p class="section-desc">See how Expense OS makes personal budgeting simpler and more private than spreadsheets or standard apps.</p>
+      <div class="section-tag"><i class="fa-solid fa-eye"></i> Visual Walkthrough</div>
+      <h2 class="section-title">Glassmorphic <span class="gradient-text">Command Center</span></h2>
+      <p class="section-desc">Explore key modules designed for speed, clarity, and total financial awareness.</p>
     </div>
 
-    <div class="glass-panel" style="overflow-x: auto;">
-      <table class="matrix-table">
+    <div class="mockup-frame">
+      <div class="mockup-header">
+        <div class="mockup-dots">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+        </div>
+        <div class="mockup-url-bar"><i class="fa-solid fa-lock" style="color: var(--planet-emerald); font-size: 0.7rem;"></i> https://expenseos.app/dashboard</div>
+        <a href="/index.html" target="_blank" class="nav-cta-btn" style="padding: 4px 12px; font-size: 0.75rem;">
+          Open Live App <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+      </div>
+
+      <div class="mockup-tabs">
+        <button class="mockup-tab-btn active" onclick="switchShowcaseTab('dashboard', this)">📊 Financial Dashboard</button>
+        <button class="mockup-tab-btn" onclick="switchShowcaseTab('bills', this)">📅 Bills &amp; Subscriptions</button>
+        <button class="mockup-tab-btn" onclick="switchShowcaseTab('split', this)">👥 Split Bills</button>
+        <button class="mockup-tab-btn" onclick="switchShowcaseTab('export', this)">📤 Reports &amp; CSV</button>
+      </div>
+
+      <div class="mockup-body" id="showcase-content">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Comparison Matrix -->
+  <section id="comparison" class="section">
+    <div class="section-header">
+      <div class="section-tag"><i class="fa-solid fa-scale-balanced"></i> Architectural Superiority</div>
+      <h2 class="section-title">How Expense OS <span class="gradient-text">Compares</span></h2>
+      <p class="section-desc">Built from the ground up to replace outdated spreadsheets and predatory ad-driven finance apps.</p>
+    </div>
+
+    <div class="comparison-table-wrapper">
+      <table class="comparison-table">
         <thead>
           <tr>
-            <th>What You Get</th>
-            <th><i class="fa-solid fa-wallet" style="color:var(--primary-bright);"></i> Expense OS</th>
-            <th>Traditional Spreadsheets</th>
-            <th>Basic Web Trackers</th>
+            <th>Core Capability</th>
+            <th style="color: var(--planet-blue);">✨ Expense OS</th>
+            <th style="color: var(--text-dim);">Traditional Excel</th>
+            <th style="color: var(--text-dim);">Typical Mobile Apps</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Bank Statement Importer</strong></td>
-            <td><i class="fa-solid fa-circle-check check-icon"></i> 1-Click PDF, Excel (.xlsx/.xls) &amp; CSV Import</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Manual Typing</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> CSV Only / Manual Copy</td>
+            <td><strong>Cross-Platform Cloud Sync</strong></td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> Instant Realtime (Supabase)</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Manual File Transfers</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Single Device Lockin</td>
           </tr>
           <tr>
-            <td><strong>Works 100% Offline</strong></td>
-            <td><i class="fa-solid fa-circle-check check-icon"></i> Full Offline Support</td>
-            <td><i class="fa-solid fa-circle-check check-icon"></i> Yes</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Requires Internet</td>
+            <td><strong>Offline-First Operation</strong></td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> 100% Functional Offline</td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> Offline Files</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Blocked by Paywalls</td>
           </tr>
           <tr>
-            <td><strong>Cloud Device Sync</strong></td>
-            <td><i class="fa-solid fa-circle-check check-icon"></i> Automatic Phone &amp; Desktop Sync</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Manual File Emailing</td>
-            <td><i class="fa-solid fa-circle-check check-icon"></i> Limited Sync</td>
+            <td><strong>Automated Receipt &amp; Bank OCR</strong></td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> Instant Auto-Categorization</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Manual Data Entry</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Paid Subscription Only</td>
           </tr>
           <tr>
-            <td><strong>Multi-Currency Conversion</strong></td>
-            <td><i class="fa-solid fa-circle-check check-icon"></i> Live Currency Exchange Rates</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Manual Formulas</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Single Currency Only</td>
-          </tr>
-          <tr>
-            <td><strong>Visual Reports &amp; Export</strong></td>
-            <td><i class="fa-solid fa-circle-check check-icon"></i> Included Free (Charts, CSV &amp; PDF)</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Basic Grids</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Paid Subscription</td>
-          </tr>
-          <tr>
-            <td><strong>Modern Design &amp; Usability</strong></td>
-            <td><i class="fa-solid fa-circle-check check-icon"></i> Clean &amp; Effortless Dark UI</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Plain Spreadsheet</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Cluttered Ads</td>
-          </tr>
-          <tr>
-            <td><strong>Privacy &amp; Data Safety</strong></td>
-            <td><i class="fa-solid fa-circle-check check-icon"></i> 100% Private on Your Device</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Unprotected Files</td>
-            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Sells Your Data</td>
+            <td><strong>Privacy &amp; Data Control</strong></td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> 100% Private, Zero Ad Trackers</td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> Local Storage</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Sells Financial Data</td>
           </tr>
         </tbody>
       </table>
     </div>
   </section>
 
-  <!-- Frequently Asked Questions (FAQ) Section -->
+  <!-- 8. Frequently Asked Questions -->
   <section id="faq" class="section">
     <div class="section-header">
-      <div class="section-tag">Got Questions?</div>
+      <div class="section-tag"><i class="fa-solid fa-circle-question"></i> Answers</div>
       <h2 class="section-title">Frequently Asked <span class="gradient-text">Questions</span></h2>
-      <p class="section-desc">Here are clear answers to the most common questions about Expense OS.</p>
     </div>
 
-    <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;">
-      
-      <div class="glass-panel" style="padding: 1.25rem 1.5rem; border-radius: 12px;">
-        <h4 style="font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fa-solid fa-circle-question text-emerald"></i> Is Expense OS completely free to use?
-        </h4>
-        <p style="font-size: 0.9rem; color: #94a3b8; margin: 0; line-height: 1.6;">Yes, 100%! Expense OS is completely free to use with zero hidden fees or subscription lockouts.</p>
+    <div class="faq-grid">
+      <div class="glass-panel faq-card">
+        <div class="faq-question"><i class="fa-solid fa-circle-check" style="color: var(--planet-emerald);"></i> Is Expense OS free to use?</div>
+        <p class="faq-answer">Yes, 100%! Expense OS is completely free with zero hidden subscriptions, microtransactions, or locked features.</p>
       </div>
 
-      <div class="glass-panel" style="padding: 1.25rem 1.5rem; border-radius: 12px;">
-        <h4 style="font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fa-solid fa-circle-question text-sky"></i> How do I import my bank statement?
-        </h4>
-        <p style="font-size: 0.9rem; color: #94a3b8; margin: 0; line-height: 1.6;">Simply click "Import Bank CSV" or drag &amp; drop your statement file (PDF, Excel .xlsx/.xls, or CSV). Expense OS automatically detects transaction dates, narration descriptions, and amounts.</p>
+      <div class="glass-panel faq-card">
+        <div class="faq-question"><i class="fa-solid fa-circle-check" style="color: var(--planet-blue);"></i> How does cross-app syncing work?</div>
+        <p class="faq-answer">Every transaction is dual-written to local device storage and live Supabase Postgres tables. If you are offline, changes are cached locally and synchronized the moment you reconnect.</p>
       </div>
 
-      <div class="glass-panel" style="padding: 1.25rem 1.5rem; border-radius: 12px;">
-        <h4 style="font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fa-solid fa-circle-question text-purple"></i> Is my financial data safe and private?
-        </h4>
-        <p style="font-size: 0.9rem; color: #94a3b8; margin: 0; line-height: 1.6;">Absolutely. Your financial records are stored securely on your own device and local session storage. We never sell or share your data.</p>
+      <div class="glass-panel faq-card">
+        <div class="faq-question"><i class="fa-solid fa-circle-check" style="color: var(--planet-purple);"></i> Can I export my data anytime?</div>
+        <p class="faq-answer">Yes! You can export your full transaction history and ledgers into standard CSV spreadsheets or backup JSON format with a single click.</p>
       </div>
-
-      <div class="glass-panel" style="padding: 1.25rem 1.5rem; border-radius: 12px;">
-        <h4 style="font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fa-solid fa-circle-question text-amber"></i> Can I use Expense OS without internet?
-        </h4>
-        <p style="font-size: 0.9rem; color: #94a3b8; margin: 0; line-height: 1.6;">Yes! Expense OS has 100% offline support. You can add expenses, edit transactions, and view charts anytime offline.</p>
-      </div>
-
     </div>
   </section>
 
-  <!-- Contact Form Section -->
-  <section id="contact" class="section">
-    <div class="section-header">
-      <div class="section-tag">Let's Connect</div>
-      <h2 class="section-title">Get in Touch <span class="gradient-text">With Me</span></h2>
-      <p class="section-desc">Have questions, feedback, or feature requests? Send a message below and I'll get back to you personally!</p>
-    </div>
-
-    <div style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; align-items: start;">
-      
-      <!-- Direct Info Card -->
-      <div class="glass-panel" style="padding: 2.25rem; border-radius: 20px;">
-        <h3 style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;">
-          <i class="fa-solid fa-comments text-emerald"></i> Direct Contact Info
-        </h3>
-        <p style="font-size: 0.95rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1.75rem;">
-          Expense OS is built with passion to make managing money simple and private. Feel free to reach out for feedback, support, or collaboration!
-        </p>
-
-        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="width: 44px; height: 44px; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #34d399; flex-shrink: 0;">
-              <i class="fa-solid fa-envelope"></i>
-            </div>
-            <div>
-              <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Email Support</div>
-              <a href="mailto:vaibhavjalota06@gmail.com" style="font-size: 0.95rem; color: #38bdf8; font-weight: 600; text-decoration: none;">vaibhavjalota06@gmail.com</a>
-            </div>
-          </div>
-
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="width: 44px; height: 44px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #38bdf8; flex-shrink: 0;">
-              <i class="fa-brands fa-github"></i>
-            </div>
-            <div>
-              <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 600;">GitHub Project</div>
-              <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile" target="_blank" style="font-size: 0.95rem; color: #38bdf8; font-weight: 600; text-decoration: none;">VaibhavJalota06 / Expense-OS</a>
-            </div>
-          </div>
-
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="width: 44px; height: 44px; background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #a78bfa; flex-shrink: 0;">
-              <i class="fa-solid fa-clock"></i>
-            </div>
-            <div>
-              <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Response Time</div>
-              <div style="font-size: 0.95rem; color: #f8fafc; font-weight: 500;">Usually within 24 hours</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Interactive Contact Form -->
-      <form id="landing-contact-form" class="glass-panel" style="padding: 2.25rem; border-radius: 20px; display: flex; flex-direction: column; gap: 1.25rem;" onsubmit="if(window.handleLandingContactSubmit)window.handleLandingContactSubmit(event);">
-        <div>
-          <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.4rem;">Your Name</label>
-          <input type="text" id="landing-contact-name" class="widget-input" placeholder="e.g. Alex Johnson" required style="width: 100%; box-sizing: border-box;">
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.4rem;">Your Email</label>
-          <input type="email" id="landing-contact-email" class="widget-input" placeholder="e.g. alex@example.com" required style="width: 100%; box-sizing: border-box;">
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.4rem;">Message</label>
-          <textarea id="landing-contact-message" class="widget-input" rows="4" placeholder="Write your message or question here..." required style="width: 100%; box-sizing: border-box; resize: vertical; min-height: 100px;"></textarea>
-        </div>
-
-        <button type="submit" id="btn-landing-contact-submit" class="btn btn-primary btn-block" style="padding: 0.85rem; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 0.5rem;">
-          <i class="fa-solid fa-paper-plane"></i> Send Message
-        </button>
-      </form>
-
-    </div>
-  </section>
-
-  <!-- Footer -->
+  <!-- 9. Cosmic Footer -->
   <footer class="footer">
     <ul class="footer-links">
-      <li><a href="/" target="_blank">Web App</a></li>
-      <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile" target="_blank">GitHub Repository</a></li>
-      <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases" target="_blank">Releases</a></li>
-      <li><a href="#features">Features</a></li>
+      <li><a href="/index.html" target="_blank" class="footer-link">Web App</a></li>
+      <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile" target="_blank" class="footer-link">GitHub Repository</a></li>
+      <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases" target="_blank" class="footer-link">Releases</a></li>
+      <li><a href="#downloads" class="footer-link">Downloads</a></li>
+      <li><a href="mailto:vaibhavjalota06@gmail.com" class="footer-link">Contact</a></li>
     </ul>
-    <p>© 2026 Expense OS. Engineered with passion by Vaibhav Jalota. All rights reserved.</p>
+    <p class="footer-copy">© 2026 Expense OS. Engineered with passion by Vaibhav Jalota. All rights reserved.</p>
   </footer>
 
-  <!-- Custom Script with Cache Buster -->
+  <!-- Custom Cinematic Script Engine -->
   <script src="/landing/script.js?v=3.3.5"></script>
 </body>
 </html>
