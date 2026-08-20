@@ -20,8 +20,8 @@ if (fs.existsSync(landingHtmlPath)) {
 
   // Replace version references in stylesheet/script query params, hero badge, and download URL
   const updatedContent = content
-    .replace(/href="style\.css\?v=[0-9.]+"/g, `href="style.css?v=${version}"`)
-    .replace(/src="script\.js\?v=[0-9.]+"/g, `src="script.js?v=${version}"`)
+    .replace(/href="(\/landing\/)?style\.css\?v=[0-9.]+"/g, `href="/landing/style.css?v=${version}"`)
+    .replace(/src="(\/landing\/)?script\.js\?v=[0-9.]+"/g, `src="/landing/script.js?v=${version}"`)
     .replace(/Expense OS v[0-9.]+ Released/g, `Expense OS v${version} Released`)
     .replace(
       /releases\/download\/v[0-9.]+\/Expense-OS-Setup-[0-9.]+\.exe/g,
@@ -56,10 +56,10 @@ if (fs.existsSync(webScriptPath)) {
   console.error('⚠️ web/script.js not found!');
 }
 
-// Git commit & push to master and gh-pages
+// Git commit & push to main
 try {
   console.log('🔄 Staging and committing landing page changes...');
-  execSync('git add landing/index.html web/script.js', { cwd: rootDir, stdio: 'inherit' });
+  execSync('git add landing/index.html', { cwd: rootDir, stdio: 'inherit' });
   
   const status = execSync('git status --porcelain landing/index.html', { cwd: rootDir }).toString().trim();
   if (status) {
@@ -67,13 +67,10 @@ try {
     console.log(`✅ Committed landing page update for v${version}`);
   }
 
-  console.log('🚀 Pushing changes to GitHub master branch...');
-  execSync('git push origin master', { cwd: rootDir, stdio: 'inherit' });
+  console.log('🚀 Pushing changes to GitHub main branch...');
+  execSync('git push origin main', { cwd: rootDir, stdio: 'inherit' });
 
-  console.log('🌐 Deploying latest landing page & web app to GitHub Pages (gh-pages branch)...');
-  execSync('git push origin master:gh-pages --force', { cwd: rootDir, stdio: 'inherit' });
-
-  console.log('\n🎉 SUCCESS: Landing page updated & published to GitHub Pages!');
+  console.log('\n🎉 SUCCESS: Landing page updated & published to GitHub & Vercel!');
 } catch (err) {
   console.error('⚠️ Notice during Git update/deploy:', err.message);
 }
