@@ -32,6 +32,21 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   String _selectedPaymentMethod = 'Google Pay';
   DateTime _selectedDate = DateTime.now();
 
+  // Frequent Categories for 1-tap fast access
+  static const List<Map<String, String>> _frequentExpenseCategories = [
+    {'name': 'Food & Dining', 'icon': '🍔'},
+    {'name': 'Groceries', 'icon': '🛒'},
+    {'name': 'Transport / Uber', 'icon': '🚗'},
+    {'name': 'Shopping', 'icon': '🛍️'},
+  ];
+
+  static const List<Map<String, String>> _frequentIncomeCategories = [
+    {'name': 'Salary', 'icon': '💼'},
+    {'name': 'Freelance', 'icon': '💻'},
+    {'name': 'Investments', 'icon': '📈'},
+    {'name': 'Side Hustle', 'icon': '💰'},
+  ];
+
   // Expense Categories & Icons
   static const List<Map<String, String>> _expenseCategories = [
     {'name': 'Food & Dining', 'icon': '🍔'},
@@ -81,6 +96,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     'Direct Deposit',
   ];
 
+  List<Map<String, String>> get _currentFrequentCategories =>
+      _selectedType == 'expense' ? _frequentExpenseCategories : _frequentIncomeCategories;
+
   List<Map<String, String>> get _currentCategories =>
       _selectedType == 'expense' ? _expenseCategories : _incomeCategories;
 
@@ -119,6 +137,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   void _switchType(String type) {
     FocusScope.of(context).unfocus();
     if (_selectedType == type) return;
+    HapticFeedback.selectionClick();
     setState(() {
       _selectedType = type;
       if (type == 'expense') {
@@ -131,10 +150,35 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     });
   }
 
+  double _evaluateMathExpression(String input) {
+    final clean = input.replaceAll(' ', '').trim();
+    if (clean.isEmpty) return 0.0;
+    final direct = double.tryParse(clean);
+    if (direct != null) return direct;
+
+    try {
+      final tokens = RegExp(r'(\d+(?:\.\d+)?|[\+\-\*\/])').allMatches(clean).map((m) => m.group(0)!).toList();
+      if (tokens.isEmpty) return 0.0;
+      double total = double.tryParse(tokens[0]) ?? 0.0;
+      for (int i = 1; i < tokens.length - 1; i += 2) {
+        final op = tokens[i];
+        final nextVal = double.tryParse(tokens[i + 1]) ?? 0.0;
+        if (op == '+') total += nextVal;
+        else if (op == '-') total -= nextVal;
+        else if (op == '*') total *= nextVal;
+        else if (op == '/') total = nextVal != 0 ? total / nextVal : total;
+      }
+      return total;
+    } catch (_) {
+      return double.tryParse(clean) ?? 0.0;
+    }
+  }
+
   void _submitForm() async {
     FocusScope.of(context).unfocus();
-    final amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
+    final amount = _evaluateMathExpression(_amountController.text);
     if (amount <= 0) return;
+    HapticFeedback.mediumImpact();
 
     if (_selectedType == 'expense') {
       final prefs = await SharedPreferences.getInstance();
@@ -527,7 +571,66 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 8),
+
+                        // ⚡ Quick Frequent Categories Bar (1-Tap Selection)
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          clipBehavior: Clip.none,
+                          child: Row(
+                            children: _currentFrequentCategories.map((catMap) {
+                              final catName = catMap['name']!;
+                              final catIcon = catMap['icon']!;
+                              final isSelected = _selectedCategory == catName;
+
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    FocusScope.of(context).unfocus();
+                                    setState(() => _selectedCategory = catName);
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 180),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? activeColor.withValues(alpha: 0.15)
+                                          : (isDark ? const Color(0xFF131A29) : const Color(0xFFEEF2FF)),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isSelected ? activeColor : const Color(0xFFCBD5E1),
+                                        width: isSelected ? 1.4 : 1.0,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(catIcon, style: const TextStyle(fontSize: 13)),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          catName,
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 12,
+                                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                            color: isSelected
+                                                ? activeColor
+                                                : (isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Full Categories Grid Wrap
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -538,6 +641,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
 
                             return GestureDetector(
                               onTap: () {
+                                HapticFeedback.selectionClick();
                                 FocusScope.of(context).unfocus();
                                 setState(() => _selectedCategory = catName);
                               },

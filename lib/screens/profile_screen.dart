@@ -976,16 +976,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
                 Divider(height: 1, color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F9)),
-                ListTile(
-                  leading: const Icon(Icons.logout_rounded, color: AppTheme.dangerRed),
-                  title: Text(
-                    'Sign Out',
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: AppTheme.dangerRed),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                    onTap: () async {
+                      HapticFeedback.mediumImpact();
+                      await _supabaseService.signOut();
+                      widget.onSignOut();
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.logout_rounded, color: AppTheme.dangerRed, size: 22),
+                          const SizedBox(width: 14),
+                          Text(
+                            'Sign Out',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.dangerRed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  onTap: () async {
-                    await _supabaseService.signOut();
-                    widget.onSignOut();
-                  },
                 ),
               ],
             ),

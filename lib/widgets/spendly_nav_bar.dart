@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 class SpendlyNavBar extends StatelessWidget {
@@ -43,19 +44,22 @@ class SpendlyNavBar extends StatelessWidget {
             _buildNavItem(0, Icons.home_rounded, 'Overview'),
             _buildNavItem(1, Icons.event_repeat_rounded, 'Bills'),
             
-            // Center Monex Royal Blue Action '+' Button
+            // Center Royal Blue Action '+' Button with Haptic Feedback
             GestureDetector(
-              onTap: onAddPressed,
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                onAddPressed();
+              },
               behavior: HitTestBehavior.opaque,
               child: Container(
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.monexBlue,
+                  color: AppTheme.primaryBlue,
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.monexBlue.withValues(alpha: 0.4),
+                      color: AppTheme.primaryBlue.withValues(alpha: 0.4),
                       blurRadius: 14,
                       offset: const Offset(0, 4),
                     ),
@@ -82,17 +86,22 @@ class SpendlyNavBar extends StatelessWidget {
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = currentIndex == index;
     return GestureDetector(
-      onTap: () => onTabSelected(index),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTabSelected(index);
+      },
       behavior: HitTestBehavior.opaque,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
+          color: isSelected ? AppTheme.primaryBlue.withValues(alpha: 0.1) : Colors.transparent,
         ),
         child: Icon(
           icon,
           size: 24,
-          color: isSelected ? AppTheme.monexBlue : const Color(0xFF98A2B3),
+          color: isSelected ? AppTheme.primaryBlue : const Color(0xFF98A2B3),
         ),
       ),
     );

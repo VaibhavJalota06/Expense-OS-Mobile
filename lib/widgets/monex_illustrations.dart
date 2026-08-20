@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
+typedef ExpenseOSIllustration = MonexIllustration;
+
 class MonexIllustration extends StatelessWidget {
   final int index; // 0 = Note Down, 1 = Money Management, 2 = Track & Analyze, 3 = Password Updated
   final double width;

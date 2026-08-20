@@ -22,15 +22,32 @@ class MonexLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = color ?? AppTheme.textPrimary;
+    final effectiveColor = color ?? (AppTheme.isDark(context) ? Colors.white : AppTheme.textPrimary);
 
-    final iconWidget = Icon(
-      Icons.account_balance_wallet_rounded,
-      size: size * 0.9,
-      color: AppTheme.monexBlue,
+    final logoImageWidget = ClipRRect(
+      borderRadius: BorderRadius.circular(size * 0.22),
+      child: Image.asset(
+        'assets/logo.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: AppTheme.monexBlue,
+            borderRadius: BorderRadius.circular(size * 0.22),
+          ),
+          child: Icon(
+            Icons.account_balance_wallet_rounded,
+            size: size * 0.6,
+            color: Colors.white,
+          ),
+        ),
+      ),
     );
 
-    if (!showText) return iconWidget;
+    if (!showText) return logoImageWidget;
 
     final textWidget = Text(
       'Expense OS',
@@ -47,7 +64,7 @@ class MonexLogo extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          iconWidget,
+          logoImageWidget,
           const SizedBox(height: 12),
           textWidget,
         ],
@@ -58,7 +75,7 @@ class MonexLogo extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        iconWidget,
+        logoImageWidget,
         const SizedBox(width: 10),
         textWidget,
       ],

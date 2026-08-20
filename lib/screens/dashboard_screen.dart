@@ -253,29 +253,75 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Top Header: "Overview" + Reminders & Alerts
+                          // Top Header: Official Logo + Brand Name + Reminders & Alerts
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Overview',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
-                                  letterSpacing: -0.3,
-                                ),
+                              Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.asset(
+                                      'assets/logo.png',
+                                      width: 36,
+                                      height: 36,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Expense OS',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w800,
+                                          color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                                          letterSpacing: -0.4,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Overview',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                icon: Icon(Icons.notifications_none_rounded,
-                                    color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, size: 24),
-                                tooltip: 'Reminders & Alerts',
-                                onPressed: _showRemindersSheet,
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.notifications_none_rounded,
+                                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, size: 24),
+                                    tooltip: 'Reminders & Alerts',
+                                    onPressed: () {
+                                      HapticFeedback.selectionClick();
+                                      _showRemindersSheet();
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.logout_rounded,
+                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085), size: 22),
+                                    tooltip: 'Sign Out / Switch Account',
+                                    onPressed: () async {
+                                      HapticFeedback.mediumImpact();
+                                      await _supabaseService.signOut();
+                                      if (widget.onSignOut != null) {
+                                        widget.onSignOut!();
+                                      }
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 18),
 
                           // Horizontal Stat Cards Carousel
                           SizedBox(
@@ -284,41 +330,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               scrollDirection: Axis.horizontal,
                               clipBehavior: Clip.none,
                               children: [
-                            // Card 1: Total Money (Bank Funds = Initial Starting Balance + Incomes)
-                            _buildStatCard(
-                              index: 0,
-                              title: 'Total Money',
-                              amount: currency.format(_availableMoney),
-                              subtitle: _monthlyBudgetCap > 0 ? 'Gross: ${currency.format(_totalIncome)}' : null,
-                              icon: Icons.account_balance_wallet_outlined,
-                              isHighlighted: _activeStatIndex == 0,
-                            ),
-                            const SizedBox(width: 14),
+                                // Card 1: Total Money (Bank Funds = Initial Starting Balance + Incomes)
+                                _buildStatCard(
+                                  index: 0,
+                                  title: 'Total Money',
+                                  amount: currency.format(_availableMoney),
+                                  subtitle: _monthlyBudgetCap > 0 ? 'Gross: ${currency.format(_totalIncome)}' : null,
+                                  icon: Icons.account_balance_wallet_outlined,
+                                  isHighlighted: _activeStatIndex == 0,
+                                ),
+                                const SizedBox(width: 14),
 
-                            // Card 2: Total Expense (Hero Royal Blue Card with dynamic date filtering)
-                            _buildStatCard(
-                              index: 1,
-                              title: _expenseCardTitle,
-                              amount: currency.format(_displayTotalExpenses),
-                              icon: Icons.credit_card_rounded,
-                              isHighlighted: _activeStatIndex == 1,
-                            ),
-                            const SizedBox(width: 14),
+                                // Card 2: Total Expense (Hero Royal Blue Card with dynamic date filtering)
+                                _buildStatCard(
+                                  index: 1,
+                                  title: _expenseCardTitle,
+                                  amount: currency.format(_displayTotalExpenses),
+                                  icon: Icons.credit_card_rounded,
+                                  isHighlighted: _activeStatIndex == 1,
+                                ),
+                                const SizedBox(width: 14),
 
-                            // Card 3: Remaining Monthly Budget (Budget Cap - Expenses Spent)
-                            _buildStatCard(
-                              index: 2,
-                              title: 'Remaining Budget',
-                              amount: currency.format(_remainingMonthlyBudget),
-                              subtitle: _monthlyBudgetCap > 0 ? 'Cap: ${currency.format(_monthlyBudgetCap)}' : 'Tap to set cap',
-                              icon: Icons.pie_chart_outline_rounded,
-                              isHighlighted: _activeStatIndex == 2,
+                                // Card 3: Remaining Monthly Budget (Budget Cap - Expenses Spent)
+                                _buildStatCard(
+                                  index: 2,
+                                  title: 'Remaining Budget',
+                                  amount: currency.format(_remainingMonthlyBudget),
+                                  subtitle: _monthlyBudgetCap > 0 ? 'Cap: ${currency.format(_monthlyBudgetCap)}' : 'Tap to set cap',
+                                  icon: Icons.pie_chart_outline_rounded,
+                                  isHighlighted: _activeStatIndex == 2,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
 
-                      const SizedBox(height: 20),
+                          const SizedBox(height: 12),
+
+                          // Pagination Indicator Dots for Stat Cards
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(3, (i) {
+                              final isActive = _activeStatIndex == i;
+                              return GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  setState(() => _activeStatIndex = i);
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 220),
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  width: isActive ? 22 : 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: isActive
+                                        ? AppTheme.primaryBlue
+                                        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFD0D5DD)),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+
+                          const SizedBox(height: 16),
 
                       // Interactive Date Selector Filter Bar for Dashboard (Sleek Monex Pill Design)
                       SingleChildScrollView(
@@ -620,6 +694,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             return ExpenseTile(
                               expense: expense,
                               onTap: () => _openAddExpenseSheet(expense),
+                              onLongPress: () => _showTransactionContextMenu(expense),
                               onDelete: () async {
                                 if (expense.id != null) {
                                   await _supabaseService.deleteExpense(expense.id!);
@@ -637,6 +712,155 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
         );
       },
+    );
+  }
+
+  void _showTransactionContextMenu(Expense expense) {
+    final isDark = AppTheme.isDark(context);
+    final currencySymbol = CurrencyService.currencySymbolNotifier.value;
+    final currency = NumberFormat.currency(symbol: currencySymbol, locale: 'en_US', decimalDigits: 0);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF131A29) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: expense.type == 'income'
+                        ? (isDark ? const Color(0xFF0D3320) : const Color(0xFFECFDF3))
+                        : (isDark ? const Color(0xFF1A2234) : const Color(0xFFF3F4F6)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(
+                      expense.type == 'income' ? '💰' : '💸',
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        expense.title,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${expense.category} • ${currency.format(expense.amount)}',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: expense.type == 'income' ? AppTheme.successGreen : AppTheme.dangerRed,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined, color: AppTheme.primaryBlue),
+              title: Text('Edit Transaction', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _openAddExpenseSheet(expense);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.copy_rounded, color: Color(0xFF7A5AF8)),
+              title: Text('Duplicate Entry', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final duplicated = Expense(
+                  title: '${expense.title} (Copy)',
+                  amount: expense.amount,
+                  category: expense.category,
+                  type: expense.type,
+                  date: DateTime.now(),
+                  paymentMethod: expense.paymentMethod,
+                  notes: expense.notes,
+                );
+                await _supabaseService.addExpense(duplicated);
+                _loadExpenses();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Transaction duplicated!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                      backgroundColor: AppTheme.successGreen,
+                    ),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded, color: AppTheme.dangerRed),
+              title: Text('Delete Transaction', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: AppTheme.dangerRed)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              onTap: () async {
+                Navigator.pop(ctx);
+                if (expense.id != null) {
+                  final deletedExpense = expense;
+                  await _supabaseService.deleteExpense(expense.id!);
+                  _loadExpenses();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Transaction deleted', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                        action: SnackBarAction(
+                          label: 'UNDO',
+                          textColor: Colors.white,
+                          onPressed: () async {
+                            await _supabaseService.addExpense(deletedExpense);
+                            _loadExpenses();
+                          },
+                        ),
+                        backgroundColor: const Color(0xFF1E293B),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
     );
   }
 

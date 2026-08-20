@@ -2,13 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Monex Primary Signature Royal Blue Palette
-  static const Color monexBlue = Color(0xFF2B59FF);
-  static const Color monexBlueHover = Color(0xFF1E4CE6);
-  static const Color monexBlueDark = Color(0xFF1738B3);
-  static const Color monexBlueLight = Color(0xFFEEF2FF);
-  static const Color monexBlueSubtle = Color(0xFFF0F4FF);
-  static const Color monexNavy = Color(0xFF0F172A);
+  // Expense OS Signature Royal Blue Palette
+  static const Color primaryBlue = Color(0xFF2B59FF);
+  static const Color primaryBlueHover = Color(0xFF1E4CE6);
+  static const Color primaryBlueDark = Color(0xFF1738B3);
+  static const Color primaryBlueLight = Color(0xFFEEF2FF);
+  static const Color primaryBlueSubtle = Color(0xFFF0F4FF);
+  static const Color primaryNavy = Color(0xFF0F172A);
+
+  // Backward-compatible alias
+  static const Color monexBlue = primaryBlue;
+  static const Color monexBlueHover = primaryBlueHover;
+  static const Color monexBlueDark = primaryBlueDark;
+  static const Color monexBlueLight = primaryBlueLight;
+  static const Color monexBlueSubtle = primaryBlueSubtle;
+  static const Color monexNavy = primaryNavy;
 
   // Background & Surface Canvas
   static const Color background = Color(0xFFF8F9FE);

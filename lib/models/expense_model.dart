@@ -1,3 +1,5 @@
+import 'dart:math';
+
 class Expense {
   final String? id;
   final String title;
@@ -22,6 +24,21 @@ class Expense {
     this.userId,
     this.createdAt,
   });
+
+  static String generateUuidV4() {
+    final random = Random.secure();
+    final values = List<int>.generate(16, (i) => random.nextInt(256));
+    values[6] = (values[6] & 0x0f) | 0x40; // Version 4
+    values[8] = (values[8] & 0x3f) | 0x80; // Variant RFC4122
+    final buffer = StringBuffer();
+    for (int i = 0; i < 16; i++) {
+      if (i == 4 || i == 6 || i == 8 || i == 10) {
+        buffer.write('-');
+      }
+      buffer.write(values[i].toRadixString(16).padLeft(2, '0'));
+    }
+    return buffer.toString();
+  }
 
   // Convert JSON from Supabase user_data or relational expenses table to Expense model
   factory Expense.fromJson(Map<String, dynamic> json) {
@@ -52,7 +69,7 @@ class Expense {
   Map<String, dynamic> toJson() {
     final dateStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     return {
-      'id': id ?? 'exp_${DateTime.now().millisecondsSinceEpoch}',
+      'id': (id != null && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(id!)) ? id : generateUuidV4(),
       'description': title,
       'title': title,
       'amount': amount,
@@ -70,8 +87,9 @@ class Expense {
   Map<String, dynamic> toTableJson([String? effectiveUserId]) {
     final dateStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     final uid = userId ?? effectiveUserId;
+    final validId = (id != null && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(id!)) ? id : generateUuidV4();
     return {
-      'id': id ?? 'exp_${DateTime.now().millisecondsSinceEpoch}',
+      'id': validId,
       'title': title,
       'amount': amount,
       'category': category,
@@ -80,7 +98,6 @@ class Expense {
       'payment_method': paymentMethod,
       if (notes != null) 'notes': notes,
       if (uid != null) 'user_id': uid,
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
   }
 

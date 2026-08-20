@@ -751,10 +751,11 @@ window.closeEditProfileModal = function(e) {
     }
 
     async function signInWithEmail(email, password) {
+      const cleanEmail = email ? email.trim().toLowerCase() : '';
+      const cleanPass = password ? password.trim() : '';
+
       try {
         clearErrors();
-        const cleanEmail = email ? email.trim().toLowerCase() : '';
-        const cleanPass = password ? password.trim() : '';
         if (!cleanEmail || !cleanPass) {
           showError(loginError, 'Please enter a valid email and password.');
           return;

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -136,11 +136,20 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         ),
                       ],
                     ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.account_balance_wallet_rounded,
-                        size: 44,
-                        color: Colors.white,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        width: 86,
+                        height: 86,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => const Center(
+                          child: Icon(
+                            Icons.account_balance_wallet_rounded,
+                            size: 44,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),

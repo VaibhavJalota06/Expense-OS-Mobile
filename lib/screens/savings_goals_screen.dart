@@ -43,7 +43,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
   Future<void> _loadGoals() async {
     // 1. Instant local render from cached preferences
     final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString('monex_goals');
+    final data = prefs.getString('expense_os_goals') ?? prefs.getString('monex_goals');
     if (data != null && mounted) {
       try {
         final List decoded = jsonDecode(data);
@@ -56,7 +56,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
     // 2. Fetch fresh data from Supabase Cloud so any goals added/updated on Web/Desktop show up immediately
     try {
       await SupabaseService().getExpenses();
-      final freshData = prefs.getString('monex_goals');
+      final freshData = prefs.getString('expense_os_goals') ?? prefs.getString('monex_goals');
       if (freshData != null && mounted) {
         final List freshDecoded = jsonDecode(freshData);
         setState(() {
@@ -69,7 +69,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
   Future<void> _saveGoals() async {
     final prefs = await SharedPreferences.getInstance();
     final encoded = jsonEncode(_goals.map((g) => g.toJson()).toList());
-    await prefs.setString('monex_goals', encoded);
+    await prefs.setString('expense_os_goals', encoded);
     try {
       await SupabaseService().pushAllDataToCloud();
     } catch (_) {}

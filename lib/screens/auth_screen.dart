@@ -109,10 +109,6 @@ class _AuthScreenState extends State<AuthScreen> with WidgetsBindingObserver {
     try {
       final success = await _supabaseService.signInWithGoogle();
       if (success && mounted) {
-        final user = _supabaseService.currentUser;
-        if (user != null) {
-          await SupabaseService.cacheUserData(user);
-        }
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('persistent_user_logged_in', true);
         widget.onAuthSuccess();
@@ -229,10 +225,14 @@ class _AuthScreenState extends State<AuthScreen> with WidgetsBindingObserver {
                 if (_authMode == AuthMode.login) ...[
                   Row(
                     children: [
-                      const Icon(
-                        Icons.account_balance_wallet_rounded,
-                        size: 32,
-                        color: AppTheme.monexBlue,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          width: 34,
+                          height: 34,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Text(

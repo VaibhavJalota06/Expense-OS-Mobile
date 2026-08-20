@@ -156,6 +156,7 @@ class _ExpenseOSAppState extends State<ExpenseOSApp> {
             }
 
             return MaterialApp(
+              key: ValueKey('auth_state_$_isAuthenticated'),
               title: 'Expense OS',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.lightTheme,

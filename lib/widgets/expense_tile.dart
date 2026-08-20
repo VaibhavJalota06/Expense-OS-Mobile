@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/expense_model.dart';
@@ -8,12 +9,14 @@ import '../theme/app_theme.dart';
 class ExpenseTile extends StatelessWidget {
   final Expense expense;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final VoidCallback? onDelete;
 
   const ExpenseTile({
     super.key,
     required this.expense,
     this.onTap,
+    this.onLongPress,
     this.onDelete,
   });
 
@@ -62,7 +65,10 @@ class ExpenseTile extends StatelessWidget {
     return Dismissible(
       key: Key(expense.id ?? '${expense.title}_${expense.date.toIso8601String()}'),
       direction: DismissDirection.endToStart,
-      onDismissed: (_) => onDelete?.call(),
+      onDismissed: (_) {
+        HapticFeedback.mediumImpact();
+        onDelete?.call();
+      },
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
@@ -89,11 +95,18 @@ class ExpenseTile extends StatelessWidget {
           ],
         ),
         child: InkWell(
-          onTap: onTap,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onTap?.call();
+          },
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            onLongPress?.call();
+          },
           borderRadius: BorderRadius.circular(20),
           child: Row(
             children: [
-              // Monex Soft Rounded Gray Icon Container
+              // Soft Rounded Icon Container
               Container(
                 width: 46,
                 height: 46,
