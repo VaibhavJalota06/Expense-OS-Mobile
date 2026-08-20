@@ -1,4 +1,4 @@
-﻿name: Cleanup Old GitHub Releases & Tags
+name: Cleanup Old GitHub Releases & Tags
 
 on:
   workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
             console.log(`Found ${releases.length} releases in total.`);
             for (const release of releases) {
               if (release.tag_name !== keepTag) {
-                console.log(`Deleting release: ${release.name} (${release.tag_name}, ID: ${release.id})`);
+                console.log(`Deleting old release: ${release.name} (${release.tag_name}, ID: ${release.id})`);
                 await github.rest.repos.deleteRelease({
                   owner,
                   repo,
@@ -40,6 +40,28 @@ jobs:
                 });
               } else {
                 console.log(`Keeping latest release: ${release.name} (${release.tag_name})`);
+
+                // Clean up old version assets from this release (e.g. 2.9.6 assets)
+                const assets = await github.paginate(github.rest.repos.listReleaseAssets, {
+                  owner,
+                  repo,
+                  release_id: release.id,
+                  per_page: 100
+                });
+
+                console.log(`Found ${assets.length} assets on release ${release.tag_name}.`);
+                for (const asset of assets) {
+                  if (asset.name.includes('2.9.6') || asset.name.toLowerCase().includes('2.9')) {
+                    console.log(`🗑️ Deleting outdated asset: ${asset.name} (ID: ${asset.id})`);
+                    await github.rest.repos.deleteReleaseAsset({
+                      owner,
+                      repo,
+                      asset_id: asset.id
+                    });
+                  } else {
+                    console.log(`✅ Keeping active asset: ${asset.name}`);
+                  }
+                }
               }
             }
 
@@ -64,4 +86,4 @@ jobs:
                 }
               }
             }
-            console.log('✅ Cleanup complete! Only v3.3.5 is retained.');
+            console.log('✅ Cleanup complete! All old releases and 2.9.6 assets have been deleted.');
