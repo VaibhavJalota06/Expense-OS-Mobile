@@ -1,0 +1,21 @@
+{
+  "name": "expense-os-suite",
+  "version": "3.3.6",
+  "description": "Expense OS - Futuristic Cross-Platform Financial Command Center",
+  "scripts": {
+    "test": "flutter test test/unit_test.dart",
+    "web:dev": "npx serve web-desktop -p 3000",
+    "release": "node scripts/release.js patch",
+    "release:minor": "node scripts/release.js minor",
+    "release:major": "node scripts/release.js major"
+  },
+  "keywords": [
+    "expense-tracker",
+    "flutter",
+    "tauri",
+    "pwa",
+    "financial-os"
+  ],
+  "author": "Vaibhav Jalota",
+  "license": "MIT"
+}

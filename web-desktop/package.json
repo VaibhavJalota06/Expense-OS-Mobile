@@ -9,8 +9,9 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "publish": "node scripts/publish-release.js",
-    "update-landing": "node scripts/update-landing-page.js"
+    "release": "node ../scripts/release.js patch",
+    "release:minor": "node ../scripts/release.js minor",
+    "release:major": "node ../scripts/release.js major"
   },
   "repository": {
     "type": "git",

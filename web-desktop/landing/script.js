@@ -364,5 +364,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ---------- 8. Live Dynamic GitHub Releases Fetcher ----------
+  async function fetchLatestRelease() {
+    try {
+      const res = await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile/releases/latest');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || !data.tag_name) return;
+
+      const tagName = data.tag_name;
+      // Update all release version tags on page
+      document.querySelectorAll('.release-version-tag').forEach(el => {
+        el.textContent = tagName;
+      });
+
+      // Update download assets if specific asset URLs exist in release
+      if (Array.isArray(data.assets) && data.assets.length > 0) {
+        data.assets.forEach(asset => {
+          const name = asset.name.toLowerCase();
+          const downloadUrl = asset.browser_download_url;
+
+          if (name.endsWith('.apk')) {
+            const apkBtn = document.querySelector('a[data-platform="android"]');
+            if (apkBtn) apkBtn.href = downloadUrl;
+          } else if (name.endsWith('.exe') || name.endsWith('.msi')) {
+            const exeBtn = document.querySelector('a[data-platform="windows"]');
+            if (exeBtn) exeBtn.href = downloadUrl;
+          } else if (name.endsWith('.ipa')) {
+            const ipaBtn = document.querySelector('a[data-platform="ios"]');
+            if (ipaBtn) ipaBtn.href = downloadUrl;
+          }
+        });
+      }
+    } catch (e) {
+      console.log('Using default universal release endpoints:', e);
+    }
+  }
+
+  fetchLatestRelease();
+
 });
+
 
