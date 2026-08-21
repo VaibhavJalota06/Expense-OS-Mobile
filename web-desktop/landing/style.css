@@ -660,9 +660,9 @@ body {
 .platforms-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  max-width: 1240px;
+  max-width: 1280px;
   margin: 0 auto;
-  gap: 1.15rem;
+  gap: 1.25rem;
   align-items: stretch;
 }
 
@@ -681,7 +681,7 @@ body {
 }
 
 .platform-card {
-  padding: 2.75rem 2.25rem;
+  padding: 2.5rem 1.75rem 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -690,6 +690,11 @@ body {
   position: relative;
   overflow: hidden;
   border-radius: 22px;
+  background: rgba(11, 16, 22, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .platform-card-body {
@@ -698,8 +703,10 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  flex: 1;
 }
 
+/* Top accent bar */
 .platform-card::before {
   content: '';
   position: absolute;
@@ -709,89 +716,170 @@ body {
   height: 3px;
   background: linear-gradient(90deg, transparent, var(--card-accent, var(--planet-blue)), transparent);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.35s ease;
+}
+
+/* Corner glow orb */
+.platform-card::after {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--card-glow, rgba(56, 189, 248, 0.08)) 0%, transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
 .platform-card:hover::before {
   opacity: 1;
 }
 
+.platform-card:hover::after {
+  opacity: 1;
+}
+
+.platform-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px var(--card-glow, rgba(56, 189, 248, 0.08));
+}
+
+/* ---------- Icon Box ---------- */
 .platform-icon-box {
-  width: 68px;
-  height: 68px;
-  border-radius: 18px;
+  width: 78px;
+  height: 78px;
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
-  margin: 0 auto 1.25rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--glass-border);
-  box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease;
+  font-size: 2rem;
+  margin: 0 auto 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.04);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .platform-card:hover .platform-icon-box {
-  transform: scale(1.1) rotate(5deg);
+  transform: scale(1.12) rotate(4deg);
+  box-shadow: 0 10px 35px var(--card-glow, rgba(56, 189, 248, 0.2)), inset 0 0 25px rgba(255, 255, 255, 0.06);
 }
 
-.platform-card.android { --card-accent: #10b981; }
-.platform-card.android .platform-icon-box { color: #34d399; background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3); }
+/* ---------- Per-Platform Colors ---------- */
+.platform-card.android {
+  --card-accent: #10b981;
+  --card-glow: rgba(16, 185, 129, 0.12);
+}
+.platform-card.android .platform-icon-box {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.platform-card.android .platform-badge {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+}
 
-.platform-card.ios { --card-accent: #f43f5e; }
-.platform-card.ios .platform-icon-box { color: #fb7185; background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.3); }
+.platform-card.windows {
+  --card-accent: #38bdf8;
+  --card-glow: rgba(56, 189, 248, 0.12);
+}
+.platform-card.windows .platform-icon-box {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+.platform-card.windows .platform-badge {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.2);
+}
 
-.platform-card.windows { --card-accent: #38bdf8; }
-.platform-card.windows .platform-icon-box { color: #38bdf8; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.3); }
+.platform-card.ios {
+  --card-accent: #f43f5e;
+  --card-glow: rgba(244, 63, 94, 0.12);
+}
+.platform-card.ios .platform-icon-box {
+  color: #fb7185;
+  background: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.2);
+}
+.platform-card.ios .platform-badge {
+  color: #fb7185;
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.2);
+}
 
-.platform-card.web { --card-accent: #a78bfa; }
-.platform-card.web .platform-icon-box { color: #a78bfa; background: rgba(167, 139, 250, 0.12); border-color: rgba(167, 139, 250, 0.3); }
+.platform-card.web {
+  --card-accent: #a78bfa;
+  --card-glow: rgba(167, 139, 250, 0.12);
+}
+.platform-card.web .platform-icon-box {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.1);
+  border-color: rgba(167, 139, 250, 0.2);
+}
+.platform-card.web .platform-badge {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.08);
+  border-color: rgba(167, 139, 250, 0.2);
+}
 
+/* ---------- Badge ---------- */
 .platform-badge {
   display: inline-block;
-  padding: 5px 12px;
+  padding: 5px 14px;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.68rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-radius: 6px;
-  margin: 0 auto 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--glass-border);
-  color: var(--text-med);
+  letter-spacing: 0.08em;
+  border-radius: var(--radius-pill);
+  margin: 0 auto 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
   text-align: center;
 }
 
+/* ---------- Title & Description ---------- */
 .platform-title {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: var(--text-pure);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
   text-align: center;
   letter-spacing: -0.01em;
 }
 
 .platform-desc {
-  font-size: 0.95rem;
-  color: var(--text-med);
-  line-height: 1.6;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.65;
   margin: 0 auto 1.5rem;
   max-width: 440px;
   text-align: center;
 }
 
+/* ---------- Feature List ---------- */
 .platform-feature-list {
   list-style: none !important;
   list-style-type: none !important;
-  padding: 0 !important;
-  margin: 0 auto 2rem !important;
+  padding: 1rem 0 0 !important;
+  margin: 0 auto 1.75rem !important;
   display: flex !important;
   flex-direction: column !important;
-  align-items: center !important;
-  gap: 0.7rem;
+  align-items: flex-start !important;
+  gap: 0.85rem;
   width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .platform-feature-list li {
@@ -799,30 +887,91 @@ body {
   list-style-type: none !important;
   display: flex !important;
   align-items: center !important;
-  justify-content: center !important;
-  gap: 0.65rem;
-  font-size: 0.9rem;
+  justify-content: flex-start !important;
+  gap: 0.6rem;
+  font-size: 0.82rem;
   color: var(--text-med);
   line-height: 1.5;
-  margin-bottom: 1.75rem;
+  width: 100%;
+  padding: 0;
+  margin: 0 !important;
 }
 
+.platform-feature-list li i {
+  font-size: 0.8rem;
+  width: 16px;
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--card-accent, var(--planet-blue));
+  opacity: 0.75;
+}
+
+/* ---------- Download Buttons ---------- */
 .btn-download {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 0.35rem !important;
+  gap: 0.5rem !important;
   width: 100% !important;
-  padding: 0.65rem 0.5rem !important;
-  border-radius: 10px !important;
+  padding: 0.8rem 1rem !important;
+  border-radius: 12px !important;
   font-family: var(--font-display) !important;
   font-weight: 700 !important;
-  font-size: 0.82rem !important;
+  font-size: 0.85rem !important;
   text-decoration: none !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
   white-space: nowrap !important;
-  min-height: 42px !important;
+  min-height: 48px !important;
   box-sizing: border-box !important;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-download i {
+  font-size: 0.9rem;
+}
+
+/* Per-platform download button styles */
+.btn-dl-android {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3);
+}
+.btn-dl-android:hover {
+  box-shadow: 0 6px 28px rgba(16, 185, 129, 0.5), 0 0 15px rgba(52, 211, 153, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-dl-windows {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(14, 165, 233, 0.3);
+}
+.btn-dl-windows:hover {
+  box-shadow: 0 6px 28px rgba(14, 165, 233, 0.5), 0 0 15px rgba(56, 189, 248, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-dl-ios {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(244, 63, 94, 0.3);
+}
+.btn-dl-ios:hover {
+  box-shadow: 0 6px 28px rgba(244, 63, 94, 0.5), 0 0 15px rgba(251, 113, 133, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-dl-web {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(139, 92, 246, 0.3);
+}
+.btn-dl-web:hover {
+  box-shadow: 0 6px 28px rgba(139, 92, 246, 0.5), 0 0 15px rgba(167, 139, 250, 0.3);
+  transform: translateY(-2px);
 }
 
 .btn-subtext {
