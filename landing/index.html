@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense OS — Beautiful, Free, Cross-Platform Expense Tracker</title>
+  <meta name="description" content="Track your daily spending, manage monthly budgets, and split bills across your phone, desktop, and web — completely free, private, and synced in real-time.">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/icon.png">
+  <link rel="shortcut icon" href="/icon.ico">
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/landing/style.css?v=3.6.0">
+</head>
+<body>
+
+  <!-- Futuristic Cosmic Preloader -->
+  <div id="landing-preloader" class="landing-preloader" aria-label="Loading Expense OS">
+    <div class="preloader-content">
+      <!-- Animated Orbital Rings & Core -->
+      <div class="preloader-orbital-wrapper">
+        <div class="preloader-ring ring-outer"></div>
+        <div class="preloader-ring ring-inner"></div>
+        <div class="preloader-core">
+          <span class="preloader-planet">🪐</span>
+        </div>
+      </div>
+
+      <!-- Brand Identity -->
+      <div class="preloader-brand">
+        <span class="preloader-title">EXPENSE <span class="preloader-accent">OS</span></span>
+        <span class="preloader-badge">SYSTEM INITIALIZING</span>
+      </div>
+
+      <!-- Live Loading Progress Track -->
+      <div class="preloader-progress-track">
+        <div class="preloader-progress-bar" id="preloader-progress-bar"></div>
+      </div>
+
+      <!-- Telemetry Status Line -->
+      <div class="preloader-status">
+        <span class="preloader-status-dot"></span>
+        <span id="preloader-status-text">INITIALIZING SECURE VAULT...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Background Starfield Canvas -->
+  <canvas id="bg-canvas"></canvas>
+  <div class="ambient-glow-top"></div>
+
+  <!-- 1. Minimal Navbar -->
+  <header class="navbar-container">
+    <nav class="navbar">
+      <a href="#" class="nav-brand">
+        <span class="brand-dot"></span>
+        <span>EXPENSE <span style="color: var(--planet-blue);">OS</span></span>
+        <span class="brand-tag release-version-tag">v3.3.6</span>
+      </a>
+
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#downloads" class="nav-link">Get the App</a></li>
+        <li><a href="#live-demos" class="nav-link">Try Tools</a></li>
+        <li><a href="#showcase" class="nav-link">Features</a></li>
+        <li><a href="#comparison" class="nav-link">Why Expense OS</a></li>
+        <li><a href="#faq" class="nav-link">FAQ</a></li>
+      </ul>
+
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <a href="/index.html" target="_blank" class="nav-cta-btn" title="Open Web App">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i> <span class="cta-btn-text">Open App</span>
+        </a>
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle Menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- 2. Hero Section (Clean & App-Aligned) -->
+  <section class="hero-section" id="hero">
+    <div class="ambient-glow glow-emerald"></div>
+    <div class="ambient-glow glow-sky"></div>
+    <div class="ambient-glow glow-violet"></div>
+
+    <!-- Central Hero Content -->
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-pulse"></span>
+        <span class="hero-eyebrow">Personal Finance Made Simple</span>
+      </div>
+      <h1 class="hero-title">EXPENSE <span class="gradient-text">OS</span></h1>
+      
+      <p class="hero-subtitle">
+        Keep your money organized without the clutter. Track daily purchases, set realistic budgets, convert international currencies, and stay in sync across all your devices.
+      </p>
+    </div>
+  </section>
+
+  <!-- 4. Available Everywhere & Download Suite -->
+  <section id="downloads" class="section">
+    <div class="section-header">
+      <div class="section-tag"><i class="fa-solid fa-mobile-screen-button"></i> Available Everywhere</div>
+      <h2 class="section-title">Use it on your <span class="gradient-text">phone, laptop, or web</span></h2>
+      <p class="section-desc">No device limits and no paywalls. Pick your favorite platform and pick up right where you left off.</p>
+    </div>
+
+    <div class="platforms-grid">
+      
+      <!-- Android Package Card -->
+      <div class="glass-panel platform-card android">
+        <div class="platform-card-body">
+          <div class="platform-icon-box">
+            <i class="fa-brands fa-android"></i>
+          </div>
+          <span class="platform-badge">Android · 14 MB APK</span>
+          <h3 class="platform-title">Android App</h3>
+          <p class="platform-desc">
+            Fast and buttery smooth mobile experience built for daily on-the-go expense logging.
+          </p>
+          <ul class="platform-feature-list">
+            <li><i class="fa-solid fa-bolt"></i> 120Hz refresh rate &amp; snappy animations</li>
+            <li><i class="fa-solid fa-fingerprint"></i> Biometric fingerprint &amp; face unlock</li>
+            <li><i class="fa-solid fa-wifi"></i> 100% offline first with auto cloud backup</li>
+          </ul>
+        </div>
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-Android.apk" download="ExpenseOS-Android.apk" class="btn-download btn-dl-android" data-platform="android">
+          <i class="fa-solid fa-download"></i> Download APK
+        </a>
+      </div>
+
+      <!-- Windows Desktop Card -->
+      <div class="glass-panel platform-card windows">
+        <div class="platform-card-body">
+          <div class="platform-icon-box">
+            <i class="fa-brands fa-windows"></i>
+          </div>
+          <span class="platform-badge">Windows · 64 &amp; 32-Bit (5MB)</span>
+          <h3 class="platform-title">Windows Desktop</h3>
+          <p class="platform-desc">
+            Ultra-fast native app for Windows (64-bit &amp; 32-bit x86) with minimal RAM overhead.
+          </p>
+          <ul class="platform-feature-list">
+            <li><i class="fa-solid fa-feather"></i> Tiny 5MB footprint — zero background drain</li>
+            <li><i class="fa-solid fa-keyboard"></i> Quick tray access &amp; global hotkeys</li>
+            <li><i class="fa-solid fa-shield-halved"></i> Pure standalone executable, zero telemetry</li>
+          </ul>
+        </div>
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-Windows-Setup.exe" download="ExpenseOS-Windows-Setup.exe" class="btn-download btn-dl-windows" data-platform="windows">
+          <i class="fa-solid fa-download"></i> Download .EXE
+        </a>
+      </div>
+
+      <!-- iOS App Card -->
+      <div class="glass-panel platform-card ios">
+        <div class="platform-card-body">
+          <div class="platform-icon-box">
+            <i class="fa-brands fa-apple"></i>
+          </div>
+          <span class="platform-badge">iOS · 18 MB IPA</span>
+          <h3 class="platform-title">Apple iOS</h3>
+          <p class="platform-desc">
+            Tailored for iPhone and iPad with native iOS gestures and Cupertino aesthetic.
+          </p>
+          <ul class="platform-feature-list">
+            <li><i class="fa-solid fa-wand-magic-sparkles"></i> Native iOS physics &amp; haptic feedback</li>
+            <li><i class="fa-solid fa-moon"></i> System-adaptive dark &amp; OLED theme</li>
+            <li><i class="fa-solid fa-file-arrow-down"></i> Ready for AltStore, Sideloadly &amp; TrollStore</li>
+          </ul>
+        </div>
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-iOS.ipa" download="ExpenseOS-iOS.ipa" class="btn-download btn-dl-ios" data-platform="ios">
+          <i class="fa-brands fa-apple"></i> Download .IPA
+        </a>
+      </div>
+
+      <!-- Web Application Card -->
+      <div class="glass-panel platform-card web">
+        <div class="platform-card-body">
+          <div class="platform-icon-box">
+            <i class="fa-solid fa-globe"></i>
+          </div>
+          <span class="platform-badge">PWA · Instant Access</span>
+          <h3 class="platform-title">Web Application</h3>
+          <p class="platform-desc">
+            Zero install required. Instant full-featured access from any desktop or mobile browser.
+          </p>
+          <ul class="platform-feature-list">
+            <li><i class="fa-solid fa-gauge-high"></i> Loads instantly under 0.4s worldwide</li>
+            <li><i class="fa-solid fa-database"></i> Private IndexedDB offline storage</li>
+            <li><i class="fa-solid fa-cloud-arrow-up"></i> Installable to home screen / desktop as PWA</li>
+          </ul>
+        </div>
+        <a href="/index.html" target="_blank" class="btn-download btn-dl-web">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Web App
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5. Interactive Calculators & Live Demos -->
+  <section id="live-demos" class="section">
+    <div class="section-header">
+      <div class="section-tag"><i class="fa-solid fa-sliders"></i> Interactive Tools</div>
+      <h2 class="section-title">Test the tools <span class="gradient-text">right here</span></h2>
+      <p class="section-desc">Try out our currency conversion, auto-tagging, and savings calculator live on this page.</p>
+    </div>
+
+    <div class="hud-grid">
+      
+      <!-- Live FX Currency Converter Widget -->
+      <div class="glass-panel hud-panel">
+        <div class="hud-topbar">
+          <div class="hud-title">
+            <i class="fa-solid fa-coins" style="color: var(--planet-blue);"></i>
+            <span>Live Currency Converter</span>
+          </div>
+          <span class="hud-status-chip">LIVE RATES</span>
+        </div>
+
+        <p style="font-size: 0.88rem; color: var(--text-dim);">
+          Check live foreign exchange rates across 30+ major world currencies.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-med); margin-bottom: 4px; display: block;">Amount</label>
+            <input type="number" id="fx-amount" value="100" min="1" class="widget-input">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-med); margin-bottom: 4px; display: block;">From</label>
+            <select id="fx-from" class="widget-select">
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="INR">INR (₹)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="CAD">CAD ($)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-med); margin-bottom: 4px; display: block;">Convert To</label>
+          <select id="fx-to" class="widget-select">
+            <option value="INR">INR (₹ Indian Rupee)</option>
+            <option value="USD">USD ($ US Dollar)</option>
+            <option value="EUR">EUR (€ Euro)</option>
+            <option value="GBP">GBP (£ British Pound)</option>
+            <option value="JPY">JPY (¥ Japanese Yen)</option>
+          </select>
+        </div>
+
+        <div class="widget-output-box">
+          <div style="font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Converted Total</div>
+          <div id="fx-result" style="font-size: 1.6rem; font-weight: 800; color: var(--planet-blue); font-family: var(--font-display); margin-top: 4px;">₹8,350.00 INR</div>
+        </div>
+      </div>
+
+      <!-- AI Auto-Category Parser Widget -->
+      <div class="glass-panel hud-panel">
+        <div class="hud-topbar">
+          <div class="hud-title">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--planet-emerald);"></i>
+            <span>Smart Auto-Categorizer</span>
+          </div>
+          <span class="hud-status-chip" style="background: rgba(56, 189, 248, 0.12); color: var(--planet-blue); border-color: rgba(56, 189, 248, 0.3);">INSTANT</span>
+        </div>
+
+        <p style="font-size: 0.88rem; color: var(--text-dim);">
+          Type any purchase or shop name to see how the app automatically tags it.
+        </p>
+
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-med); margin-bottom: 4px; display: block;">What did you buy?</label>
+          <input type="text" id="ai-sim-input" value="Starbucks Iced Caramel Macchiato" class="widget-input" placeholder="e.g. Uber ride, Netflix, Whole Foods">
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="btn-secondary-dl" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 20px;" onclick="document.getElementById('ai-sim-input').value='Netflix 4K Ultra Subscription'; document.getElementById('ai-sim-input').dispatchEvent(new Event('input'));">Netflix</button>
+          <button type="button" class="btn-secondary-dl" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 20px;" onclick="document.getElementById('ai-sim-input').value='Shell Petrol Fuel Station'; document.getElementById('ai-sim-input').dispatchEvent(new Event('input'));">Fuel</button>
+          <button type="button" class="btn-secondary-dl" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 20px;" onclick="document.getElementById('ai-sim-input').value='Whole Foods Organic Groceries'; document.getElementById('ai-sim-input').dispatchEvent(new Event('input'));">Groceries</button>
+        </div>
+
+        <div class="widget-output-box" id="ai-sim-output">
+          <div style="font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Suggested Category</div>
+          <div id="ai-sim-result" style="font-size: 1.4rem; font-weight: 800; color: var(--planet-emerald); font-family: var(--font-display); margin-top: 4px;">☕ Food &amp; Dining</div>
+        </div>
+      </div>
+
+      <!-- 3. Interactive Monthly Budget Savings Calculator -->
+      <div class="glass-panel hud-panel">
+        <div class="hud-topbar">
+          <div class="hud-title">
+            <i class="fa-solid fa-calculator" style="color: var(--planet-purple);"></i>
+            <span>Monthly Budget Calculator</span>
+          </div>
+          <span class="hud-status-chip" style="background: rgba(139, 92, 246, 0.12); color: var(--planet-purple); border-color: rgba(139, 92, 246, 0.3);">CALCULATOR</span>
+        </div>
+
+        <p style="font-size: 0.88rem; color: var(--text-dim);">
+          See how setting small spending caps can build up your annual savings.
+        </p>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; color: var(--text-med); margin-bottom: 4px;">
+            <span>Estimated Monthly Spending</span>
+            <span id="sim-spend-val" style="color: var(--planet-blue); font-family: var(--font-mono);">$1,800 / mo</span>
+          </div>
+          <input type="range" id="sim-spend" min="300" max="8000" step="100" value="1800" class="widget-slider">
+        </div>
+
+        <div class="widget-output-box">
+          <div style="font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Potential Money Saved Per Year</div>
+          <div id="sim-savings-result" style="font-size: 1.6rem; font-weight: 800; color: var(--planet-emerald); font-family: var(--font-display); margin-top: 4px;">+$3,888.00 / yr</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 6. Feature Showcase -->
+  <section id="showcase" class="section">
+    <div class="section-header">
+      <div class="section-tag"><i class="fa-solid fa-layer-group"></i> Inside the App</div>
+      <h2 class="section-title">Everything you need to <span class="gradient-text">stay on top of your money</span></h2>
+      <p class="section-desc">Clear visual charts, recurring subscription alerts, and simple bill splitting with friends.</p>
+    </div>
+
+    <div class="mockup-frame">
+      <div class="mockup-header">
+        <div class="mockup-dots">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+        </div>
+        <div class="mockup-url-bar"><i class="fa-solid fa-lock" style="color: var(--planet-emerald); font-size: 0.7rem;"></i> https://expenseos.app/dashboard</div>
+        <a href="/index.html" target="_blank" class="nav-cta-btn" style="padding: 4px 12px; font-size: 0.75rem;">
+          Try Live Demo <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+      </div>
+
+      <div class="mockup-tabs">
+        <button class="mockup-tab-btn active" onclick="switchShowcaseTab('dashboard', this)">📊 Spending Dashboard</button>
+        <button class="mockup-tab-btn" onclick="switchShowcaseTab('bills', this)">📅 Subscriptions &amp; Bills</button>
+        <button class="mockup-tab-btn" onclick="switchShowcaseTab('split', this)">👥 Shared Expenses</button>
+        <button class="mockup-tab-btn" onclick="switchShowcaseTab('export', this)">📤 Export &amp; Backup</button>
+      </div>
+
+      <div class="mockup-body" id="showcase-content">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Honest Comparison Table -->
+  <section id="comparison" class="section">
+    <div class="section-header">
+      <div class="section-tag"><i class="fa-solid fa-scale-balanced"></i> Honest Comparison</div>
+      <h2 class="section-title">Why choose <span class="gradient-text">Expense OS</span>?</h2>
+      <p class="section-desc">Built for people who want a simple, clean, and private tracker without pop-up ads or monthly fees.</p>
+    </div>
+
+    <div class="comparison-table-wrapper">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>What Matters</th>
+            <th style="color: var(--planet-blue);">✨ Expense OS</th>
+            <th style="color: var(--text-dim);">Spreadsheets</th>
+            <th style="color: var(--text-dim);">Other Budget Apps</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Cross-Device Sync</strong></td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> Instant automatic sync across all devices</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Manual file copies</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Often locked behind paid subscriptions</td>
+          </tr>
+          <tr>
+            <td><strong>Works Offline</strong></td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> 100% functional without internet</td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> Offline files</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Blocked by login screens</td>
+          </tr>
+          <tr>
+            <td><strong>Smart Categorization</strong></td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> Fast automatic merchant tagging</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Manual typing for every row</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Paid tier only</td>
+          </tr>
+          <tr>
+            <td><strong>Privacy &amp; Ads</strong></td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> 100% private, zero ads, no data selling</td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> Saved on your computer</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> Ads and credit card offers</td>
+          </tr>
+          <tr>
+            <td><strong>Cost</strong></td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> Free forever</td>
+            <td><i class="fa-solid fa-circle-check check-icon"></i> Free</td>
+            <td><i class="fa-solid fa-circle-xmark cross-icon"></i> $5 to $15 every month</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 8. Real User Reviews -->
+  <section id="testimonials" class="section">
+    <div class="section-header">
+      <div class="section-tag"><i class="fa-solid fa-heart" style="color: var(--planet-gold);"></i> User Feedback</div>
+      <h2 class="section-title">What people <span class="gradient-text">are saying</span></h2>
+      <p class="section-desc">Simple, honest feedback from people using Expense OS to manage their daily money.</p>
+    </div>
+
+    <div class="testimonials-grid" style="display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 1.5rem !important; width: 100% !important; align-items: stretch !important;">
+      <div class="glass-panel testimonial-card" style="padding: 1.75rem !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; margin: 0 !important; border-radius: 16px !important;">
+        <div>
+          <div style="display: flex; gap: 4px; color: var(--planet-gold); margin-bottom: 0.75rem;">
+            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+          </div>
+          <p style="font-size: 0.92rem; color: var(--text-high); line-height: 1.6; margin-bottom: 1.25rem;">
+            "I used to keep an Excel sheet that I constantly forgot to update. Expense OS is so quick to open on my phone that I actually log my coffee and groceries right after buying."
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #38bdf8, #8b5cf6); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff;">
+            AR
+          </div>
+          <div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: #fff;">Alex Rivera</div>
+            <div style="font-size: 0.75rem; color: var(--planet-emerald);">Daily User</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel testimonial-card" style="padding: 1.75rem !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; margin: 0 !important; border-radius: 16px !important;">
+        <div>
+          <div style="display: flex; gap: 4px; color: var(--planet-gold); margin-bottom: 0.75rem;">
+            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+          </div>
+          <p style="font-size: 0.92rem; color: var(--text-high); line-height: 1.6; margin-bottom: 1.25rem;">
+            "The auto-categorization is a lifesaver. I just type 'Uber' or 'Trader Joe's' and it immediately files it into Travel or Groceries without making me tap through dropdown menus."
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #06b6d4); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff;">
+            MK
+          </div>
+          <div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: #fff;">Maya Kapoor</div>
+            <div style="font-size: 0.75rem; color: var(--planet-emerald);">Daily User</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel testimonial-card" style="padding: 1.75rem !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; margin: 0 !important; border-radius: 16px !important;">
+        <div>
+          <div style="display: flex; gap: 4px; color: var(--planet-gold); margin-bottom: 0.75rem;">
+            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+          </div>
+          <p style="font-size: 0.92rem; color: var(--text-high); line-height: 1.6; margin-bottom: 1.25rem;">
+            "Finally an app that works when I'm on an airplane or traveling abroad without roaming data, and then syncs with my laptop as soon as I connect to WiFi."
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff;">
+            DL
+          </div>
+          <div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: #fff;">David Ling</div>
+            <div style="font-size: 0.75rem; color: var(--planet-emerald);">Daily User</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Frequently Asked Questions -->
+  <section id="faq" class="section">
+    <div class="section-header">
+      <div class="section-tag"><i class="fa-solid fa-circle-question"></i> Answers</div>
+      <h2 class="section-title">Frequently Asked <span class="gradient-text">Questions</span></h2>
+      <div style="max-width: 400px; margin: 1rem auto 0;">
+        <input type="text" id="faq-search-input" class="widget-input" placeholder="🔍 Search questions (e.g. sync, free, export)...">
+      </div>
+    </div>
+
+    <div class="faq-grid">
+      <div class="glass-panel faq-card">
+        <div class="faq-question"><i class="fa-solid fa-circle-check" style="color: var(--planet-emerald);"></i> Is Expense OS really free?</div>
+        <p class="faq-answer">Yes, 100% free. There are no trial periods, no locked features, and no credit card required. It is built as a clean, practical tool for everyone.</p>
+      </div>
+
+      <div class="glass-panel faq-card">
+        <div class="faq-question"><i class="fa-solid fa-circle-check" style="color: var(--planet-blue);"></i> How does syncing between my phone and computer work?</div>
+        <p class="faq-answer">Your data is saved securely to your account using Supabase cloud database. Whenever you open the app on your computer or phone, everything stays in sync. If you lose internet connection, you can keep adding expenses normally and they will sync up when you reconnect.</p>
+      </div>
+
+      <div class="glass-panel faq-card">
+        <div class="faq-question"><i class="fa-solid fa-circle-check" style="color: var(--planet-purple);"></i> Can I export or backup my data anytime?</div>
+        <p class="faq-answer">Yes. You can download all your transaction history and budgets anytime as a standard CSV spreadsheet or a JSON backup file with one click.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. Cohesive Framed Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand-column">
+        <a href="#hero" class="footer-brand">
+          <span class="footer-planet-icon">🪐</span>
+          <span class="footer-brand-text">Expense <span class="text-gradient">OS</span></span>
+        </a>
+        <p class="footer-tagline">
+          Ultra-fast, private, and offline-first expense tracking built for all platforms. Zero tracking. 100% free forever.
+        </p>
+        <div class="footer-status-pill">
+          <span class="footer-status-dot"></span>
+          <span class="footer-status-text">All Systems Operational · v3.5.3</span>
+        </div>
+      </div>
+
+      <div class="footer-nav-grid">
+        <div class="footer-nav-col">
+          <h4 class="footer-nav-heading">Platforms</h4>
+          <ul class="footer-nav-list">
+            <li><a href="/index.html" target="_blank" class="footer-nav-link"><i class="fa-solid fa-globe"></i> Web Application</a></li>
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-Windows-Setup.exe" class="footer-nav-link"><i class="fa-brands fa-windows"></i> Windows 64/32-Bit</a></li>
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-Android.apk" class="footer-nav-link"><i class="fa-brands fa-android"></i> Android APK</a></li>
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-iOS.ipa" class="footer-nav-link"><i class="fa-brands fa-apple"></i> iOS IPA (AltStore)</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-nav-col">
+          <h4 class="footer-nav-heading">Product</h4>
+          <ul class="footer-nav-list">
+            <li><a href="#showcase" class="footer-nav-link">Interactive Demos</a></li>
+            <li><a href="#features" class="footer-nav-link">Feature Highlights</a></li>
+            <li><a href="#comparison" class="footer-nav-link">Why Expense OS</a></li>
+            <li><a href="#faq" class="footer-nav-link">Frequently Asked Questions</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-nav-col">
+          <h4 class="footer-nav-heading">Open Source</h4>
+          <ul class="footer-nav-list">
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile" target="_blank" class="footer-nav-link"><i class="fa-brands fa-github"></i> GitHub Repository</a></li>
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases" target="_blank" class="footer-nav-link"><i class="fa-solid fa-code-branch"></i> Release Notes</a></li>
+            <li><a href="mailto:vaibhavjalota06@gmail.com" class="footer-nav-link"><i class="fa-solid fa-envelope"></i> Contact Developer</a></li>
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/blob/main/LICENSE" target="_blank" class="footer-nav-link"><i class="fa-solid fa-scale-balanced"></i> MIT License</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom-bar">
+      <p class="footer-copy">© 2026 Expense OS. Built with precision by <strong>Vaibhav Jalota</strong>. All rights reserved.</p>
+      <div class="footer-bottom-badges">
+        <span class="footer-chip"><i class="fa-solid fa-shield-halved"></i> 100% Client-Side</span>
+        <span class="footer-chip"><i class="fa-solid fa-database"></i> Local IndexedDB</span>
+        <span class="footer-chip"><i class="fa-solid fa-bolt"></i> Zero Telemetry</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Custom Script -->
+  <script src="/landing/script.js?v=3.5.9"></script>
+
+  <!-- Motion ESM Animations -->
+  <script type="module">
+    import { animate, scroll, inView, spring, stagger } from 'https://cdn.jsdelivr.net/npm/motion@12.4.7/+esm';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        // 1. Hero Title & Eyebrow Entrance
+        const heroTitle = document.querySelector('.hero-title');
+        if (heroTitle) {
+          animate(heroTitle, { opacity: [0, 1], scale: [0.96, 1], y: [20, 0] }, { duration: 0.7 });
+        }
+
+        const heroSubtitle = document.querySelector('.hero-subtitle');
+        if (heroSubtitle) {
+          animate(heroSubtitle, { opacity: [0, 1], y: [15, 0] }, { duration: 0.7, delay: 0.15 });
+        }
+
+        // 2. Platform Cards Reveal
+        if (document.querySelector('.platforms-grid')) {
+          inView('.platforms-grid', () => {
+            animate('.platform-card', 
+              { opacity: [0, 1], y: [30, 0] }, 
+              { duration: 0.5, delay: stagger(0.1) }
+            );
+          });
+        }
+
+        // 3. Widgets Reveal
+        if (document.querySelector('.hud-grid')) {
+          inView('.hud-grid', () => {
+            animate('.hud-panel', 
+              { opacity: [0, 1], y: [25, 0] }, 
+              { duration: 0.55, delay: stagger(0.12) }
+            );
+          });
+        }
+
+        // 4. Comparison Table Reveal
+        if (document.querySelector('.comparison-table-wrapper')) {
+          inView('.comparison-table-wrapper', () => {
+            animate('.comparison-table-wrapper', 
+              { opacity: [0, 1], y: [20, 0] }, 
+              { duration: 0.6 }
+            );
+          });
+        }
+
+        // 5. FAQ Cards Stagger
+        if (document.querySelector('.faq-grid')) {
+          inView('.faq-grid', () => {
+            animate('.faq-card', 
+              { opacity: [0, 1], y: [20, 0] }, 
+              { duration: 0.5, delay: stagger(0.08) }
+            );
+          });
+        }
+      } catch (err) {
+        console.warn('Motion animation note:', err);
+      }
+    });
+  </script>
+</body>
+</html>
