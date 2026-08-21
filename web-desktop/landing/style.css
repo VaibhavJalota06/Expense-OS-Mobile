@@ -287,29 +287,6 @@ body {
   margin: 0 auto;
 }
 
-  transition: all 0.3s ease;
-}
-
-.hero-badge-pill:hover {
-  border-color: var(--planet-blue);
-  box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
-  transform: translateY(-1px);
-}
-
-.pulse-dot-green {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 10px #10b981;
-  animation: pulseDotGreen 2s infinite ease-in-out;
-}
-
-@keyframes pulseDotGreen {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.6; }
-}
-
 /* Eyebrow Label matching reference */
 .hero-eyebrow {
   font-family: var(--font-display);
