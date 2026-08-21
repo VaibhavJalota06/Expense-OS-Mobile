@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/app_update_service.dart';
 import '../services/supabase_service.dart';
 import '../widgets/spendly_nav_bar.dart';
 import 'add_expense_screen.dart';

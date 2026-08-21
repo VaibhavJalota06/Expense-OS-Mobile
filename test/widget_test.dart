@@ -7,6 +7,7 @@ void main() {
       initialHasSeenOnboarding: true,
       initialIsAuthenticated: true,
     ));
+    await tester.pump(const Duration(milliseconds: 200));
     expect(find.byType(ExpenseOSApp), findsOneWidget);
   });
 }

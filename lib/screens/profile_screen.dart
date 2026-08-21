@@ -389,8 +389,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showThemeSelector() {
-    final isDarkNow = AppTheme.isDark(context);
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
