@@ -148,6 +148,7 @@ class SupabaseService {
       try {
         debugPrint('[GoogleSignIn] Starting 100% Native In-App Google Sign-In on $defaultTargetPlatform...');
         final GoogleSignIn googleSignIn = GoogleSignIn(
+          serverClientId: googleServerClientId,
           clientId: defaultTargetPlatform == TargetPlatform.iOS ? googleIosClientId : null,
           scopes: const [
             'email',
@@ -173,7 +174,8 @@ class SupabaseService {
         await prefs.remove('monex_goals');
         await prefs.remove('saved_group_expenses');
 
-        // Extract credentials
+        // Extract credentials & authenticate with Supabase
+        String? resolvedUserId;
         try {
           final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
           final String? idToken = googleAuth.idToken;
@@ -188,74 +190,47 @@ class SupabaseService {
             if (response.user != null) {
               debugPrint('[GoogleSignIn] Supabase auth verified for: ${response.user!.email}');
               await cacheUserData(response.user);
+              resolvedUserId = response.user!.id;
             }
           }
         } catch (authSyncErr) {
           debugPrint('[GoogleSignIn] Supabase token sync note: $authSyncErr');
         }
 
-        // Guaranteed In-App Login with verified Google Account details
+        // Guaranteed In-App Login with verified user's chosen Google Account details
         debugPrint('[GoogleSignIn] Native Google session verified for: ${googleUser.email}');
         await prefs.setBool('persistent_user_logged_in', true);
         await prefs.setString('google_user_email', googleUser.email.toLowerCase().trim());
-        await prefs.setString('custom_user_name', googleUser.displayName ?? googleUser.email.split('@').first);
-        if (googleUser.photoUrl != null) {
+        await prefs.setString(
+          'custom_user_name',
+          (googleUser.displayName != null && googleUser.displayName!.isNotEmpty)
+              ? googleUser.displayName!
+              : googleUser.email.split('@').first,
+        );
+        if (googleUser.photoUrl != null && googleUser.photoUrl!.isNotEmpty) {
           await prefs.setString('google_user_avatar', googleUser.photoUrl!);
+        } else {
+          await prefs.remove('google_user_avatar');
         }
-        await prefs.setString('supabase_user_id', googleUser.id);
-        
-      } catch (nativeError) {
-        debugPrint('[GoogleSignIn] Native sign-in note: $nativeError. Authenticating verified Google Account in Supabase...');
-        
-        final prefs = await SharedPreferences.getInstance();
-        _localExpenses.clear();
-        await prefs.remove('local_offline_expenses');
-        await prefs.remove('user_starting_balance');
-        await prefs.remove('monthly_budget_cap');
-        await prefs.remove('user_saved_subscriptions');
-        await prefs.remove('expense_os_goals');
-        await prefs.remove('monex_goals');
-        await prefs.remove('saved_group_expenses');
+        await prefs.remove('custom_avatar_path');
 
-        const fallbackEmail = 'bountyh745@gmail.com';
-        const fallbackPass = 'GoogleAuthSecure_Bounty745!';
-        const fallbackName = 'Tech Bounty Hunter';
+        if (resolvedUserId != null && resolvedUserId.isNotEmpty) {
+          await prefs.setString('supabase_user_id', resolvedUserId);
+        } else if (currentUser != null && currentUser!.id.isNotEmpty) {
+          await prefs.setString('supabase_user_id', currentUser!.id);
+        } else {
+          await prefs.setString('supabase_user_id', googleUser.id);
+        }
 
-        User? authenticatedUser;
         try {
-          final res = await client.auth.signInWithPassword(email: fallbackEmail, password: fallbackPass);
-          authenticatedUser = res.user;
-        } catch (_) {
-          try {
-            final res = await client.auth.signUp(
-              email: fallbackEmail,
-              password: fallbackPass,
-              data: {
-                'full_name': fallbackName,
-                'name': fallbackName,
-                'avatar_url': 'https://api.dicebear.com/7.x/bottts/png?seed=bountyh745',
-              },
-            );
-            authenticatedUser = res.user;
-          } catch (signUpErr) {
-            debugPrint('[GoogleSignIn] Supabase auth note: $signUpErr');
-          }
-        }
-
-        await prefs.setBool('persistent_user_logged_in', true);
-        await prefs.setString('google_user_email', fallbackEmail);
-        await prefs.setString('custom_user_name', fallbackName);
-        await prefs.setString('google_user_avatar', 'https://api.dicebear.com/7.x/avataaars/png?seed=TechBountyHunter&backgroundColor=b6e3f4');
-        if (authenticatedUser != null) {
-          await prefs.setString('supabase_user_id', authenticatedUser.id);
-          await cacheUserData(authenticatedUser);
-          try {
-            await getExpenses();
-            await loadFinancialProfileFromCloud();
-          } catch (_) {}
-        }
+          await getExpenses();
+          await loadFinancialProfileFromCloud();
+        } catch (_) {}
 
         return true;
+      } catch (nativeError) {
+        debugPrint('[GoogleSignIn] Native Google sign-in failed: $nativeError');
+        rethrow;
       }
     }
 
@@ -287,11 +262,13 @@ class SupabaseService {
     await prefs.remove('google_user_avatar');
     await prefs.remove('custom_avatar_path');
     await prefs.remove('supabase_user_id');
+    await prefs.remove('offline_user_id');
     await prefs.remove('local_offline_expenses');
     await prefs.remove('user_starting_balance');
     await prefs.remove('monthly_budget_cap');
     await prefs.remove('user_saved_subscriptions');
     await prefs.remove('monex_goals');
+    await prefs.remove('expense_os_goals');
     await prefs.remove('saved_group_expenses');
     try {
       final googleSignIn = GoogleSignIn();
@@ -344,14 +321,17 @@ class SupabaseService {
     // 2. Cached authenticated user ID
     final prefs = await SharedPreferences.getInstance();
     final cached = prefs.getString('supabase_user_id');
-    if (cached != null && cached.isNotEmpty && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(cached)) {
+    if (cached != null && cached.isNotEmpty) {
       return cached;
     }
-    if (cached != null && !RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(cached)) {
-      await prefs.remove('supabase_user_id');
+    // 3. Fallback local offline user ID
+    final offlineId = prefs.getString('offline_user_id');
+    if (offlineId != null && offlineId.isNotEmpty) {
+      return offlineId;
     }
-    // 3. Registered Supabase UUID for bountyh745 account
-    return '10db8c7b-3cba-4daf-a85d-e7bd51d4f8c7';
+    final newOfflineId = 'offline_${DateTime.now().millisecondsSinceEpoch}';
+    await prefs.setString('offline_user_id', newOfflineId);
+    return newOfflineId;
   }
 
   // ---------------------------------------------------------------
