@@ -250,15 +250,15 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="glass-panel" style="padding: 1.25rem; background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.3);">
           <div style="font-size: 0.75rem; color: var(--planet-blue); text-transform: uppercase; font-weight: 700;">Monthly Income</div>
           <div style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-top: 4px;">$6,500.00</div>
-          <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;">Direct Deposit active</div>
+          <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;">Paycheck received</div>
         </div>
         <div class="glass-panel" style="padding: 1.25rem; background: rgba(244, 63, 94, 0.08); border-color: rgba(244, 63, 94, 0.3);">
           <div style="font-size: 0.75rem; color: #fb7185; text-transform: uppercase; font-weight: 700;">Total Spending</div>
           <div style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-top: 4px;">$2,145.80</div>
-          <div style="font-size: 0.75rem; color: #34d399; margin-top: 4px;">$1,854.20 under budget</div>
+          <div style="font-size: 0.75rem; color: #34d399; margin-top: 4px;">$1,854.20 left in budget</div>
         </div>
       </div>
-      <div style="font-size: 0.85rem; color: var(--text-dim); text-align: center;">⚡ Dual-synchronized in real-time across Supabase Cloud &amp; Local Cache.</div>
+      <div style="font-size: 0.85rem; color: var(--text-dim); text-align: center;">✓ Everything is saved automatically and synced across your devices.</div>
     `,
     bills: `
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -266,26 +266,26 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(239, 68, 68, 0.15); color: #ef4444; display: flex; align-items: center; justify-content: center; font-weight: 800;">N</div>
             <div>
-              <div style="font-weight: 700; color: #fff;">Netflix 4K Premium</div>
-              <div style="font-size: 0.75rem; color: var(--text-dim);">Renews on 28th of every month</div>
+              <div style="font-weight: 700; color: #fff;">Netflix Subscription</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Due on the 28th of every month</div>
             </div>
           </div>
           <div style="text-align: right;">
             <div style="font-weight: 800; color: #fff;">$22.99 / mo</div>
-            <div style="font-size: 0.75rem; color: var(--planet-emerald);">● Auto-Renew Active</div>
+            <div style="font-size: 0.75rem; color: var(--planet-emerald);">● Recurring Bill</div>
           </div>
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.25rem; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid var(--glass-border);">
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-weight: 800;">S</div>
             <div>
-              <div style="font-weight: 700; color: #fff;">Spotify Family Plan</div>
-              <div style="font-size: 0.75rem; color: var(--text-dim);">Renews on 15th of every month</div>
+              <div style="font-weight: 700; color: #fff;">Spotify Premium</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Due on the 15th of every month</div>
             </div>
           </div>
           <div style="text-align: right;">
             <div style="font-weight: 800; color: #fff;">$16.99 / mo</div>
-            <div style="font-size: 0.75rem; color: var(--planet-emerald);">● Auto-Renew Active</div>
+            <div style="font-size: 0.75rem; color: var(--planet-emerald);">● Recurring Bill</div>
           </div>
         </div>
       </div>
@@ -294,28 +294,28 @@ document.addEventListener('DOMContentLoaded', () => {
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
         <div class="glass-panel" style="padding: 1.25rem;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-            <span style="font-weight: 700; color: #fff;">Weekend Trip to Aspen</span>
-            <span style="font-size: 0.75rem; color: var(--planet-blue); font-family: var(--font-mono);">4 Members</span>
+            <span style="font-weight: 700; color: #fff;">Weekend Cabin Trip</span>
+            <span style="font-size: 0.75rem; color: var(--planet-blue); font-family: var(--font-mono);">4 Friends</span>
           </div>
           <div style="font-size: 1.3rem; font-weight: 800; color: var(--planet-emerald);">$1,240.00 Total</div>
-          <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">Your share: $310.00 (Settled)</div>
+          <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">Your share: $310.00 (Paid)</div>
         </div>
         <div class="glass-panel" style="padding: 1.25rem;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-            <span style="font-weight: 700; color: #fff;">Apartment High-Speed Fiber</span>
+            <span style="font-weight: 700; color: #fff;">Apartment Wi-Fi Internet</span>
             <span style="font-size: 0.75rem; color: var(--planet-purple); font-family: var(--font-mono);">2 Roommates</span>
           </div>
           <div style="font-size: 1.3rem; font-weight: 800; color: var(--planet-purple);">$90.00 / mo</div>
-          <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">You owe: $45.00 due in 3 days</div>
+          <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">You owe: $45.00 (Due soon)</div>
         </div>
       </div>
     `,
     export: `
       <div style="text-align: center; padding: 1rem 0;">
-        <div style="font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Instant Multi-Format Data Portability</div>
-        <p style="font-size: 0.88rem; color: var(--text-med); max-width: 500px; margin: 0 auto 1.5rem;">Export filtered bank statements, monthly tax reports, or comprehensive JSON backups without limitations.</p>
+        <div style="font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Export your data anytime</div>
+        <p style="font-size: 0.88rem; color: var(--text-med); max-width: 500px; margin: 0 auto 1.5rem;">Download your complete spending history as a spreadsheet or backup file with a single click.</p>
         <div style="display: flex; gap: 1rem; justify-content: center;">
-          <a href="/index.html" target="_blank" class="btn-hero-primary" style="padding: 0.6rem 1.5rem; font-size: 0.85rem;"><i class="fa-solid fa-file-csv"></i> Open Exporter</a>
+          <a href="/index.html" target="_blank" class="btn-hero-primary" style="padding: 0.6rem 1.5rem; font-size: 0.85rem;"><i class="fa-solid fa-file-csv"></i> Open App Exporter</a>
         </div>
       </div>
     `
