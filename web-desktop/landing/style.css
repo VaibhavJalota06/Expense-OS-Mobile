@@ -287,23 +287,6 @@ body {
   margin: 0 auto;
 }
 
-/* Floating Hero Badge Pill */
-.hero-badge-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.4rem 1.1rem;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  border-radius: var(--radius-pill);
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-pure);
-  margin-bottom: 1.25rem;
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
 }
 
