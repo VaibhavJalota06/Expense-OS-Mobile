@@ -1139,21 +1139,28 @@ body {
 }
 
 .btn-download {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  min-height: 48px;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.88rem;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-sizing: border-box;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.35rem !important;
+  width: 100% !important;
+  padding: 0.65rem 0.5rem !important;
+  border-radius: 10px !important;
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  font-size: 0.82rem !important;
+  text-decoration: none !important;
+  transition: all 0.3s ease !important;
+  white-space: nowrap !important;
+  min-height: 42px !important;
+}
+
+.btn-subtext {
+  font-size: 0.72rem !important;
+  opacity: 0.8 !important;
+  font-weight: 500 !important;
+  font-family: var(--font-mono) !important;
+  white-space: nowrap !important;
 }
 
 .btn-dl-android {
