@@ -6,6 +6,9 @@
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
     "publish": "node scripts/publish-release.js",
     "update-landing": "node scripts/update-landing-page.js"
   },
@@ -77,6 +80,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
+    "@tauri-apps/cli": "^1.5.0",
     "@types/node": "^26.2.0",
     "electron": "^43.4.0",
     "electron-builder": "^26.15.3"

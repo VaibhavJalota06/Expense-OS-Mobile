@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-config-schema/schema.json",
+  "build": {
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "",
+    "devPath": "http://localhost:3000",
+    "distDir": "../"
+  },
+  "package": {
+    "productName": "Expense OS",
+    "version": "3.3.5"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      },
+      "notification": {
+        "all": true
+      },
+      "dialog": {
+        "all": true,
+        "open": true,
+        "save": true
+      },
+      "fs": {
+        "all": true
+      },
+      "http": {
+        "all": true,
+        "request": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "Finance",
+      "copyright": "Copyright © 2026 Expense OS",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": [
+        "icons/icon.png"
+      ],
+      "identifier": "com.expensecalculator.expenseosmobile",
+      "longDescription": "Expense OS — Personal Finance Command Center to track expenses, set budget caps, convert global currencies in real-time, and sync seamlessly.",
+      "macOS": {
+        "frameworks": [],
+        "minimumSystemVersion": ""
+      },
+      "shortDescription": "Expense OS Personal Finance Command Center",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": "default-src 'self' http://localhost:* ws://localhost:*; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; connect-src 'self' http://localhost:* wss://localhost:* https://*.googleapis.com https://api.github.com https://api.emailjs.com https://*.supabase.co wss://*.supabase.co wss://*.supabase.com;"
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "center": true,
+        "fullscreen": false,
+        "height": 850,
+        "maximized": true,
+        "resizable": true,
+        "title": "Expense OS — Personal Finance Command Center",
+        "width": 1380
+      }
+    ]
+  }
+}
