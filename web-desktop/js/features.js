@@ -150,27 +150,43 @@
      * Classify vendor/text into standard Expense OS category
      */
     classifyVendor: function(text) {
+      if (!text || typeof text !== 'string') return 'Miscellaneous';
       const lower = text.toLowerCase();
-      if (lower.match(/starbucks|mcdonald|restaurant|cafe|coffee|pizza|food|burger|bakery|supermarket|grocery|mart|walmart/)) {
+      if (lower.match(/starbucks|mcdonald|kfc|subway|dominos|pizza|zomato|swiggy|uber eats|doordash|grubhub|cafe|restaurant|diner|bakery|bistro|food|coffee|taco|chipotle|dunkin/)) {
         return 'Food & Dining';
       }
-      if (lower.match(/uber|lyft|shell|gas|fuel|petrol|transit|metro|taxi|cab|flight|airline|parking/)) {
-        return 'Transportation';
+      if (lower.match(/uber|lyft|ola|rapido|grab|cab|taxi|metro|subway|train|bus|transit|railway|irctc|parking|toll|fastag|fuel|petrol|diesel|shell|bp|exxon|chevron|gas/)) {
+        return 'Transport / Uber';
       }
-      if (lower.match(/amazon|target|zara|h&m|nike|store|shopping|apparel|electronics|mall/)) {
+      if (lower.match(/amazon|flipkart|walmart|target|ebay|myntra|zara|h&m|nike|adidas|uniqlo|apple|best buy|ikea|shopping|mall|clothing|fashion/)) {
         return 'Shopping';
       }
-      if (lower.match(/electric|water|utility|internet|wifi|phone|telecom|broadband|rent|bill/)) {
+      if (lower.match(/costco|whole foods|trader joe|blinkit|zepto|instamart|bigbasket|grocery|supermarket|mart|provision|vegetable|fruit|milk/)) {
+        return 'Groceries';
+      }
+      if (lower.match(/electric|water|gas bill|utility|internet|wifi|broadband|airtel|jio|vi|vodafone|verizon|att|t-mobile|recharge|mobile bill|dth/)) {
         return 'Bills & Utilities';
       }
-      if (lower.match(/netflix|spotify|cinema|movie|theatre|steam|game|concert|event/)) {
+      if (lower.match(/netflix|spotify|prime|youtube|disney|hbo|hulu|apple music|icloud|chatgpt|openai|midjourney|github|adobe|playstation|xbox|nintendo|patreon|medium|substack/)) {
+        return 'Subscriptions';
+      }
+      if (lower.match(/pharmacy|chemist|doctor|hospital|clinic|dentist|medical|medicine|cvs|walgreens|apollo|practo|health|fitness|gym/)) {
+        return 'Health & Medical';
+      }
+      if (lower.match(/cinema|movie|bookmyshow|amc|steam|game|gaming|concert|ticket|event|bowling|arcade/)) {
         return 'Entertainment';
       }
-      if (lower.match(/pharmacy|doctor|hospital|clinic|health|gym|fitness|dental|medical/)) {
-        return 'Health & Fitness';
+      if (lower.match(/udemy|coursera|edx|tuition|school|college|university|book|course|class/)) {
+        return 'Education';
       }
-      if (lower.match(/subscription|saas|aws|google|apple|adobe|cloud|hosting/)) {
-        return 'Services & Subscriptions';
+      if (lower.match(/salary|payroll|stipend|employer|wages/)) {
+        return 'Salary';
+      }
+      if (lower.match(/freelance|upwork|fiverr|toptal|client payment/)) {
+        return 'Freelance';
+      }
+      if (lower.match(/dividend|interest|stock|crypto|binance|coinbase|zerodha|groww|investment/)) {
+        return 'Investments';
       }
       return 'Miscellaneous';
     },
@@ -488,5 +504,6 @@
   window.AnomalyDetector = AnomalyDetector;
   window.WhatIfSimulator = WhatIfSimulator;
   window.SplitBillManager = SplitBillManager;
+  window.detectCategory = function(text) { return ReceiptOCR.classifyVendor(text); };
 
 })(window);

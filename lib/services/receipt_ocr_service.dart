@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'merchant_categorizer.dart';
 
 class ReceiptLineItem {
   String name;
@@ -192,41 +193,46 @@ class ReceiptOCRService {
     }
 
     // 5. Smart Category Auto-Classification
-    final lower = text.toLowerCase();
-    if (lower.contains('restaurant') || lower.contains('coffee') || lower.contains('starbucks') ||
-        lower.contains('cafe') || lower.contains('burger') || lower.contains('pizza') ||
-        lower.contains('food') || lower.contains('diner') || lower.contains('bakery') ||
-        lower.contains('mcdonald') || lower.contains('kfc') || lower.contains('subway')) {
-      category = 'Food & Dining';
-      detectedMerchant ??= 'Restaurant & Dining';
-    } else if (lower.contains('supermarket') || lower.contains('grocery') || lower.contains('walmart') ||
-        lower.contains('market') || lower.contains('whole foods') || lower.contains('trader joe') ||
-        lower.contains('target') || lower.contains('milk') || lower.contains('produce')) {
-      category = 'Groceries';
-      detectedMerchant ??= 'Supermarket Grocery';
-    } else if (lower.contains('uber') || lower.contains('lyft') || lower.contains('taxi') ||
-        lower.contains('fuel') || lower.contains('petrol') || lower.contains('gas station') ||
-        lower.contains('shell') || lower.contains('chevron') || lower.contains('parking')) {
-      category = 'Transportation';
-      detectedMerchant ??= 'Transport & Fuel';
-    } else if (lower.contains('amazon') || lower.contains('store') || lower.contains('mall') ||
-        lower.contains('zara') || lower.contains('h&m') || lower.contains('clothing') ||
-        lower.contains('apparel') || lower.contains('nike') || lower.contains('retail')) {
-      category = 'Shopping';
-      detectedMerchant ??= 'Retail Store';
-    } else if (lower.contains('pharmacy') || lower.contains('medical') || lower.contains('clinic') ||
-        lower.contains('health') || lower.contains('hospital') || lower.contains('walgreens') ||
-        lower.contains('cvs') || lower.contains('drugs') || lower.contains('medicine')) {
-      category = 'Health & Medical';
-      detectedMerchant ??= 'Pharmacy / Health';
-    } else if (lower.contains('cinema') || lower.contains('movie') || lower.contains('theatre') ||
-        lower.contains('ticket') || lower.contains('game') || lower.contains('entertainment')) {
-      category = 'Entertainment';
-      detectedMerchant ??= 'Entertainment';
-    } else if (lower.contains('electric') || lower.contains('water') || lower.contains('utility') ||
-        lower.contains('internet') || lower.contains('wifi') || lower.contains('broadband')) {
-      category = 'Bills & Utilities';
-      detectedMerchant ??= 'Utility Service';
+    final detectedCat = MerchantCategorizer.detectCategory(text, defaultCategory: '');
+    if (detectedCat.isNotEmpty) {
+      category = detectedCat;
+    } else {
+      final lower = text.toLowerCase();
+      if (lower.contains('restaurant') || lower.contains('coffee') || lower.contains('starbucks') ||
+          lower.contains('cafe') || lower.contains('burger') || lower.contains('pizza') ||
+          lower.contains('food') || lower.contains('diner') || lower.contains('bakery') ||
+          lower.contains('mcdonald') || lower.contains('kfc') || lower.contains('subway')) {
+        category = 'Food & Dining';
+        detectedMerchant ??= 'Restaurant & Dining';
+      } else if (lower.contains('supermarket') || lower.contains('grocery') || lower.contains('walmart') ||
+          lower.contains('market') || lower.contains('whole foods') || lower.contains('trader joe') ||
+          lower.contains('target') || lower.contains('milk') || lower.contains('produce')) {
+        category = 'Groceries';
+        detectedMerchant ??= 'Supermarket Grocery';
+      } else if (lower.contains('uber') || lower.contains('lyft') || lower.contains('taxi') ||
+          lower.contains('fuel') || lower.contains('petrol') || lower.contains('gas station') ||
+          lower.contains('shell') || lower.contains('chevron') || lower.contains('parking')) {
+        category = 'Transport / Uber';
+        detectedMerchant ??= 'Transport & Fuel';
+      } else if (lower.contains('amazon') || lower.contains('store') || lower.contains('mall') ||
+          lower.contains('zara') || lower.contains('h&m') || lower.contains('clothing') ||
+          lower.contains('apparel') || lower.contains('nike') || lower.contains('retail')) {
+        category = 'Shopping';
+        detectedMerchant ??= 'Retail Store';
+      } else if (lower.contains('pharmacy') || lower.contains('medical') || lower.contains('clinic') ||
+          lower.contains('health') || lower.contains('hospital') || lower.contains('walgreens') ||
+          lower.contains('cvs') || lower.contains('drugs') || lower.contains('medicine')) {
+        category = 'Health & Medical';
+        detectedMerchant ??= 'Pharmacy / Health';
+      } else if (lower.contains('cinema') || lower.contains('movie') || lower.contains('theatre') ||
+          lower.contains('ticket') || lower.contains('game') || lower.contains('entertainment')) {
+        category = 'Entertainment';
+        detectedMerchant ??= 'Entertainment';
+      } else if (lower.contains('electric') || lower.contains('water') || lower.contains('utility') ||
+          lower.contains('internet') || lower.contains('wifi') || lower.contains('broadband')) {
+        category = 'Bills & Utilities';
+        detectedMerchant ??= 'Utility Service';
+      }
     }
 
     // Apply category to extracted line items

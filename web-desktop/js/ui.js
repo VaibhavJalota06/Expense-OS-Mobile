@@ -3004,20 +3004,29 @@ window.toggleSidebar = function(e) {
   const sidebar = document.querySelector('.sidebar');
   const overlay = document.getElementById('sidebar-overlay');
 
-  if (sidebar) sidebar.classList.toggle('active');
-  if (overlay) overlay.classList.toggle('active');
-
-  if (appLayout) {
-    appLayout.classList.toggle('sidebar-collapsed');
-    const isCollapsed = appLayout.classList.contains('sidebar-collapsed');
-    try { localStorage.setItem('expense_cal_sidebar_collapsed', isCollapsed ? 'true' : 'false'); } catch(err){}
+  if (window.innerWidth <= 992) {
+    if (sidebar) {
+      sidebar.classList.toggle('sidebar-open');
+      sidebar.classList.toggle('active');
+    }
+    if (overlay) {
+      overlay.classList.toggle('active');
+    }
+  } else {
+    if (sidebar) sidebar.classList.toggle('active');
+    if (overlay) overlay.classList.toggle('active');
+    if (appLayout) {
+      appLayout.classList.toggle('sidebar-collapsed');
+      const isCollapsed = appLayout.classList.contains('sidebar-collapsed');
+      try { localStorage.setItem('expense_cal_sidebar_collapsed', isCollapsed ? 'true' : 'false'); } catch(err){}
+    }
   }
 };
 
-// Restore saved sidebar collapsed state on load
+// Restore saved sidebar collapsed state on load (Desktop only)
 document.addEventListener('DOMContentLoaded', function() {
   try {
-    if (localStorage.getItem('expense_cal_sidebar_collapsed') === 'true') {
+    if (window.innerWidth > 992 && localStorage.getItem('expense_cal_sidebar_collapsed') === 'true') {
       const appLayout = document.querySelector('.app-layout');
       if (appLayout) appLayout.classList.add('sidebar-collapsed');
     }
@@ -3117,15 +3126,19 @@ document.addEventListener('click', (e) => {
 
 // ---------- Sidebar Toggle for Small Screens ----------
 function toggleSidebar(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
-  const sidebar = document.querySelector('.sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
-  if (sidebar) {
-    sidebar.classList.toggle('sidebar-open');
-    sidebar.classList.toggle('active');
-  }
-  if (overlay) {
-    overlay.classList.toggle('active');
+  if (typeof window.toggleSidebar === 'function') {
+    window.toggleSidebar(e);
+  } else {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) {
+      sidebar.classList.toggle('sidebar-open');
+      sidebar.classList.toggle('active');
+    }
+    if (overlay) {
+      overlay.classList.toggle('active');
+    }
   }
 }
 
@@ -3141,11 +3154,6 @@ function closeSidebar() {
 }
 
 document.addEventListener('click', (e) => {
-  const toggleBtn = e.target.closest('#btn-sidebar-toggle');
-  if (toggleBtn) {
-    toggleSidebar(e);
-    return;
-  }
   const overlay = e.target.closest('#sidebar-overlay');
   if (overlay) {
     closeSidebar();

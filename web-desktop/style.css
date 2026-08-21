@@ -767,22 +767,23 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   letter-spacing: 0.02em;
 }
 
-/* Glass Panel Component */
+/* Glass Panel Component - Pinterest Modern Dark Glass Edition */
 .glass-panel {
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: radial-gradient(circle at top right, rgba(52, 211, 153, 0.05), transparent 70%), var(--glass);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   border-radius: var(--radius-lg);
   padding: 1.35rem;
-  box-shadow: var(--shadow-subtle);
-  transition: var(--transition);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5), 0 0 1px inset rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   z-index: 1;
 }
 .glass-panel:hover {
-  background: var(--glass-strong);
-  border-color: var(--glass-border-hover);
+  background: radial-gradient(circle at top right, rgba(52, 211, 153, 0.08), transparent 75%), var(--glass-strong);
+  border-color: rgba(52, 211, 153, 0.25);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), 0 0 15px rgba(52, 211, 153, 0.08);
 }
 
 /* Navigation Layout */
@@ -1190,6 +1191,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .sidebar-collapsed .sidebar,
 .app-layout.sidebar-collapsed .sidebar {
   margin-left: -260px !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 .sidebar-collapsed .sidebar-toggle-btn,
 .app-layout.sidebar-collapsed .sidebar-toggle-btn {
@@ -1307,13 +1310,59 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   flex-direction: column;
   justify-content: space-between;
   gap: 0.5rem;
+  background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.05), transparent 70%), var(--glass);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 14px 35px -8px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.08);
 }
 .clickable-card {
   cursor: pointer;
 }
 .clickable-card:hover {
-  border-color: var(--glass-border-hover);
-  transform: translateY(-1px);
+  border-color: rgba(52, 211, 153, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 35px -8px rgba(0, 0, 0, 0.55), 0 0 15px rgba(52, 211, 153, 0.12);
+}
+
+/* Badge Glow Indicators */
+.badge-glow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+.badge-glow-emerald {
+  background: rgba(52, 211, 153, 0.12);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.15);
+}
+.badge-glow-sky {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+.badge-glow-violet {
+  background: rgba(167, 139, 250, 0.12);
+  color: #a78bfa;
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.15);
 }
 .stat-header {
   display: flex;
@@ -2215,21 +2264,8 @@ select option {
   .sidebar-toggle-btn { display: none !important; }
 }
 
-/* 3. Mobile (<768px): Slide-in drawer sidebar, 2-col stats, stacked cards table */
+/* 3. Mobile (<768px): Responsive Topbar & Grids */
 @media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 270px;
-    transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 10px 0 30px rgba(0,0,0,0.8);
-  }
-  .sidebar.sidebar-open {
-    transform: translateX(0);
-  }
   .sidebar-overlay {
     display: none;
     position: fixed;
@@ -3081,15 +3117,23 @@ select option {
     max-width: 85vw !important;
     min-width: 0 !important;
     z-index: 10000 !important;
-    transform: translateX(-100%) !important;
-    box-shadow: 15px 0 35px rgba(0, 0, 0, 0.85) !important;
-    border-right: 1px solid rgba(52, 211, 153, 0.3) !important;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    margin-left: 0 !important;
+    transform: translateX(-105%) !important;
+    box-shadow: none !important;
+    border-right: none !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s ease !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 
   .sidebar.sidebar-open,
   .sidebar.active {
+    left: 0 !important;
     transform: translateX(0) !important;
+    border-right: 1px solid rgba(52, 211, 153, 0.3) !important;
+    box-shadow: 15px 0 35px rgba(0, 0, 0, 0.85) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
   }
 
   .sidebar-overlay {

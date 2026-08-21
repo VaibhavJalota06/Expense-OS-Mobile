@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense_model.dart';
 import '../services/currency_service.dart';
 import '../theme/app_theme.dart';
+import '../services/merchant_categorizer.dart';
 
 class AddExpenseSheet extends StatefulWidget {
   final Expense? expenseToEdit;
@@ -123,6 +124,26 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       _selectedType = 'expense';
       _selectedCategory = _expenseCategories.first['name']!;
       _selectedPaymentMethod = _expensePaymentMethods.first;
+      _titleController.addListener(_autoDetectCategory);
+    }
+  }
+
+  void _autoDetectCategory() {
+    if (widget.expenseToEdit != null) return;
+    final text = _titleController.text;
+    if (text.trim().length >= 3) {
+      final detected = MerchantCategorizer.detectCategory(text, defaultCategory: '');
+      if (detected.isNotEmpty) {
+        final matchedCategory = _currentCategories.firstWhere(
+          (c) => c['name'] == detected || detected.startsWith(c['name']!) || c['name']!.startsWith(detected.split(' ').first),
+          orElse: () => _currentCategories.first,
+        )['name']!;
+        if (matchedCategory != _selectedCategory) {
+          setState(() {
+            _selectedCategory = matchedCategory;
+          });
+        }
+      }
     }
   }
 

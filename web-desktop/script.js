@@ -2234,10 +2234,27 @@ window.handleNextMonth = function(e) {
 
 window.toggleSidebar = function(e) {
   if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err){} }
+  const appLayout = document.querySelector('.app-layout');
   const sidebar = document.querySelector('.sidebar');
   const overlay = document.getElementById('sidebar-overlay');
-  if (sidebar) sidebar.classList.toggle('active');
-  if (overlay) overlay.classList.toggle('active');
+
+  if (window.innerWidth <= 992) {
+    if (sidebar) {
+      sidebar.classList.toggle('sidebar-open');
+      sidebar.classList.toggle('active');
+    }
+    if (overlay) {
+      overlay.classList.toggle('active');
+    }
+  } else {
+    if (sidebar) sidebar.classList.toggle('active');
+    if (overlay) overlay.classList.toggle('active');
+    if (appLayout) {
+      appLayout.classList.toggle('sidebar-collapsed');
+      const isCollapsed = appLayout.classList.contains('sidebar-collapsed');
+      try { localStorage.setItem('expense_cal_sidebar_collapsed', isCollapsed ? 'true' : 'false'); } catch(err){}
+    }
+  }
 };
 
 if (btnResetAll) btnResetAll.addEventListener('click', resetAllData);
@@ -2290,15 +2307,19 @@ document.addEventListener('click', (e) => {
 
 // ---------- Sidebar Toggle for Small Screens ----------
 function toggleSidebar(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
-  const sidebar = document.querySelector('.sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
-  if (sidebar) {
-    sidebar.classList.toggle('sidebar-open');
-    sidebar.classList.toggle('active');
-  }
-  if (overlay) {
-    overlay.classList.toggle('active');
+  if (typeof window.toggleSidebar === 'function') {
+    window.toggleSidebar(e);
+  } else {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) {
+      sidebar.classList.toggle('sidebar-open');
+      sidebar.classList.toggle('active');
+    }
+    if (overlay) {
+      overlay.classList.toggle('active');
+    }
   }
 }
 
@@ -2314,11 +2335,6 @@ function closeSidebar() {
 }
 
 document.addEventListener('click', (e) => {
-  const toggleBtn = e.target.closest('#btn-sidebar-toggle');
-  if (toggleBtn) {
-    toggleSidebar(e);
-    return;
-  }
   const overlay = e.target.closest('#sidebar-overlay');
   if (overlay) {
     closeSidebar();

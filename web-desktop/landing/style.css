@@ -913,10 +913,13 @@ body {
   overflow-x: auto;
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .comparison-table {
   width: 100%;
+  min-width: 580px;
   border-collapse: collapse;
   background: var(--bg-card);
   text-align: left;
@@ -1008,7 +1011,7 @@ body {
 }
 
 /* ==========================================================================
-   10. Responsive Breakpoints
+   10. Responsive Breakpoints & Mobile Overflow Fixes
    ========================================================================== */
 @media (max-width: 900px) {
   .orbital-node {
@@ -1020,8 +1023,25 @@ body {
 }
 
 @media (max-width: 768px) {
+  .navbar-container {
+    top: 0.5rem;
+    padding: 0 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
   .navbar {
-    padding: 0.6rem 1rem;
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .nav-brand {
+    font-size: 0.95rem;
+    gap: 0.4rem;
+  }
+  .nav-cta-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
   }
   .nav-links {
     display: none;
@@ -1030,9 +1050,145 @@ body {
     display: block;
   }
   .hero-title {
-    font-size: 2.8rem;
+    font-size: 2.4rem;
+    letter-spacing: 0.04em;
   }
   .planet-globe {
-    height: 220px;
+    height: 200px;
+  }
+  .section {
+    padding: 3.5rem 1rem;
+  }
+}
+
+/* Phones & Small Mobile Displays (<= 640px) */
+@media (max-width: 640px) {
+  .navbar-container {
+    padding: 0 0.4rem;
+  }
+  .navbar {
+    padding: 0.45rem 0.65rem;
+  }
+  .nav-brand {
+    font-size: 0.88rem;
+  }
+  .nav-brand .brand-tag {
+    display: none;
+  }
+  .navbar .nav-cta-btn .cta-btn-text {
+    display: none; /* Hide 'Launch App' text label on small phone navbar to fit cleanly */
+  }
+  .navbar .nav-cta-btn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8rem;
+    border-radius: 50%;
+  }
+  .hero-cosmos {
+    padding-top: 5.5rem;
+    min-height: auto;
+    padding-bottom: 2.5rem;
+  }
+  .hero-title {
+    font-size: 1.95rem;
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+  }
+  .hero-eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+  }
+  .hero-subtitle {
+    font-size: 0.88rem;
+    margin-bottom: 1.75rem;
+  }
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.85rem;
+    margin-bottom: 2rem;
+  }
+  .btn-hero-primary, .btn-hero-secondary {
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem 1.25rem;
+  }
+  .platforms-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .platform-card {
+    padding: 1.5rem 1rem;
+  }
+  .mockup-header {
+    padding: 0.65rem 0.75rem;
+    gap: 0.4rem;
+    justify-content: space-between;
+  }
+  .mockup-url-bar {
+    display: none; /* Hide URL bar on mobile phones so "Open Live App" badge fits inside the card header without overflow */
+  }
+  .mockup-header .nav-cta-btn {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+  }
+  .mockup-header .nav-cta-btn .cta-btn-text {
+    display: inline; /* Ensure text remains visible on mockup header button */
+  }
+  .mockup-tabs {
+    padding: 0.65rem 0.75rem;
+    gap: 0.35rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mockup-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .mockup-tab-btn {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+  }
+  .mockup-body {
+    padding: 1rem;
+  }
+  .comparison-table-wrapper {
+    margin: 0;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .comparison-table {
+    min-width: 520px;
+  }
+  .comparison-table th, .comparison-table td {
+    padding: 0.85rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  .faq-card {
+    padding: 1.25rem 1rem;
+  }
+  .faq-question {
+    font-size: 0.95rem;
+  }
+  .footer-links {
+    gap: 1rem;
+    flex-direction: column;
+  }
+}
+
+/* Extra Small Phones (<= 400px) */
+@media (max-width: 400px) {
+  .hero-title {
+    font-size: 1.7rem;
+  }
+  .section-title {
+    font-size: 1.5rem;
+  }
+  .nav-brand {
+    font-size: 0.85rem;
+  }
+  .brand-tag {
+    display: none;
   }
 }
