@@ -338,15 +338,6 @@ body {
   margin-bottom: 1.25rem;
 }
 
-.hero-title-underline {
-  width: 120px;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--planet-cyan), var(--planet-purple), transparent);
-  box-shadow: 0 0 15px var(--planet-cyan);
-  margin: 0 auto 1.75rem;
-  border-radius: 3px;
-}
-
 .hero-subtitle {
   font-size: clamp(0.95rem, 2vw, 1.15rem);
   color: var(--text-med);
