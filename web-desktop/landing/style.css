@@ -1204,15 +1204,15 @@ body {
   }
   .comparison-table {
     min-width: 520px;
-  }
-  .comparison-table th, .comparison-table td {
-    padding: 0.85rem 0.75rem;
-    font-size: 0.8rem;
-  }
-  .faq-card {
-    padding: 1.25rem 1rem;
-  }
-  .faq-question {
+.faq-answer {
+  font-size: 0.95rem;
+  color: var(--text-med);
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   9. Cosmic Footer
+   ========================================================================== */
 .footer {
   position: relative;
   z-index: 20;
