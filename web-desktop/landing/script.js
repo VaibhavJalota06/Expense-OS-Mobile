@@ -200,6 +200,44 @@ document.addEventListener('DOMContentLoaded', () => {
     classifyExpense();
   }
 
+  // ---------- 5b. Interactive Yearly Savings Simulator ----------
+  const simSpendSlider = document.getElementById('sim-spend');
+  const simSpendVal = document.getElementById('sim-spend-val');
+  const simSavingsResult = document.getElementById('sim-savings-result');
+
+  function updateSavingsSim() {
+    if (!simSpendSlider || !simSpendVal || !simSavingsResult) return;
+    const spend = parseFloat(simSpendSlider.value) || 1800;
+    simSpendVal.textContent = `$${spend.toLocaleString()} / mo`;
+
+    // 18% average optimization rate via AI budget capping
+    const annualSavings = Math.round(spend * 12 * 0.18);
+    simSavingsResult.textContent = `+$${annualSavings.toLocaleString()}.00 / yr`;
+  }
+
+  if (simSpendSlider) {
+    simSpendSlider.addEventListener('input', updateSavingsSim);
+    updateSavingsSim();
+  }
+
+  // ---------- 5c. Searchable FAQ Accordion Filter ----------
+  const faqSearchInput = document.getElementById('faq-search-input');
+  const faqCards = document.querySelectorAll('.faq-card');
+
+  if (faqSearchInput && faqCards.length > 0) {
+    faqSearchInput.addEventListener('input', () => {
+      const query = faqSearchInput.value.toLowerCase().trim();
+      faqCards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (!query || text.includes(query)) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  }
+
   // ---------- 6. Interactive 3D Showcase Tabs ----------
   const showcaseScreens = {
     dashboard: `
