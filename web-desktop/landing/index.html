@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="/landing/style.css?v=3.5.3">
+  <link rel="stylesheet" href="/landing/style.css?v=3.5.4">
 </head>
 <body>
 
@@ -481,16 +481,64 @@
     </div>
   </section>
 
-  <!-- 10. Footer -->
+  <!-- 10. Cohesive Framed Footer -->
   <footer class="footer">
-    <ul class="footer-links">
-      <li><a href="/index.html" target="_blank" class="footer-link">Open Web App</a></li>
-      <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile" target="_blank" class="footer-link">GitHub</a></li>
-      <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases" target="_blank" class="footer-link">All Downloads</a></li>
-      <li><a href="#downloads" class="footer-link">Desktop &amp; Mobile Apps</a></li>
-      <li><a href="mailto:vaibhavjalota06@gmail.com" class="footer-link">Contact Developer</a></li>
-    </ul>
-    <p class="footer-copy">© 2026 Expense OS. Built with care by Vaibhav Jalota. All rights reserved.</p>
+    <div class="footer-inner">
+      <div class="footer-brand-column">
+        <a href="#hero" class="footer-brand">
+          <span class="footer-planet-icon">🪐</span>
+          <span class="footer-brand-text">Expense <span class="text-gradient">OS</span></span>
+        </a>
+        <p class="footer-tagline">
+          Ultra-fast, private, and offline-first expense tracking built for all platforms. Zero tracking. 100% free forever.
+        </p>
+        <div class="footer-status-pill">
+          <span class="footer-status-dot"></span>
+          <span class="footer-status-text">All Systems Operational · v3.5.3</span>
+        </div>
+      </div>
+
+      <div class="footer-nav-grid">
+        <div class="footer-nav-col">
+          <h4 class="footer-nav-heading">Platforms</h4>
+          <ul class="footer-nav-list">
+            <li><a href="/index.html" target="_blank" class="footer-nav-link"><i class="fa-solid fa-globe"></i> Web Application</a></li>
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-Windows-Setup.exe" class="footer-nav-link"><i class="fa-brands fa-windows"></i> Windows 64/32-Bit</a></li>
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-Android.apk" class="footer-nav-link"><i class="fa-brands fa-android"></i> Android APK</a></li>
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-iOS.ipa" class="footer-nav-link"><i class="fa-brands fa-apple"></i> iOS IPA (AltStore)</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-nav-col">
+          <h4 class="footer-nav-heading">Product</h4>
+          <ul class="footer-nav-list">
+            <li><a href="#showcase" class="footer-nav-link">Interactive Demos</a></li>
+            <li><a href="#features" class="footer-nav-link">Feature Highlights</a></li>
+            <li><a href="#comparison" class="footer-nav-link">Why Expense OS</a></li>
+            <li><a href="#faq" class="footer-nav-link">Frequently Asked Questions</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-nav-col">
+          <h4 class="footer-nav-heading">Open Source</h4>
+          <ul class="footer-nav-list">
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile" target="_blank" class="footer-nav-link"><i class="fa-brands fa-github"></i> GitHub Repository</a></li>
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases" target="_blank" class="footer-nav-link"><i class="fa-solid fa-code-branch"></i> Release Notes</a></li>
+            <li><a href="mailto:vaibhavjalota06@gmail.com" class="footer-nav-link"><i class="fa-solid fa-envelope"></i> Contact Developer</a></li>
+            <li><a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/blob/main/LICENSE" target="_blank" class="footer-nav-link"><i class="fa-solid fa-scale-balanced"></i> MIT License</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom-bar">
+      <p class="footer-copy">© 2026 Expense OS. Built with precision by <strong>Vaibhav Jalota</strong>. All rights reserved.</p>
+      <div class="footer-bottom-badges">
+        <span class="footer-chip"><i class="fa-solid fa-shield-halved"></i> 100% Client-Side</span>
+        <span class="footer-chip"><i class="fa-solid fa-database"></i> Local IndexedDB</span>
+        <span class="footer-chip"><i class="fa-solid fa-bolt"></i> Zero Telemetry</span>
+      </div>
+    </div>
   </footer>
 
   <!-- Custom Script -->
