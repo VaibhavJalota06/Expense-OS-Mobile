@@ -25,6 +25,11 @@
   <canvas id="bg-canvas"></canvas>
   <div class="ambient-glow-top"></div>
 
+  <!-- Scroll-Bound Traveling Circuit Indicator Track -->
+  <div class="circuit-line-track" aria-hidden="true">
+    <div class="circuit-pulse-dot" id="circuit-dot"></div>
+  </div>
+
   <!-- 1. Minimal Navbar -->
   <header class="navbar-container">
     <nav class="navbar">
@@ -104,6 +109,30 @@
       </div>
     </div>
   </section>
+
+  <!-- Precision Editorial Metrics Bar -->
+  <div class="editorial-readout">
+    <div class="readout-cell">
+      <div class="readout-value">$0.00</div>
+      <div class="readout-label"><span class="readout-dot"></span> 100% Free Forever</div>
+    </div>
+    <div class="readout-cell">
+      <div class="readout-value">&lt; 2s</div>
+      <div class="readout-label"><span class="readout-dot"></span> To Log Any Expense</div>
+    </div>
+    <div class="readout-cell">
+      <div class="readout-value">100%</div>
+      <div class="readout-label"><span class="readout-dot"></span> Offline Functional</div>
+    </div>
+    <div class="readout-cell">
+      <div class="readout-value">30+</div>
+      <div class="readout-label"><span class="readout-dot"></span> Live Currencies</div>
+    </div>
+    <div class="readout-cell">
+      <div class="readout-value">0</div>
+      <div class="readout-label"><span class="readout-dot" style="background:#10b981; box-shadow:0 0 6px rgba(16,185,129,0.5);"></span> Ad Trackers / 100% Private</div>
+    </div>
+  </div>
 
   <!-- 4. Available Everywhere & Download Suite -->
   <section id="downloads" class="section">
@@ -186,7 +215,7 @@
     </div>
   </section>
 
-  <!-- 5. Interactive Calculators & Live Demos -->
+  <!-- 5. Interactive Calculators & Scenario Switcher -->
   <section id="live-demos" class="section">
     <div class="section-header">
       <div class="section-tag"><i class="fa-solid fa-sliders"></i> Interactive Tools</div>
@@ -194,7 +223,29 @@
       <p class="section-desc">Try out our currency conversion, auto-tagging, and savings calculator live on this page.</p>
     </div>
 
-    <div class="hud-grid">
+    <!-- Interactive Scenario Simulator (Normal Routine vs Travel/Holiday Month) -->
+    <div class="scenario-container">
+      <div class="scenario-header">
+        <div class="scenario-title-box">
+          <h3>Scenario Preview: Routine Month vs. Travel Month</h3>
+          <p>See how Expense OS immediately adapts to changing spending habits without breaking your budget.</p>
+        </div>
+        <div class="scenario-toggle-rail">
+          <button type="button" class="scenario-btn active" id="btn-scenario-routine" onclick="switchScenario('routine')">
+            <i class="fa-solid fa-house"></i> Routine Month
+          </button>
+          <button type="button" class="scenario-btn" id="btn-scenario-travel" onclick="switchScenario('travel')">
+            <i class="fa-solid fa-plane"></i> Travel &amp; Vacation Month
+          </button>
+        </div>
+      </div>
+
+      <div class="scenario-display-grid" id="scenario-grid">
+        <!-- Injected via JavaScript based on active scenario -->
+      </div>
+    </div>
+
+    <div class="hud-grid" style="margin-top: 2rem;">
       
       <!-- Live FX Currency Converter Widget -->
       <div class="glass-panel hud-panel">

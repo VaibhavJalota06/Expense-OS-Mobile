@@ -403,6 +403,98 @@ document.addEventListener('DOMContentLoaded', () => {
 
   fetchLatestRelease();
 
+  // ---------- 9. Scenario Switcher Logic (Inspired by Meuze.ai) ----------
+  const scenarioData = {
+    routine: [
+      {
+        tag: 'Fixed Living',
+        tagClass: 'tag-routine',
+        title: 'Apartment Rent & Utilities',
+        val: '$1,650.00 / mo',
+        desc: 'Direct auto-deduct. Categorized under Housing with 1-click ledger logging.'
+      },
+      {
+        tag: 'Daily Living',
+        tagClass: 'tag-routine',
+        title: 'Weekly Groceries & Cafes',
+        val: '$420.50 logged',
+        desc: 'Smart merchant auto-tagging. 24 small receipts sorted into Groceries & Dining.'
+      },
+      {
+        tag: 'Projected Surplus',
+        tagClass: 'tag-routine',
+        title: 'High-Yield Savings & Investments',
+        val: '+$680.00 saved',
+        desc: 'Remaining discretionary balance automatically flagged for investments or emergency fund.'
+      }
+    ],
+    travel: [
+      {
+        tag: 'Live FX Sync',
+        tagClass: 'tag-travel',
+        title: 'Tokyo Hotel & Dining',
+        val: '¥145,200 ($980 USD)',
+        desc: 'Live market exchange rate conversion with instant offline logging across timezones.'
+      },
+      {
+        tag: 'Split Expense',
+        tagClass: 'tag-travel',
+        title: 'Shinkansen Bullet Train Passes',
+        val: '$340.00 (3 friends)',
+        desc: 'Instant share breakdown: You owe $113.33. Settled via QR code without manual math.'
+      },
+      {
+        tag: 'Pacing Guard',
+        tagClass: 'tag-travel',
+        title: 'Vacation Budget Protection',
+        val: '78% of Travel Cap Used',
+        desc: 'Proactive pacing indicator keeps you from overspending before the trip finishes.'
+      }
+    ]
+  };
+
+  window.switchScenario = function(type) {
+    const grid = document.getElementById('scenario-grid');
+    const btnRoutine = document.getElementById('btn-scenario-routine');
+    const btnTravel = document.getElementById('btn-scenario-travel');
+
+    if (!grid || !scenarioData[type]) return;
+
+    if (type === 'routine') {
+      btnRoutine?.classList.add('active');
+      btnTravel?.classList.remove('active');
+    } else {
+      btnTravel?.classList.add('active');
+      btnRoutine?.classList.remove('active');
+    }
+
+    grid.innerHTML = scenarioData[type].map(item => `
+      <div class="scenario-card">
+        <div class="scenario-card-header">
+          <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">${item.title}</span>
+          <span class="scenario-card-tag ${item.tagClass}">${item.tag}</span>
+        </div>
+        <div class="scenario-value">${item.val}</div>
+        <div class="scenario-desc">${item.desc}</div>
+      </div>
+    `).join('');
+  };
+
+  // Render initial scenario state
+  window.switchScenario('routine');
+
+  // ---------- 10. Scroll-Bound Circuit Pulse Dot Tracker ----------
+  const circuitDot = document.getElementById('circuit-dot');
+  if (circuitDot) {
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = maxScroll > 0 ? (scrollY / maxScroll) * 100 : 0;
+      circuitDot.style.top = `${Math.min(100, Math.max(0, progress))}%`;
+    }, { passive: true });
+  }
+
 });
+
 
 
