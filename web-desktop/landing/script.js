@@ -4,6 +4,67 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // ---------- 0. Cosmic Preloader Lifecycle Controller ----------
+  const preloader = document.getElementById('landing-preloader');
+  const progressBar = document.getElementById('preloader-progress-bar');
+  const statusText = document.getElementById('preloader-status-text');
+
+  if (preloader && progressBar && statusText) {
+    let progress = 20;
+    progressBar.style.width = '20%';
+
+    const statusSteps = [
+      { at: 35, msg: 'LOADING LOCAL DATABASE SCHEMAS...' },
+      { at: 65, msg: 'INITIALIZING CLIENT-SIDE ENCRYPTION...' },
+      { at: 85, msg: 'VERIFYING ECOSYSTEM PROTOCOLS...' },
+      { at: 100, msg: 'EXPENSE OS READY' }
+    ];
+
+    const progressInterval = setInterval(() => {
+      if (progress < 92) {
+        progress += Math.floor(Math.random() * 12) + 6;
+        if (progress > 92) progress = 92;
+        progressBar.style.width = `${progress}%`;
+
+        for (const step of statusSteps) {
+          if (progress >= step.at && step.at < 100) {
+            statusText.textContent = step.msg;
+          }
+        }
+      }
+    }, 75);
+
+    const finishPreloader = () => {
+      clearInterval(progressInterval);
+      progressBar.style.width = '100%';
+      statusText.textContent = 'EXPENSE OS READY';
+
+      setTimeout(() => {
+        preloader.classList.add('loaded');
+        setTimeout(() => {
+          if (preloader.parentNode) {
+            preloader.style.display = 'none';
+          }
+        }, 650);
+      }, 300);
+    };
+
+    // Ensure smooth minimum duration so loading screen is visually crisp and never flashes abruptly
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 800));
+    const pageLoaded = new Promise(resolve => {
+      if (document.readyState === 'complete') {
+        resolve();
+      } else {
+        window.addEventListener('load', resolve);
+      }
+    });
+
+    Promise.all([minLoadTime, pageLoaded]).then(finishPreloader);
+
+    // Fallback safety timeout
+    setTimeout(finishPreloader, 2200);
+  }
+
   // ---------- 1. Soothing Financial Ambient Node Canvas ----------
   const canvas = document.getElementById('bg-canvas');
   if (canvas) {

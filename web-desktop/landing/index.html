@@ -17,9 +17,40 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="/landing/style.css?v=3.5.8">
+  <link rel="stylesheet" href="/landing/style.css?v=3.5.9">
 </head>
 <body>
+
+  <!-- Futuristic Cosmic Preloader -->
+  <div id="landing-preloader" class="landing-preloader" aria-label="Loading Expense OS">
+    <div class="preloader-content">
+      <!-- Animated Orbital Rings & Core -->
+      <div class="preloader-orbital-wrapper">
+        <div class="preloader-ring ring-outer"></div>
+        <div class="preloader-ring ring-inner"></div>
+        <div class="preloader-core">
+          <span class="preloader-planet">🪐</span>
+        </div>
+      </div>
+
+      <!-- Brand Identity -->
+      <div class="preloader-brand">
+        <span class="preloader-title">EXPENSE <span class="preloader-accent">OS</span></span>
+        <span class="preloader-badge">SYSTEM INITIALIZING</span>
+      </div>
+
+      <!-- Live Loading Progress Track -->
+      <div class="preloader-progress-track">
+        <div class="preloader-progress-bar" id="preloader-progress-bar"></div>
+      </div>
+
+      <!-- Telemetry Status Line -->
+      <div class="preloader-status">
+        <span class="preloader-status-dot"></span>
+        <span id="preloader-status-text">INITIALIZING SECURE VAULT...</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Background Starfield Canvas -->
   <canvas id="bg-canvas"></canvas>
@@ -542,55 +573,67 @@
   </footer>
 
   <!-- Custom Script -->
-  <script src="/landing/script.js?v=3.3.6"></script>
+  <script src="/landing/script.js?v=3.5.9"></script>
 
   <!-- Motion ESM Animations -->
   <script type="module">
     import { animate, scroll, inView, spring, stagger } from 'https://cdn.jsdelivr.net/npm/motion@12.4.7/+esm';
 
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Hero Title & Eyebrow Entrance
-      const heroTitle = document.querySelector('.hero-title');
-      if (heroTitle) {
-        animate(heroTitle, { opacity: [0, 1], scale: [0.94, 1], y: [20, 0] }, { duration: 0.8, easing: spring({ stiffness: 90, damping: 14 }) });
+      try {
+        // 1. Hero Title & Eyebrow Entrance
+        const heroTitle = document.querySelector('.hero-title');
+        if (heroTitle) {
+          animate(heroTitle, { opacity: [0, 1], scale: [0.96, 1], y: [20, 0] }, { duration: 0.7 });
+        }
+
+        const heroSubtitle = document.querySelector('.hero-subtitle');
+        if (heroSubtitle) {
+          animate(heroSubtitle, { opacity: [0, 1], y: [15, 0] }, { duration: 0.7, delay: 0.15 });
+        }
+
+        // 2. Platform Cards Reveal
+        if (document.querySelector('.platforms-grid')) {
+          inView('.platforms-grid', () => {
+            animate('.platform-card', 
+              { opacity: [0, 1], y: [30, 0] }, 
+              { duration: 0.5, delay: stagger(0.1) }
+            );
+          });
+        }
+
+        // 3. Widgets Reveal
+        if (document.querySelector('.hud-grid')) {
+          inView('.hud-grid', () => {
+            animate('.hud-panel', 
+              { opacity: [0, 1], y: [25, 0] }, 
+              { duration: 0.55, delay: stagger(0.12) }
+            );
+          });
+        }
+
+        // 4. Comparison Table Reveal
+        if (document.querySelector('.comparison-table-wrapper')) {
+          inView('.comparison-table-wrapper', () => {
+            animate('.comparison-table-wrapper', 
+              { opacity: [0, 1], y: [20, 0] }, 
+              { duration: 0.6 }
+            );
+          });
+        }
+
+        // 5. FAQ Cards Stagger
+        if (document.querySelector('.faq-grid')) {
+          inView('.faq-grid', () => {
+            animate('.faq-card', 
+              { opacity: [0, 1], y: [20, 0] }, 
+              { duration: 0.5, delay: stagger(0.08) }
+            );
+          });
+        }
+      } catch (err) {
+        console.warn('Motion animation note:', err);
       }
-
-      const heroSubtitle = document.querySelector('.hero-subtitle');
-      if (heroSubtitle) {
-        animate(heroSubtitle, { opacity: [0, 1], y: [15, 0] }, { duration: 0.7, delay: 0.2 });
-      }
-
-      // 2. Platform Cards Reveal
-      inView('.platforms-grid', () => {
-        animate('.platform-card', 
-          { opacity: [0, 1], y: [35, 0] }, 
-          { duration: 0.6, delay: stagger(0.12), easing: spring({ stiffness: 110, damping: 14 }) }
-        );
-      });
-
-      // 3. Widgets Reveal
-      inView('.hud-grid', () => {
-        animate('.hud-panel', 
-          { opacity: [0, 1], y: [30, 0] }, 
-          { duration: 0.65, delay: stagger(0.15), easing: spring({ stiffness: 100, damping: 15 }) }
-        );
-      });
-
-      // 4. Comparison Table Reveal
-      inView('.comparison-table-wrapper', () => {
-        animate('.comparison-table-wrapper', 
-          { opacity: [0, 1], y: [25, 0] }, 
-          { duration: 0.7 }
-        );
-      });
-
-      // 5. FAQ Cards Stagger
-      inView('.faq-grid', () => {
-        animate('.faq-card', 
-          { opacity: [0, 1], y: [20, 0] }, 
-          { duration: 0.5, delay: stagger(0.1) }
-        );
-      });
     });
   </script>
 </body>

@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    Expense OS - Cinematic 3D Space & Planetary Landing Page Stylesheet
    Inspired by Solar System / Deep Space UI Reference
    ========================================================================== */
@@ -144,6 +144,200 @@ body {
   width: 600px;
   height: 450px;
   background: radial-gradient(circle, rgba(167, 139, 250, 0.08) 0%, transparent 70%);
+}
+
+/* ==========================================================================
+   0. Futuristic Cosmic Preloader
+   ========================================================================== */
+.landing-preloader {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #070a0e;
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 40%, rgba(56, 189, 248, 0.12) 0%, rgba(52, 211, 153, 0.06) 40%, #070a0e 80%);
+  background-size: 24px 24px, 100% 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.55s ease,
+              filter 0.55s ease;
+}
+
+.landing-preloader.loaded {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(1.05);
+  filter: blur(8px);
+}
+
+.preloader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  padding: 2rem;
+  max-width: 440px;
+  width: 90%;
+}
+
+/* Orbital Rings */
+.preloader-orbital-wrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.75rem;
+}
+
+.preloader-ring {
+  position: absolute;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.ring-outer {
+  width: 100px;
+  height: 100px;
+  border: 2px dashed rgba(56, 189, 248, 0.35);
+  border-top-color: #38bdf8;
+  border-right-color: #34d399;
+  animation: preloaderSpinClockwise 3s linear infinite;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+}
+
+.ring-inner {
+  width: 72px;
+  height: 72px;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-left-color: #34d399;
+  border-bottom-color: #a78bfa;
+  animation: preloaderSpinCounter 2s linear infinite;
+}
+
+.preloader-core {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(14, 19, 26, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.35);
+  animation: preloaderPulseCore 2s ease-in-out infinite alternate;
+}
+
+.preloader-planet {
+  font-size: 1.6rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.6));
+}
+
+/* Brand & Badge */
+.preloader-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.preloader-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.45rem;
+  letter-spacing: 0.18em;
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.preloader-accent {
+  color: var(--planet-blue);
+  text-shadow: 0 0 16px rgba(56, 189, 248, 0.6);
+}
+
+.preloader-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* Progress Track */
+.preloader-progress-track {
+  width: 240px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  margin-bottom: 1rem;
+}
+
+.preloader-progress-bar {
+  height: 100%;
+  width: 15%;
+  background: linear-gradient(90deg, #38bdf8, #34d399);
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.8), 0 0 6px rgba(56, 189, 248, 0.8);
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Status Text */
+.preloader-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+
+.preloader-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+  animation: pulseDot 1.2s infinite;
+}
+
+/* Keyframes */
+@keyframes preloaderSpinClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes preloaderSpinCounter {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes preloaderPulseCore {
+  0% { transform: scale(0.94); box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+  100% { transform: scale(1.06); box-shadow: 0 0 30px rgba(52, 211, 153, 0.5); }
 }
 
 /* ==========================================================================
