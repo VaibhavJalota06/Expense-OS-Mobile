@@ -17,18 +17,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="/landing/style.css?v=3.3.7">
+  <link rel="stylesheet" href="/landing/style.css?v=3.3.8">
 </head>
 <body>
 
   <!-- Background Starfield Canvas -->
   <canvas id="bg-canvas"></canvas>
   <div class="ambient-glow-top"></div>
-
-  <!-- Scroll-Bound Traveling Circuit Indicator Track -->
-  <div class="circuit-line-track" aria-hidden="true">
-    <div class="circuit-pulse-dot" id="circuit-dot"></div>
-  </div>
 
   <!-- 1. Minimal Navbar -->
   <header class="navbar-container">
@@ -132,7 +127,7 @@
             Fast, responsive 120Hz mobile app with fingerprint unlock, instant offline logging, and automatic cloud backup.
           </p>
         </div>
-        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-Android.apk" download="ExpenseOS-Android.apk" class="btn-download btn-emerald-dl" data-platform="android">
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-Android.apk" download="ExpenseOS-Android.apk" class="btn-download btn-dl-android" data-platform="android">
           <i class="fa-solid fa-download"></i> Download Android APK
         </a>
       </div>
@@ -149,8 +144,8 @@
             Lightweight native 5MB app for Windows 10 &amp; 11. Quick system tray access, keyboard shortcuts, and zero bloat.
           </p>
         </div>
-        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-Windows-Setup.exe" download="ExpenseOS-Windows-Setup.exe" class="btn-download btn-secondary-dl" data-platform="windows">
-          <i class="fa-solid fa-download"></i> Download Windows App
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-Windows-Setup.exe" download="ExpenseOS-Windows-Setup.exe" class="btn-download btn-dl-windows" data-platform="windows">
+          <i class="fa-solid fa-download"></i> Download Windows .EXE
         </a>
       </div>
 
@@ -166,8 +161,8 @@
             Built for iPhone and iPad. Clean interface, smooth gesture navigation, and easily sideloaded via AltStore or Sideloadly.
           </p>
         </div>
-        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-iOS.ipa" download="ExpenseOS-iOS.ipa" class="btn-download btn-secondary-dl" data-platform="ios" style="border-color: rgba(244, 63, 94, 0.4);">
-          <i class="fa-brands fa-apple"></i> Download iOS IPA
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/latest/download/ExpenseOS-iOS.ipa" download="ExpenseOS-iOS.ipa" class="btn-download btn-dl-ios" data-platform="ios">
+          <i class="fa-brands fa-apple"></i> Download iOS .IPA
         </a>
       </div>
 
@@ -183,15 +178,15 @@
             No download required. Works smoothly on Chrome, Safari, Edge, and Firefox with full offline PWA support.
           </p>
         </div>
-        <a href="/index.html" target="_blank" class="btn-download btn-secondary-dl" style="background: rgba(167, 139, 250, 0.2); border-color: rgba(167, 139, 250, 0.4); color: #fff;">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Browser
+        <a href="/index.html" target="_blank" class="btn-download btn-dl-web">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Web App
         </a>
       </div>
 
     </div>
   </section>
 
-  <!-- 5. Interactive Calculators & Scenario Switcher -->
+  <!-- 5. Interactive Calculators & Live Demos -->
   <section id="live-demos" class="section">
     <div class="section-header">
       <div class="section-tag"><i class="fa-solid fa-sliders"></i> Interactive Tools</div>
@@ -199,29 +194,7 @@
       <p class="section-desc">Try out our currency conversion, auto-tagging, and savings calculator live on this page.</p>
     </div>
 
-    <!-- Interactive Scenario Simulator (Normal Routine vs Travel/Holiday Month) -->
-    <div class="scenario-container">
-      <div class="scenario-header">
-        <div class="scenario-title-box">
-          <h3>Scenario Preview: Routine Month vs. Travel Month</h3>
-          <p>See how Expense OS immediately adapts to changing spending habits without breaking your budget.</p>
-        </div>
-        <div class="scenario-toggle-rail">
-          <button type="button" class="scenario-btn active" id="btn-scenario-routine" onclick="switchScenario('routine')">
-            <i class="fa-solid fa-house"></i> Routine Month
-          </button>
-          <button type="button" class="scenario-btn" id="btn-scenario-travel" onclick="switchScenario('travel')">
-            <i class="fa-solid fa-plane"></i> Travel &amp; Vacation Month
-          </button>
-        </div>
-      </div>
-
-      <div class="scenario-display-grid" id="scenario-grid">
-        <!-- Injected via JavaScript based on active scenario -->
-      </div>
-    </div>
-
-    <div class="hud-grid" style="margin-top: 2rem;">
+    <div class="hud-grid">
       
       <!-- Live FX Currency Converter Widget -->
       <div class="glass-panel hud-panel">
