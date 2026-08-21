@@ -400,5 +400,55 @@
 
   <!-- Custom Cinematic Script Engine -->
   <script src="/landing/script.js?v=3.3.5"></script>
+
+  <!-- Motion (Framer Motion Engine) ESM Animations -->
+  <script type="module">
+    import { animate, scroll, inView, spring, stagger } from 'https://cdn.jsdelivr.net/npm/motion@12.4.7/+esm';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Hero Title & Eyebrow Motion Entrance
+      const heroTitle = document.querySelector('.hero-title');
+      if (heroTitle) {
+        animate(heroTitle, { opacity: [0, 1], scale: [0.94, 1], y: [20, 0] }, { duration: 0.8, easing: spring({ stiffness: 90, damping: 14 }) });
+      }
+
+      const heroSubtitle = document.querySelector('.hero-subtitle');
+      if (heroSubtitle) {
+        animate(heroSubtitle, { opacity: [0, 1], y: [15, 0] }, { duration: 0.7, delay: 0.2 });
+      }
+
+      // 2. Glassmorphic Platform Cards Staggered Spring Reveal
+      inView('.platforms-grid', () => {
+        animate('.platform-card', 
+          { opacity: [0, 1], y: [35, 0] }, 
+          { duration: 0.6, delay: stagger(0.12), easing: spring({ stiffness: 110, damping: 14 }) }
+        );
+      });
+
+      // 3. HUD Widgets Motion Reveal
+      inView('.hud-grid', () => {
+        animate('.hud-panel', 
+          { opacity: [0, 1], y: [30, 0] }, 
+          { duration: 0.65, delay: stagger(0.15), easing: spring({ stiffness: 100, damping: 15 }) }
+        );
+      });
+
+      // 4. Comparison Table Motion Reveal
+      inView('.comparison-table-wrapper', () => {
+        animate('.comparison-table-wrapper', 
+          { opacity: [0, 1], y: [25, 0] }, 
+          { duration: 0.7 }
+        );
+      });
+
+      // 5. FAQ Cards Motion Stagger
+      inView('.faq-grid', () => {
+        animate('.faq-card', 
+          { opacity: [0, 1], y: [20, 0] }, 
+          { duration: 0.5, delay: stagger(0.1) }
+        );
+      });
+    });
+  </script>
 </body>
 </html>

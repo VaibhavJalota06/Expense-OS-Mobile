@@ -1847,5 +1847,25 @@
       });
     }
   </script>
+
+  <!-- Motion (Framer Motion Engine) ESM Animations -->
+  <script type="module">
+    import { animate, spring, stagger } from 'https://cdn.jsdelivr.net/npm/motion@12.4.7/+esm';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Animate Hero Cards & Balance Widgets on App Open
+      const cards = document.querySelectorAll('.card, .hero-card, .metric-card, .chart-card');
+      if (cards.length > 0) {
+        animate(cards, { opacity: [0, 1], y: [16, 0] }, { duration: 0.5, delay: stagger(0.06), easing: spring({ stiffness: 120, damping: 16 }) });
+      }
+
+      // 2. Global Modal Motion Animate Function
+      window.motionAnimateElement = (element, opacity = [0, 1], y = [20, 0]) => {
+        if (element) {
+          animate(element, { opacity, y }, { duration: 0.35, easing: spring({ stiffness: 140, damping: 16 }) });
+        }
+      };
+    });
+  </script>
 </body>
 </html>
