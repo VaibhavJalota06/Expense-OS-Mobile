@@ -373,35 +373,6 @@ body {
   font-weight: 400;
 }
 
-/* Hero Live Activity Stats Strip */
-.hero-stats-strip {
-  display: inline-flex;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 0.6rem 1.5rem;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-pill);
-  margin-top: 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--text-med);
-}
-
-.stat-divider {
-  width: 1px;
-  height: 14px;
-  background: var(--glass-border);
-}
-
 /* Big Glowing Pill CTA button matching reference */
 .hero-actions {
   display: flex;
