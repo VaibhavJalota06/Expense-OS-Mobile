@@ -74,6 +74,13 @@
   scrollbar-color: rgba(255, 255, 255, 0.12) var(--bg-base);
 }
 
+ul, ol, li {
+  list-style: none !important;
+  list-style-type: none !important;
+  margin: 0;
+  padding: 0;
+}
+
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
