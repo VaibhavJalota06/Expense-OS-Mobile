@@ -1213,20 +1213,19 @@ body {
     padding: 1.25rem 1rem;
   }
   .faq-question {
-    font-size: 0.95rem;
-  }
-  .footer-links {
-    gap: 1rem;
-    flex-direction: column;
-  }
+.footer {
+  position: relative;
+  z-index: 20;
+  border-top: 1px solid var(--glass-border);
+  padding: 4rem 1.5rem 3rem;
+  text-align: center;
+  background: rgba(3, 7, 18, 0.85);
 }
 
-/* Extra Small Phones (<= 400px) */
-@media (max-width: 400px) {
-  .hero-title {
-    font-size: 1.7rem;
-  }
-  .section-title {
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 2rem;
   list-style: none;
   margin-bottom: 2rem;
@@ -1432,11 +1431,12 @@ body {
   }
 }
 
-/* Testimonials Grid & Custom Range Sliders */
+/* Testimonials Grid Alignment & Layout */
 .testimonials-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.75rem;
+  align-items: stretch;
 }
 
 .testimonial-card {
@@ -1444,8 +1444,13 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   transition: all 0.35s ease;
+  min-height: 220px;
 }
 
 .testimonial-card:hover {
@@ -1454,6 +1459,13 @@ body {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.2);
 }
 
+@media (max-width: 992px) {
+  .testimonials-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+/* Custom Range Slider */
 .widget-slider {
   width: 100%;
   height: 6px;
