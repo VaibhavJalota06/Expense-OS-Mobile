@@ -298,9 +298,8 @@ document.addEventListener('DOMContentLoaded', () => {
     export: `
       <div style="text-align: center; padding: 1rem 0;">
         <div style="font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Export your data anytime</div>
-        <p style="font-size: 0.88rem; color: var(--text-med); max-width: 500px; margin: 0 auto 1.5rem;">Download your complete spending history as a spreadsheet or backup file with a single click.</p>
         <div style="display: flex; gap: 1rem; justify-content: center;">
-          <a href="/index.html" target="_blank" class="btn-hero-primary" style="padding: 0.6rem 1.5rem; font-size: 0.85rem;"><i class="fa-solid fa-file-csv"></i> Open App Exporter</a>
+          <a href="/index.html" target="_blank" class="hud-calc-btn" style="padding: 0.75rem 1.75rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-file-csv"></i> Open App Exporter</a>
         </div>
       </div>
     `
