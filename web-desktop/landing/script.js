@@ -1,118 +1,103 @@
 /* ==========================================================================
-   Expense OS - Cinematic 3D Space & Planetary Landing Script Engine
+   Expense OS - Modern Financial Ambient Landing Script Engine
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // ---------- 1. Cosmic Starfield Canvas ----------
+  // ---------- 1. Soothing Financial Ambient Node Canvas ----------
   const canvas = document.getElementById('bg-canvas');
   if (canvas) {
     const ctx = canvas.getContext('2d');
     let width = canvas.width = window.innerWidth;
     let height = canvas.height = window.innerHeight;
 
+    let mouseX = width / 2;
+    let mouseY = height / 2;
+
     window.addEventListener('resize', () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
     });
 
-    const starCount = 90;
-    const stars = [];
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
 
-    for (let i = 0; i < starCount; i++) {
-      stars.push({
+    const nodeCount = Math.min(Math.floor(window.innerWidth / 22), 55);
+    const nodes = [];
+    const colors = ['rgba(52, 211, 153, ', 'rgba(56, 189, 248, ', 'rgba(167, 139, 250, '];
+
+    for (let i = 0; i < nodeCount; i++) {
+      nodes.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        radius: Math.random() * 1.4 + 0.3,
-        alpha: Math.random() * 0.7 + 0.2,
-        twinkleSpeed: Math.random() * 0.02 + 0.005,
-        twinkleDir: 1
+        vx: (Math.random() - 0.5) * 0.45,
+        vy: (Math.random() - 0.5) * 0.45,
+        radius: Math.random() * 1.6 + 1.0,
+        baseAlpha: Math.random() * 0.35 + 0.15,
+        colorPrefix: colors[Math.floor(Math.random() * colors.length)]
       });
     }
 
-    // Occasional shooting stars
-    let shootingStar = null;
-
-    function spawnShootingStar() {
-      if (!shootingStar && Math.random() < 0.015) {
-        shootingStar = {
-          x: Math.random() * width * 0.8,
-          y: Math.random() * height * 0.4,
-          len: Math.random() * 80 + 50,
-          speed: Math.random() * 12 + 10,
-          opacity: 1
-        };
-      }
-    }
-
-    function animateCosmos() {
+    function animateAmbientNetwork() {
       ctx.clearRect(0, 0, width, height);
 
-      // Render stars
-      stars.forEach(s => {
-        s.alpha += s.twinkleSpeed * s.twinkleDir;
-        if (s.alpha > 0.9) s.twinkleDir = -1;
-        if (s.alpha < 0.2) s.twinkleDir = 1;
+      // Draw subtle connecting links
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
 
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
-        ctx.shadowBlur = 4;
-        ctx.shadowColor = '#38bdf8';
-        ctx.fill();
-      });
-
-      // Render shooting star
-      spawnShootingStar();
-      if (shootingStar) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.strokeStyle = `rgba(56, 189, 248, ${shootingStar.opacity})`;
-        ctx.lineWidth = 2;
-        ctx.moveTo(shootingStar.x, shootingStar.y);
-        ctx.lineTo(shootingStar.x + shootingStar.len, shootingStar.y + (shootingStar.len * 0.4));
-        ctx.stroke();
-        ctx.restore();
-
-        shootingStar.x += shootingStar.speed;
-        shootingStar.y += shootingStar.speed * 0.4;
-        shootingStar.opacity -= 0.02;
-
-        if (shootingStar.opacity <= 0 || shootingStar.x > width) {
-          shootingStar = null;
+          if (dist < 140) {
+            const alpha = (1 - dist / 140) * 0.12;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = `rgba(148, 163, 184, ${alpha})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
         }
       }
 
-      requestAnimationFrame(animateCosmos);
+      // Update & draw nodes
+      nodes.forEach(node => {
+        // Move slowly
+        node.x += node.vx;
+        node.y += node.vy;
+
+        // Soft bounce at boundaries
+        if (node.x < 0 || node.x > width) node.vx *= -1;
+        if (node.y < 0 || node.y > height) node.vy *= -1;
+
+        // Subtle mouse interactivity
+        const mdx = node.x - mouseX;
+        const mdy = node.y - mouseY;
+        const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
+        if (mDist < 120) {
+          const push = (1 - mDist / 120) * 0.3;
+          node.x += (mdx / mDist) * push;
+          node.y += (mdy / mDist) * push;
+        }
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `${node.colorPrefix}${node.baseAlpha})`;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = 'rgba(56, 189, 248, 0.4)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      requestAnimationFrame(animateAmbientNetwork);
     }
 
-    animateCosmos();
+    animateAmbientNetwork();
   }
 
-  // ---------- 2. Parallax Planet & Orbital Tilt on Mouse Move ----------
-  const heroSection = document.getElementById('hero');
-  const planetGlobe = document.getElementById('planet-globe');
-  const orbitalLeft = document.querySelector('.orbital-node.left');
-  const orbitalRight = document.querySelector('.orbital-node.right');
-
-  if (heroSection && planetGlobe) {
-    window.addEventListener('mousemove', (e) => {
-      const { innerWidth, innerHeight } = window;
-      const xRatio = (e.clientX / innerWidth - 0.5) * 2; // -1 to 1
-      const yRatio = (e.clientY / innerHeight - 0.5) * 2;
-
-      planetGlobe.style.transform = `translate(${xRatio * 8}px, ${yRatio * 4}px) rotate(${xRatio * 1}deg)`;
-
-      if (orbitalLeft) {
-        orbitalLeft.style.transform = `translateY(calc(-50% + ${yRatio * 10}px)) translateX(${xRatio * 6}px)`;
-      }
-      if (orbitalRight) {
-        orbitalRight.style.transform = `translateY(calc(-50% + ${-yRatio * 10}px)) translateX(${-xRatio * 6}px)`;
-      }
-    });
-  }
-
-  // ---------- 3. Navbar Scroll Elevation ----------
+  // ---------- 2. Navbar Scroll Elevation ----------
   const navbar = document.querySelector('.navbar');
   window.addEventListener('scroll', () => {
     if (window.scrollY > 40) {

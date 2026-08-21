@@ -6,36 +6,37 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Cosmic Palette */
-  --bg-deep-space: #030712;
-  --bg-space-mesh: radial-gradient(circle at 50% -20%, #0d1e38 0%, #030712 70%);
-  --bg-card: rgba(11, 19, 38, 0.65);
-  --bg-card-hover: rgba(17, 29, 58, 0.85);
+  /* Financial Dark Terminal System (App-Aligned) */
+  --bg-deep-space: #090C11;
+  --bg-base: #090C11;
+  --bg-elevated: #0E131A;
+  --bg-card: rgba(14, 19, 26, 0.75);
+  --bg-card-hover: rgba(20, 27, 38, 0.9);
   
-  /* Celestial Neon Glow Accents */
+  /* Core Financial Accents */
   --planet-blue: #38bdf8;
-  --planet-blue-glow: rgba(56, 189, 248, 0.45);
-  --planet-cyan: #06b6d4;
-  --planet-cyan-glow: rgba(6, 182, 212, 0.5);
-  --planet-emerald: #10b981;
-  --planet-emerald-glow: rgba(16, 185, 129, 0.45);
-  --planet-purple: #8b5cf6;
-  --planet-purple-glow: rgba(139, 92, 246, 0.45);
-  --planet-gold: #f59e0b;
+  --planet-blue-glow: rgba(56, 189, 248, 0.35);
+  --planet-cyan: #38bdf8;
+  --planet-cyan-glow: rgba(56, 189, 248, 0.4);
+  --planet-emerald: #34d399;
+  --planet-emerald-glow: rgba(52, 211, 153, 0.35);
+  --planet-purple: #a78bfa;
+  --planet-purple-glow: rgba(167, 139, 250, 0.35);
+  --planet-gold: #fbbf24;
 
   /* Typography Colors */
   --text-pure: #ffffff;
   --text-high: #f8fafc;
   --text-med: #cbd5e1;
-  --text-dim: #64748b;
+  --text-dim: #94a3b8;
 
   /* Glass & Borders */
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-border-hover: rgba(56, 189, 248, 0.4);
-  --glass-blur: blur(16px);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-border-hover: rgba(52, 211, 153, 0.3);
+  --glass-blur: blur(20px);
 
   /* Fonts */
-  --font-serif: 'Cinzel', serif;
+  --font-serif: 'Plus Jakarta Sans', sans-serif;
   --font-display: 'Outfit', sans-serif;
   --font-body: 'Plus Jakarta Sans', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
@@ -47,22 +48,22 @@
   --radius-sm: 8px;
 }
 
-/* Custom Cosmic Scrollbar */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-deep-space);
+  background: var(--bg-base);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(56, 189, 248, 0.3);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 999px;
-  border: 2px solid var(--bg-deep-space);
+  border: 2px solid var(--bg-base);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--planet-blue);
-  box-shadow: 0 0 12px var(--planet-blue-glow);
+  background: var(--planet-emerald);
+  box-shadow: 0 0 12px var(--planet-emerald-glow);
 }
 
 * {
@@ -70,7 +71,7 @@
   padding: 0;
   box-sizing: border-box;
   scrollbar-width: thin;
-  scrollbar-color: rgba(56, 189, 248, 0.3) var(--bg-deep-space);
+  scrollbar-color: rgba(255, 255, 255, 0.12) var(--bg-base);
 }
 
 html {
@@ -79,8 +80,11 @@ html {
 }
 
 body {
-  background-color: var(--bg-deep-space);
-  background-image: var(--bg-space-mesh);
+  background-color: var(--bg-base);
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(9, 12, 17, 0.8) 0%, rgba(9, 12, 17, 1) 100%);
+  background-size: 28px 28px, 100% 100%;
   color: var(--text-high);
   font-family: var(--font-body);
   overflow-x: hidden;
@@ -90,7 +94,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Background Particle / Starfield Canvas */
+/* Background Particle / Floating Ambient Canvas */
 #bg-canvas {
   position: fixed;
   top: 0;
@@ -101,18 +105,38 @@ body {
   pointer-events: none;
 }
 
-/* Ambient Radial Glow Gradients in Background */
-.ambient-glow-top {
+/* Ambient Radial Glow Auroras */
+.ambient-glow {
   position: absolute;
-  top: -150px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 800px;
-  height: 400px;
-  background: radial-gradient(ellipse at center, rgba(14, 165, 233, 0.18) 0%, rgba(3, 7, 18, 0) 70%);
-  filter: blur(60px);
+  border-radius: 50%;
+  filter: blur(140px);
   pointer-events: none;
   z-index: 1;
+}
+
+.glow-emerald {
+  top: 5%;
+  left: 15%;
+  width: 500px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.12) 0%, transparent 70%);
+}
+
+.glow-sky {
+  top: 15%;
+  right: 15%;
+  width: 550px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, transparent 70%);
+}
+
+.glow-violet {
+  top: 45%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.08) 0%, transparent 70%);
 }
 
 /* ==========================================================================
@@ -322,256 +346,47 @@ body {
   animation: pulseDotAmber 1.8s infinite ease-in-out;
 }
 
-@keyframes pulseDotAmber {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.5; }
+  backdrop-filter: var(--glass-blur);
 }
 
-/* Eyebrow Label matching reference */
+.badge-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 10px #34d399;
+  animation: pulseDot 2s infinite;
+}
+
 .hero-eyebrow {
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.35em;
-  color: var(--planet-blue);
-  margin-bottom: 0.75rem;
-  display: inline-block;
-  opacity: 0.95;
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+  letter-spacing: 0.12em;
+  color: #34d399;
+  margin: 0;
 }
 
-/* Main Cinematic Serif Title with Gradient & Glow */
 .hero-title {
-  font-family: var(--font-serif);
-  font-size: clamp(3.2rem, 8vw, 6.5rem);
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7.5vw, 5.8rem);
   font-weight: 800;
-  letter-spacing: 0.1em;
-  background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 35%, #38bdf8 70%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1.05;
-  filter: drop-shadow(0 0 35px rgba(56, 189, 248, 0.35));
+  letter-spacing: -0.02em;
+  color: var(--text-pure);
+  line-height: 1.1;
   margin-bottom: 1.25rem;
 }
 
 .hero-subtitle {
-  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  font-size: clamp(1rem, 2vw, 1.2rem);
   color: var(--text-med);
-  max-width: 660px;
-  margin: 0 auto 2.25rem;
-  line-height: 1.7;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.75;
   font-weight: 400;
 }
 
-/* Big Glowing Pill CTA button matching reference */
-.hero-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  margin-bottom: 2rem;
-  position: relative;
-  z-index: 30;
-}
-
-.btn-hero-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  padding: 0.9rem 2.5rem;
-  background: #ffffff;
-  color: #030712;
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  border-radius: var(--radius-pill);
-  text-decoration: none;
-  box-shadow: 0 0 25px rgba(255, 255, 255, 0.6), 0 0 50px rgba(56, 189, 248, 0.35);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  border: none;
-  cursor: pointer;
-}
-
-.btn-hero-primary:hover {
-  background: #f0fdf4;
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 0 35px rgba(255, 255, 255, 0.8), 0 0 70px rgba(56, 189, 248, 0.6);
-}
-
-.btn-hero-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.85rem 1.75rem;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  color: var(--text-pure);
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  border-radius: var(--radius-pill);
-  text-decoration: none;
-  border: 1px solid var(--glass-border);
-  transition: all 0.3s ease;
-}
-
-.btn-hero-secondary:hover {
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(56, 189, 248, 0.5);
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
-  transform: translateY(-2px);
-}
-
-/* Flanking Orbital Side Nodes matching reference (Left & Right planets) */
-.orbital-node {
-  position: absolute;
-  top: 48%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  z-index: 25;
-  text-decoration: none;
-  transition: all 0.4s ease;
-  cursor: pointer;
-}
-
-.orbital-node.left {
-  left: clamp(1rem, 5vw, 6rem);
-  flex-direction: row;
-}
-
-.orbital-node.right {
-  right: clamp(1rem, 5vw, 6rem);
-  flex-direction: row-reverse;
-}
-
-.planet-orb {
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  position: relative;
-  box-shadow: inset -10px -10px 20px rgba(0, 0, 0, 0.85), 0 0 25px rgba(56, 189, 248, 0.3);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  flex-shrink: 0;
-}
-
-.planet-orb.orb-cyan {
-  background: radial-gradient(circle at 35% 35%, #67e8f9, #0891b2 60%, #082f49 100%);
-  box-shadow: inset -12px -12px 24px rgba(0, 0, 0, 0.9), 0 0 30px rgba(6, 182, 212, 0.45);
-}
-
-.planet-orb.orb-emerald {
-  background: radial-gradient(circle at 35% 35%, #6ee7b7, #059669 60%, #064e3b 100%);
-  box-shadow: inset -12px -12px 24px rgba(0, 0, 0, 0.9), 0 0 30px rgba(16, 185, 129, 0.45);
-}
-
-.orbital-node:hover .planet-orb {
-  transform: scale(1.12) rotate(15deg);
-  box-shadow: inset -8px -8px 20px rgba(0, 0, 0, 0.7), 0 0 45px rgba(56, 189, 248, 0.7);
-}
-
-.orbital-label {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
-.orbital-node.right .orbital-label {
-  text-align: right;
-}
-
-.orbital-tag {
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--text-pure);
-}
-
-.orbital-desc {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  font-weight: 500;
-}
-
-/* ==========================================================================
-   3. Majestic Glowing Planet Curvature (Bottom Horizon)
-   ========================================================================== */
-.planet-horizon-wrapper {
-  position: relative;
-  width: 100%;
-  margin-top: -3rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 15;
-  pointer-events: none;
-}
-
-.planet-globe {
-  width: clamp(600px, 90vw, 1200px);
-  height: clamp(300px, 45vw, 600px);
-  border-radius: 50% 50% 0 0;
-  position: relative;
-  overflow: hidden;
-  background: radial-gradient(circle at 50% 10%, #1e3a8a 0%, #0f172a 40%, #030712 85%);
-  box-shadow: 
-    0 -15px 50px rgba(56, 189, 248, 0.4),
-    0 -40px 100px rgba(14, 165, 233, 0.25),
-    inset 0 10px 40px rgba(255, 255, 255, 0.6),
-    inset 0 40px 80px rgba(56, 189, 248, 0.4);
-  border-top: 2px solid rgba(255, 255, 255, 0.7);
-}
-
-.planet-texture-overlay {
-  position: absolute;
-  inset: 0;
-  background: 
-    radial-gradient(ellipse at 45% 25%, rgba(6, 182, 212, 0.35) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 40%, rgba(16, 185, 129, 0.25) 0%, transparent 55%),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.06'/%3E%3C/svg%3E");
-  mix-blend-mode: overlay;
-}
-
-/* Atmospheric Rim Glow */
-.planet-atmosphere-glow {
-  position: absolute;
-  top: 0;
-  left: 10%;
-  right: 10%;
-  height: 60px;
-  background: linear-gradient(180deg, rgba(56, 189, 248, 0.45) 0%, transparent 100%);
-  filter: blur(15px);
-}
-
-/* Scroll indicator down arrow inside planet apex */
-.scroll-indicator-down {
-  position: absolute;
-  top: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--text-pure);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  z-index: 35;
-  pointer-events: auto;
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.4);
   animation: bounceDown 2s infinite ease-in-out;
