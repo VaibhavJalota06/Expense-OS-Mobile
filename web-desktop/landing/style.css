@@ -335,17 +335,22 @@ body {
   border-color: #f59e0b;
   box-shadow: 0 0 35px rgba(245, 158, 11, 0.45);
   transform: translateY(-2px);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
-.pulse-dot-amber {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #f59e0b;
-  box-shadow: 0 0 12px #f59e0b;
-  animation: pulseDotAmber 1.8s infinite ease-in-out;
-}
-
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 1.25rem;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: var(--radius-pill);
+  margin-bottom: 1.75rem;
   backdrop-filter: var(--glass-blur);
 }
 
@@ -1036,6 +1041,79 @@ body {
   padding: 4rem 1.5rem 3rem;
   text-align: center;
   background: rgba(3, 7, 18, 0.85);
+}
+
+.hero-section {
+  position: relative;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 13rem 1.5rem 4rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  z-index: 20;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 1.25rem;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: var(--radius-pill);
+  margin-bottom: 1.75rem;
+  backdrop-filter: var(--glass-blur);
+}
+
+.badge-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 10px #34d399;
+  animation: pulseDot 2s infinite;
+}
+
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #34d399;
+  margin: 0;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7.5vw, 5.8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-pure);
+  line-height: 1.1;
+  margin-bottom: 1.25rem;
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: var(--text-med);
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.75;
+  font-weight: 400;
 }
 
 .btn-download {
