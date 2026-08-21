@@ -221,7 +221,7 @@ class NotificationService {
     }
   }
 
-  /// 1. Budget Cap Alerts
+  /// 1. Global Monthly Budget Cap Alerts
   Future<void> checkBudgetAlert({
     required double totalSpent,
     required double budgetCap,
@@ -242,6 +242,34 @@ class NotificationService {
         id: 102,
         title: '🔔 80% Budget Threshold Reached',
         body: 'You have used ${(ratio * 100).toInt()}% of your monthly limit ($currencySymbol${totalSpent.toStringAsFixed(0)} / $currencySymbol${budgetCap.toStringAsFixed(0)}).',
+        channelType: NotificationChannelType.budget,
+      );
+    }
+  }
+
+  /// 1b. Category-Specific Budget Cap Alerts (80% and 100% Thresholds)
+  Future<void> checkCategoryBudgetAlert({
+    required String categoryName,
+    required double categorySpent,
+    required double categoryCap,
+    required String currencySymbol,
+  }) async {
+    if (categoryCap <= 0) return;
+    final ratio = categorySpent / categoryCap;
+    final idOffset = categoryName.hashCode.abs() % 1000;
+
+    if (ratio >= 1.0) {
+      await showNotification(
+        id: 2000 + idOffset,
+        title: '⚠️ $categoryName Budget Exceeded!',
+        body: 'You spent $currencySymbol${categorySpent.toStringAsFixed(0)} of $currencySymbol${categoryCap.toStringAsFixed(0)} cap for $categoryName.',
+        channelType: NotificationChannelType.budget,
+      );
+    } else if (ratio >= 0.8) {
+      await showNotification(
+        id: 1000 + idOffset,
+        title: '🔔 80% $categoryName Budget Reached',
+        body: '$categoryName is at ${(ratio * 100).toInt()}% of limit ($currencySymbol${categorySpent.toStringAsFixed(0)} / $currencySymbol${categoryCap.toStringAsFixed(0)}).',
         channelType: NotificationChannelType.budget,
       );
     }

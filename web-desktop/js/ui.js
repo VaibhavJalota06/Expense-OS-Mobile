@@ -1,3 +1,37 @@
+// Helper to trigger Native Windows OS & Web Toast Notifications for 80% and 100% budget caps
+function triggerDesktopBudgetNotification(title, body, notificationKey) {
+  try {
+    const lastTrigger = sessionStorage.getItem(`notif_sent_${notificationKey}`);
+    if (lastTrigger) return; // Prevent duplicate toast spam in same session
+    sessionStorage.setItem(`notif_sent_${notificationKey}`, 'true');
+
+    // 1. Electron Native Windows OS Toast Notification
+    if (window.electronAPI && window.electronAPI.showNativeNotification) {
+      window.electronAPI.showNativeNotification(title, body);
+    }
+
+    // 2. HTML5 Web Desktop Notification
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        new Notification(title, { body, icon: 'icon.png' });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(title, { body, icon: 'icon.png' });
+          }
+        });
+      }
+    }
+  } catch (e) {
+    console.error('Desktop notification error:', e);
+  }
+}
+
+// Request Desktop Notification Permission on Startup
+if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+  try { Notification.requestPermission(); } catch(e) {}
+}
+
 // ---------- DOM Elements ----------
 const viewTitleEl = document.getElementById('view-title');
 const viewSubtitleEl = document.getElementById('view-subtitle');
@@ -1063,6 +1097,23 @@ function updateUI() {
       statPercentEl.textContent = 'Budget Limit Not Set (Click to Set ✏️)';
     } else {
       statPercentEl.textContent = `${spentRatio.toFixed(1)}% Spent of Cap (${remainingPercent.toFixed(1)}% Left)`;
+    }
+  }
+
+  // Trigger Windows OS Toast Notification & Web Notification for 80% and 100% Budget Thresholds
+  if (budget > 0) {
+    if (spentRatio >= 100) {
+      triggerDesktopBudgetNotification(
+        '⚠️ Monthly Budget Exceeded!',
+        `You have spent ${formatCurrency(totalSpent)} of your ${formatCurrency(budget)} limit (${spentRatio.toFixed(1)}%).`,
+        `budget_exceeded_${selectedMonth}`
+      );
+    } else if (spentRatio >= 80) {
+      triggerDesktopBudgetNotification(
+        '🔔 80% Budget Threshold Reached',
+        `You have used ${spentRatio.toFixed(1)}% of your monthly budget limit (${formatCurrency(totalSpent)} / ${formatCurrency(budget)}).`,
+        `budget_80_${selectedMonth}`
+      );
     }
   }
 

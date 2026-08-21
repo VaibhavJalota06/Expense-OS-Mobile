@@ -1130,6 +1130,24 @@ class SupabaseService {
             currencySymbol: currencySymbol,
           );
         }
+
+        // Also check Category-Specific Budget Cap Thresholds
+        if (expense.category.isNotEmpty) {
+          final now = DateTime.now();
+          final categoryExpenses = _localExpenses
+              .where((e) => e.type.toLowerCase() == 'expense' && e.category == expense.category && e.date.year == now.year && e.date.month == now.month)
+              .fold(0.0, (sum, e) => sum + e.amount);
+
+          final catCap = prefs.getDouble('category_budget_cap_${expense.category}') ?? 0.0;
+          if (catCap > 0) {
+            await NotificationService().checkCategoryBudgetAlert(
+              categoryName: expense.category,
+              categorySpent: categoryExpenses,
+              categoryCap: catCap,
+              currencySymbol: currencySymbol,
+            );
+          }
+        }
       }
     } catch (e) {
       debugPrint('Error triggering transaction notification: $e');

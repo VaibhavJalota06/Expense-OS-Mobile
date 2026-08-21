@@ -1,8 +1,23 @@
-const { app, BrowserWindow, Menu, shell, ipcMain, session } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, session, Notification } = require('electron');
 const path = require('path');
 const http = require('http');
 const fs = require('fs');
 const os = require('os');
+
+// Native Windows OS Notification IPC handler
+ipcMain.handle('show-native-notification', (_event, { title, body }) => {
+  try {
+    if (Notification.isSupported()) {
+      new Notification({
+        title: title || 'Expense OS Alert',
+        body: body || '',
+        icon: path.join(__dirname, 'icon.png')
+      }).show();
+    }
+  } catch (e) {
+    console.error('Error showing Windows native notification:', e);
+  }
+});
 
 const DESKTOP_AUTH_SCHEME = 'com.expensecalculator.expenseosmobile';
 
