@@ -145,7 +145,7 @@ class SupabaseService {
 
   static const String googleServerClientId = "15673126976-lrpvllp65ca80f4d5p87mes8bb6srorp.apps.googleusercontent.com";
   static const String googleIosClientId = "15673126976-c67nj6jll0noh5neas867mdv023n81f1.apps.googleusercontent.com";
-  static const String googleAndroidClientId = "15673126976-fu4p42673veifcnqh6dg0kfd2joibr6g.apps.googleusercontent.com";
+  static const String googleAndroidClientId = "15673126976-g693egeeq53e02g4b4a1b02s307h5u7h.apps.googleusercontent.com";
 
   Future<bool> signInWithGoogle() async {
     debugPrint('[GoogleSignIn] Starting Google Sign-In flow...');
