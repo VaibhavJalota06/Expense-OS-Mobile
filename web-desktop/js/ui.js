@@ -76,19 +76,18 @@ window.ExpenseValidator = {
   }
 };
 
+
 // Helper to trigger Native Windows OS & Web Toast Notifications for 80% and 100% budget caps
 function triggerDesktopBudgetNotification(title, body, notificationKey) {
   try {
-    const lastTrigger = sessionStorage.getItem(`notif_sent_${notificationKey}`);
-    if (lastTrigger) return; // Prevent duplicate toast spam in same session
-    sessionStorage.setItem(`notif_sent_${notificationKey}`, 'true');
+    const lastTrigger = sessionStorage.getItem('notif_sent_' + notificationKey);
+    if (lastTrigger) return;
+    sessionStorage.setItem('notif_sent_' + notificationKey, 'true');
 
-    // 1. Electron Native Windows OS Toast Notification
     if (window.electronAPI && window.electronAPI.showNativeNotification) {
       window.electronAPI.showNativeNotification(title, body);
     }
 
-    // 2. HTML5 Web Desktop Notification
     if ('Notification' in window) {
       if (Notification.permission === 'granted') {
         new Notification(title, { body, icon: 'icon.png' });
@@ -103,6 +102,120 @@ function triggerDesktopBudgetNotification(title, body, notificationKey) {
   } catch (e) {
     console.error('Desktop notification error:', e);
   }
+}
+
+// ────────────────────────────────────────────────────────────
+// Accessible Global Toast Notification Engine
+// ────────────────────────────────────────────────────────────
+window.showToast = function(message, type = 'info', duration = 3500) {
+  try {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.className = 'toast-container';
+      container.setAttribute('role', 'region');
+      container.setAttribute('aria-label', 'Notifications');
+      container.setAttribute('aria-live', 'polite');
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-item toast-' + type;
+    toast.setAttribute('role', 'status');
+
+    let iconHtml = '<i class="fa-solid fa-circle-info text-sky"></i>';
+    if (type === 'success') iconHtml = '<i class="fa-solid fa-circle-check text-emerald"></i>';
+    else if (type === 'error') iconHtml = '<i class="fa-solid fa-circle-exclamation text-rose"></i>';
+    else if (type === 'warning') iconHtml = '<i class="fa-solid fa-triangle-exclamation text-amber"></i>';
+
+    toast.innerHTML = [
+      '<div style="display:flex; align-items:center; gap:0.6rem;">',
+      iconHtml,
+      '<span>' + message + '</span>',
+      '</div>',
+      '<button type="button" class="toast-close-btn" aria-label="Dismiss">&times;</button>'
+    ].join('');
+
+    const closeBtn = toast.querySelector('.toast-close-btn');
+    const dismiss = () => {
+      toast.classList.add('toast-exit');
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 300);
+    };
+
+    if (closeBtn) closeBtn.onclick = dismiss;
+    container.appendChild(toast);
+
+    if (duration > 0) {
+      setTimeout(dismiss, duration);
+    }
+  } catch (err) {
+    console.warn('Toast display notice:', err);
+  }
+};
+
+// ────────────────────────────────────────────────────────────
+// Recurring Bills & Subscriptions Dashboard Reminder Banner
+// ────────────────────────────────────────────────────────────
+function renderDashboardBillReminders() {
+  const banner = document.getElementById('dashboard-bill-reminder-banner');
+  if (!banner) return;
+
+  const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
+  const currentDay = new Date().getDate();
+
+  // Find unpaid bills due in <= 3 days or overdue
+  const alertBills = (subscriptions || []).filter(sub => {
+    if (sub.lastPaidMonth === currentYM) return false;
+    const dueDay = Number(sub.dueDay || 1);
+    const diff = dueDay - currentDay;
+    return diff <= 3;
+  });
+
+  if (alertBills.length === 0) {
+    banner.classList.add('hidden');
+    banner.innerHTML = '';
+    return;
+  }
+
+  const overdueCount = alertBills.filter(s => currentDay > s.dueDay).length;
+  const isUrgent = overdueCount > 0;
+
+  let title = '';
+  let subtext = '';
+
+  if (alertBills.length === 1) {
+    const bill = alertBills[0];
+    const diff = bill.dueDay - currentDay;
+    let dueTag = diff < 0 ? ('Overdue by ' + Math.abs(diff) + ' day(s)') : (diff === 0 ? 'Due Today!' : ('Due in ' + diff + ' day(s)'));
+    title = '⚠️ Recurring Bill Alert: ' + bill.name + ' (' + formatCurrency(bill.amount) + ')';
+    subtext = dueTag + ' • Avoid late fees by clearing it today.';
+  } else {
+    const totalDue = alertBills.reduce((acc, b) => acc + Number(b.amount || 0), 0);
+    title = '⚠️ ' + alertBills.length + ' Recurring Bills Due Soon (' + formatCurrency(totalDue) + ')';
+    subtext = (overdueCount > 0 ? (overdueCount + ' bill(s) are overdue! ') : '') + 'Next bills: ' + alertBills.map(b => b.name).slice(0, 3).join(', ');
+  }
+
+  banner.className = 'bill-reminder-banner ' + (isUrgent ? 'urgent' : '');
+  banner.classList.remove('hidden');
+  banner.innerHTML = [
+    '<div class="bill-reminder-left">',
+    '  <div class="bill-reminder-icon">',
+    '    <i class="fa-solid ' + (isUrgent ? 'fa-triangle-exclamation text-rose' : 'fa-bell text-amber') + '"></i>',
+    '  </div>',
+    '  <div>',
+    '    <div class="bill-reminder-title">' + title + '</div>',
+    '    <div class="bill-reminder-sub">' + subtext + '</div>',
+    '  </div>',
+    '</div>',
+    '<div style="display:flex; align-items:center; gap:0.5rem;">',
+    '  <button type="button" class="bill-reminder-btn" onclick="if(window.switchView)window.switchView(\'bills\');">',
+    '    Manage Bills <i class="fa-solid fa-arrow-right" style="margin-left:4px;"></i>',
+    '  </button>',
+    '</div>'
+  ].join('');
 }
 
 // Request Desktop Notification Permission on Startup
@@ -568,6 +681,7 @@ function updateUI() {
     if (activeView === 'dashboard') {
       renderRadialGauge(spentRatio, totalSpent, budget);
       renderSubscriptions();
+      renderDashboardBillReminders();
       renderCategoryBreakdown(filteredMonthExpenses, totalSpent);
       renderMonthlyTrendChart();
       renderTransactionsTable(filteredMonthExpenses);
@@ -1311,9 +1425,23 @@ function renderTransactionsTable(monthFilteredExpenses) {
   }
 
   const filtered = monthFilteredExpenses.filter(item => {
-    const matchesSearch = item.description.toLowerCase().includes(searchTerm) ||
-                          item.category.toLowerCase().includes(searchTerm) ||
-                          item.payment.toLowerCase().includes(searchTerm);
+    let matchesSearch = true;
+    if (searchTerm) {
+      const descMatch = (item.description || '').toLowerCase().includes(searchTerm);
+      const catMatch = (item.category || '').toLowerCase().includes(searchTerm);
+      const payMatch = (item.payment || '').toLowerCase().includes(searchTerm);
+      const dateMatch = (item.date || '').toLowerCase().includes(searchTerm);
+      const amtMatch = String(item.amount || '').includes(searchTerm);
+
+      let rangeMatch = false;
+      if (searchTerm.startsWith('>') && !isNaN(parseFloat(searchTerm.slice(1)))) {
+        rangeMatch = Number(item.amount || 0) >= parseFloat(searchTerm.slice(1));
+      } else if (searchTerm.startsWith('<') && !isNaN(parseFloat(searchTerm.slice(1)))) {
+        rangeMatch = Number(item.amount || 0) <= parseFloat(searchTerm.slice(1));
+      }
+
+      matchesSearch = descMatch || catMatch || payMatch || dateMatch || amtMatch || rangeMatch;
+    }
     const matchesCat = selectedCat === 'ALL' || item.category === selectedCat;
 
     let matchesTime = true;

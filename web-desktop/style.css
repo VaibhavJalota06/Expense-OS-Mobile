@@ -4869,3 +4869,157 @@ select option {
   font-weight: 600;
   line-height: 1;
 }
+
+/* ── Accessibility Skip Link ── */
+.skip-to-content {
+  position: fixed;
+  top: -100px;
+  left: 1.5rem;
+  background: var(--emerald, #10b981);
+  color: #000000;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-md, 10px);
+  z-index: 9999999;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+  transition: top 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.skip-to-content:focus {
+  top: 1.5rem;
+  outline: 2px solid #ffffff;
+}
+
+/* ── Recurring Bills Due-Date Dashboard Alert Banner ── */
+.bill-reminder-banner {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(245, 158, 11, 0.1));
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-lg, 14px);
+  padding: 1rem 1.35rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  animation: slideInDown 0.3s ease;
+  backdrop-filter: blur(12px);
+}
+.bill-reminder-banner.urgent {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(220, 38, 38, 0.12));
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+}
+.bill-reminder-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.bill-reminder-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+.bill-reminder-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #f8fafc;
+  margin-bottom: 0.2rem;
+}
+.bill-reminder-sub {
+  font-size: 0.82rem;
+  color: var(--text-mid, #94a3b8);
+}
+.bill-reminder-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.bill-reminder-btn:hover {
+  background: var(--emerald, #10b981);
+  border-color: var(--emerald, #10b981);
+  color: #000000;
+}
+
+/* ── Global Accessible Toast Notifications ── */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 420px;
+  width: calc(100% - 3rem);
+  pointer-events: none;
+}
+.toast-item {
+  pointer-events: auto;
+  background: rgba(18, 18, 20, 0.95);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 10px);
+  padding: 0.85rem 1.15rem;
+  color: #f8fafc;
+  font-size: 0.88rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s ease;
+}
+.toast-item.toast-success {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, rgba(18, 18, 20, 0.96), rgba(16, 185, 129, 0.12));
+}
+.toast-item.toast-error {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: linear-gradient(135deg, rgba(18, 18, 20, 0.96), rgba(239, 68, 68, 0.12));
+}
+.toast-item.toast-info {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: linear-gradient(135deg, rgba(18, 18, 20, 0.96), rgba(56, 189, 248, 0.12));
+}
+.toast-item.toast-warning {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: linear-gradient(135deg, rgba(18, 18, 20, 0.96), rgba(245, 158, 11, 0.12));
+}
+.toast-item.toast-exit {
+  opacity: 0;
+  transform: translateX(30px) scale(0.95);
+}
+.toast-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  padding: 0.2rem;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+.toast-close-btn:hover {
+  color: #f8fafc;
+}
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+

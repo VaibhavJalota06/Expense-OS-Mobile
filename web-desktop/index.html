@@ -69,6 +69,9 @@
   </script>
 </head>
 <body>
+  <!-- Accessibility Skip Link -->
+  <a href="#main-content" class="skip-to-content">Skip to main content</a>
+
   <!-- Instant App Startup Loader -->
   <div id="app-loader" class="app-loader-screen">
     <div class="loader-content">
@@ -466,6 +469,9 @@
       <div class="views-container">
         <!-- 1. Dashboard View -->
         <section id="view-dashboard" class="view-panel active">
+          <!-- Upcoming Recurring Bills & Subscriptions Reminder Banner -->
+          <div id="dashboard-bill-reminder-banner" class="bill-reminder-banner hidden" role="alert" aria-live="polite"></div>
+
           <!-- Overview Key Metrics Grid -->
           <div class="stats-grid">
             <div class="glass-panel stat-card stat-card-glow-emerald clickable-card" id="stat-account-card" title="Click to edit starting account balance" onclick="if(window.openAccountBalanceModal)window.openAccountBalanceModal(event);">
@@ -1855,6 +1861,9 @@
     </div>
   </div>
 
+
+  <!-- Global Accessible Toast Notification Region -->
+  <div id="toast-container" class="toast-container" role="region" aria-label="Notifications" aria-live="polite"></div>
 
   <!-- EmailJS Browser SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
