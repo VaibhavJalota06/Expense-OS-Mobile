@@ -26,11 +26,11 @@ void main() async {
     ),
   );
 
-  // Instant local storage access (<5ms)
+  // Instant local storage access
   final prefs = await SharedPreferences.getInstance();
 
-  // Non-blocking background initializations
-  SupabaseService.initialize().catchError((e) {
+  // Core Service initializations
+  await SupabaseService.initialize().catchError((e) {
     debugPrint('Supabase initialization error: $e');
   });
   CurrencyService().initialize().catchError((_) {});
@@ -40,7 +40,8 @@ void main() async {
   final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
   final isPersistentLoggedIn = prefs.getBool('persistent_user_logged_in') ?? false;
   final cachedUserId = prefs.getString('supabase_user_id');
-  final hasCachedUser = (cachedUserId != null && cachedUserId.isNotEmpty) || (prefs.getString('google_user_email') != null);
+  final currentUser = SupabaseService().currentUser;
+  final hasCachedUser = (currentUser != null) || (cachedUserId != null && cachedUserId.isNotEmpty) || (prefs.getString('google_user_email') != null);
 
   final initialAuthed = isPersistentLoggedIn || hasCachedUser;
 

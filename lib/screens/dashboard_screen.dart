@@ -147,6 +147,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (user != null) {
       await SupabaseService.cacheUserData(user);
       await SupabaseService.loadFinancialProfileFromCloud();
+      final prefs = await SharedPreferences.getInstance();
+      final bal = prefs.getDouble('user_starting_balance') ?? 0.0;
+      final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
+      if (mounted) {
+        setState(() {
+          _startingBalance = bal;
+          _monthlyBudgetCap = budget;
+        });
+        _evaluateBudgetRules();
+      }
     }
   }
 
