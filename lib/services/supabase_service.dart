@@ -347,7 +347,24 @@ class SupabaseService {
       final userId = await _getEffectiveUserId();
       final prefs = await SharedPreferences.getInstance();
       final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
-      final balance = prefs.getDouble('user_starting_balance') ?? 0.0;
+      double balance = prefs.getDouble('user_starting_balance') ?? 0.0;
+      if (balance <= 0) {
+        try {
+          final existing = await client.from('user_data').select('subscriptions,incomes').eq('user_id', userId).maybeSingle();
+          if (existing != null && existing['subscriptions'] is List) {
+            for (var s in existing['subscriptions']) {
+              if (s is Map && (s['id'] == 'system_financial_meta' || s['type'] == 'system_financial_meta')) {
+                final cloudBal = (s['starting_balance'] as num?)?.toDouble() ?? 0.0;
+                if (cloudBal > 0) {
+                  balance = cloudBal;
+                  await prefs.setDouble('user_starting_balance', balance);
+                  break;
+                }
+              }
+            }
+          }
+        } catch (_) {}
+      }
       final currency = prefs.getString('app_currency_code') ?? CurrencyService.currencyCodeNotifier.value;
 
       final webExpenses = _localExpenses
@@ -869,10 +886,6 @@ class SupabaseService {
           } catch (_) {
             await prefs2.remove('saved_group_expenses');
           }
-
-          await prefs2.setDouble('user_starting_balance', 0.0);
-          await prefs2.remove('expense_os_goals');
-          await prefs2.remove('monex_goals');
         }
 
         // Sync budget from relational budgets table
