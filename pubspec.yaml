@@ -1,7 +1,7 @@
 name: expense_os
 description: "A comprehensive Expense OS mobile application."
 publish_to: "none"
-version: 3.3.6+86
+version: 3.3.7+87
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
