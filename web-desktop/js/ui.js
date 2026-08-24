@@ -166,8 +166,9 @@ function renderDashboardBillReminders() {
   const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
   const currentDay = new Date().getDate();
 
-  // Find unpaid bills due in <= 2 days (today, tomorrow, or in 2 days) or overdue
+  // Find unpaid bills due in <= 2 days (today, tomorrow, or in 2 days) or overdue in active month
   const alertBills = (subscriptions || []).filter(sub => {
+    if (sub.startMonth && currentYM < sub.startMonth) return false;
     if (sub.lastPaidMonth === currentYM) return false;
     const dueDay = Number(sub.dueDay || 1);
     const diff = dueDay - currentDay;
@@ -296,6 +297,7 @@ const subModal = document.getElementById('sub-modal');
 const subForm = document.getElementById('sub-form');
 const subNameInput = document.getElementById('sub-name');
 const subAmountInput = document.getElementById('sub-amount');
+const subStartMonthInput = document.getElementById('sub-start-month');
 const subDueDayInput = document.getElementById('sub-due-day');
 const subCategorySelect = document.getElementById('sub-category');
 const subModalCloseBtn = document.getElementById('sub-modal-close');
@@ -888,7 +890,12 @@ function renderSubscriptions() {
         const isPaidThisMonth = sub.lastPaidMonth === currentYM;
         let urgencyBadge = '';
 
-        if (isPaidThisMonth) {
+        if (sub.startMonth && currentYM < sub.startMonth) {
+          const parts = sub.startMonth.split('-');
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const mName = monthNames[parseInt(parts[1], 10) - 1] || sub.startMonth;
+          urgencyBadge = `<span class="bill-urgency-badge normal"><i class="fa-regular fa-calendar-days"></i> Starts ${mName} (Day ${sub.dueDay})</span>`;
+        } else if (isPaidThisMonth) {
           urgencyBadge = `<span class="bill-urgency-badge paid"><i class="fa-solid fa-circle-check"></i> Paid this Month</span>`;
         } else {
           const daysLeft = sub.dueDay - currentDay;
@@ -1928,6 +1935,10 @@ function openSubscriptionModal() {
   subNameInput.value = '';
   subAmountInput.value = '';
   subDueDayInput.value = '';
+  if (subStartMonthInput) {
+    const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
+    subStartMonthInput.value = currentYM;
+  }
   subModal.classList.remove('hidden');
   subNameInput.focus();
 }
@@ -1942,6 +1953,8 @@ if (subForm) {
     const amount = parseFloat(subAmountInput.value);
     const dueDay = parseInt(subDueDayInput.value, 10);
     const category = subCategorySelect.value;
+    const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
+    const startMonth = subStartMonthInput ? subStartMonthInput.value : currentYM;
 
     if (!name || isNaN(amount) || amount <= 0 || isNaN(dueDay) || dueDay < 1 || dueDay > 31) {
       showAlert('Invalid Details', 'Please enter valid subscription details.');
@@ -1954,6 +1967,7 @@ if (subForm) {
       amount,
       dueDay,
       category,
+      startMonth: startMonth || currentYM,
       lastPaidMonth: ''
     };
 
