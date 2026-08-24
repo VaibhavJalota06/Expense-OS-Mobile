@@ -30,11 +30,11 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS starting_balance NUMERIC(12
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+-- Public read for leaderboard display (display name, avatar, level)
 DROP POLICY IF EXISTS "Allow public read access to profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Allow authenticated and guest upsert to profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Allow updates to profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Allow deletions on profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Users manage own profile" ON public.profiles;
+CREATE POLICY "Allow public read access to profiles"
+    ON public.profiles FOR SELECT
+    USING (true);
 
 CREATE POLICY "Users manage own profile"
     ON public.profiles FOR ALL
@@ -257,6 +257,36 @@ CREATE POLICY "Users manage own user_data"
     ON public.user_data FOR ALL
     USING (auth.uid()::text = user_id OR user_id IS NULL)
     WITH CHECK (auth.uid()::text = user_id OR user_id IS NULL);
+
+
+-- --------------------------------------------------------
+-- 10. User Emerald Rewards & Leaderboard Table
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.user_emerald_rewards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    emeralds INT NOT NULL DEFAULT 250,
+    streak_days INT NOT NULL DEFAULT 0,
+    unlocked_stickers JSONB NOT NULL DEFAULT '[]'::jsonb,
+    purchased_shop_items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT unique_emerald_user UNIQUE (user_id)
+);
+
+ALTER TABLE public.user_emerald_rewards ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read on leaderboard emerald points
+DROP POLICY IF EXISTS "Allow public read access to emerald leaderboard" ON public.user_emerald_rewards;
+CREATE POLICY "Allow public read access to emerald leaderboard"
+    ON public.user_emerald_rewards FOR SELECT
+    USING (true);
+
+-- Allow users to manage their own emerald rewards
+DROP POLICY IF EXISTS "Users manage own emerald rewards" ON public.user_emerald_rewards;
+CREATE POLICY "Users manage own emerald rewards"
+    ON public.user_emerald_rewards FOR ALL
+    USING (auth.uid() = user_id OR user_id IS NULL)
+    WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
 
 
 -- --------------------------------------------------------

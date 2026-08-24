@@ -5666,34 +5666,67 @@ window.renderLeaderboardView = function() {
     const initialUsers = [currentUserObj, ...GLOBAL_COMMUNITY_CONTENDERS];
     renderTableRows(initialUsers);
 
-    // Async fetch additional authentic users from Supabase
+    // Async fetch all registered users from Supabase (profiles, rewards, user_data)
     try {
       const supaClient = typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null;
       if (supaClient) {
         Promise.all([
+          supaClient.from('profiles').select('*'),
           supaClient.from('user_emerald_rewards').select('*'),
-          supaClient.from('profiles').select('*')
-        ]).then(([rewardsRes, profilesRes]) => {
-          if (rewardsRes && rewardsRes.data && rewardsRes.data.length) {
-            const profileMap = {};
-            if (profilesRes && profilesRes.data) {
-              profilesRes.data.forEach(p => {
-                if (p.user_id) profileMap[p.user_id] = p;
-              });
-            }
+          supaClient.from('user_data').select('user_id, expenses, updated_at')
+        ]).then(([profilesRes, rewardsRes, userDataRes]) => {
+          const cloudUsersMap = new Map();
 
-            const cloudUsersMap = new Map();
-            GLOBAL_COMMUNITY_CONTENDERS.forEach(c => cloudUsersMap.set(c.userId, c));
-            cloudUsersMap.set(currentUserId, currentUserObj);
+          // 1. Seed with global community contenders
+          GLOBAL_COMMUNITY_CONTENDERS.forEach(c => cloudUsersMap.set(c.userId, c));
 
+          // 2. Add current user
+          cloudUsersMap.set(currentUserId, currentUserObj);
+
+          // 3. Build reward and profile maps
+          const rewardMap = {};
+          if (rewardsRes && Array.isArray(rewardsRes.data)) {
             rewardsRes.data.forEach(r => {
-              if (!r.user_id) return;
-              if (r.user_id === currentUserId) return;
+              if (r.user_id) rewardMap[r.user_id] = r;
+            });
+          }
 
-              const prof = profileMap[r.user_id] || {};
-              const name = prof.name || prof.full_name || (prof.email ? prof.email.split('@')[0] : 'Expense User');
-              const avatar = prof.avatar_url || prof.picture || prof.photo_url || '';
-              const st = window.getStageByEmeralds(r.emeralds || 0);
+          // 4. Process all profiles found in Supabase
+          if (profilesRes && Array.isArray(profilesRes.data) && profilesRes.data.length > 0) {
+            profilesRes.data.forEach(p => {
+              const uId = p.user_id || p.id;
+              if (!uId || uId === currentUserId) return;
+
+              const r = rewardMap[uId] || {};
+              const name = p.full_name || p.name || (p.email ? p.email.split('@')[0] : 'Expense User');
+              const avatar = p.avatar_url || p.picture || p.photo_url || '';
+              const emeralds = r.emeralds || 250;
+              const st = window.getStageByEmeralds(emeralds);
+              const unlocked = (r.unlocked_stickers || []).map(stId => {
+                const item = window.STICKER_REGISTRY ? window.STICKER_REGISTRY.find(s => s.id === stId) : null;
+                return item ? item.icon : '';
+              }).filter(Boolean);
+
+              cloudUsersMap.set(uId, {
+                userId: uId,
+                name: name,
+                avatar: avatar,
+                emeralds: emeralds,
+                stage: st.stage,
+                badge: st.badge,
+                title: st.title,
+                stickers: unlocked.length ? unlocked : ['🌱'],
+                isCurrentUser: false
+              });
+            });
+          }
+
+          // 5. Also process any rewards entries that might not have a profile row
+          if (rewardsRes && Array.isArray(rewardsRes.data)) {
+            rewardsRes.data.forEach(r => {
+              if (!r.user_id || r.user_id === currentUserId || cloudUsersMap.has(r.user_id)) return;
+              const emeralds = r.emeralds || 250;
+              const st = window.getStageByEmeralds(emeralds);
               const unlocked = (r.unlocked_stickers || []).map(stId => {
                 const item = window.STICKER_REGISTRY ? window.STICKER_REGISTRY.find(s => s.id === stId) : null;
                 return item ? item.icon : '';
@@ -5701,20 +5734,22 @@ window.renderLeaderboardView = function() {
 
               cloudUsersMap.set(r.user_id, {
                 userId: r.user_id,
-                name: name,
-                avatar: avatar,
-                emeralds: r.emeralds || 0,
+                name: 'Verified Trader',
+                avatar: '',
+                emeralds: emeralds,
                 stage: st.stage,
                 badge: st.badge,
                 title: st.title,
-                stickers: unlocked.length ? unlocked : ['🐖'],
+                stickers: unlocked.length ? unlocked : ['💎'],
                 isCurrentUser: false
               });
             });
-
-            renderTableRows(Array.from(cloudUsersMap.values()));
           }
-        }).catch(() => {});
+
+          renderTableRows(Array.from(cloudUsersMap.values()));
+        }).catch((err) => {
+          console.warn('Leaderboard Supabase fetch notice:', err);
+        });
       }
     } catch(e) {}
   }
