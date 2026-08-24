@@ -213,10 +213,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return _startingBalance + loggedIncome;
   }
 
+  /// Dynamic Budgeting Mode: Effective Monthly Budget = Base Budget + Month's Logged Extra Income
+  double get _effectiveMonthlyBudget {
+    if (_monthlyBudgetCap <= 0 && _currentMonthIncome <= 0) return 0.0;
+    return _monthlyBudgetCap + _currentMonthIncome;
+  }
+
   /// Available money in bank account after monthly budget allocation is deducted
   double get _availableMoney {
-    if (_monthlyBudgetCap <= 0) return _totalIncome;
-    return (_totalIncome - _monthlyBudgetCap).clamp(0.0, double.infinity);
+    if (_effectiveMonthlyBudget <= 0) return _totalIncome;
+    return (_totalIncome - _effectiveMonthlyBudget).clamp(0.0, double.infinity);
   }
 
   double get _currentMonthExpenses {
@@ -227,8 +233,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   double get _remainingMonthlyBudget {
-    if (_monthlyBudgetCap <= 0) return 0.0;
-    return _monthlyBudgetCap - _currentMonthExpenses;
+    if (_effectiveMonthlyBudget <= 0) return 0.0;
+    return _effectiveMonthlyBudget - _currentMonthExpenses;
   }
 
   void _openAddExpenseSheet([Expense? expenseToEdit]) {
@@ -355,7 +361,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   index: 2,
                                   title: 'Remaining Budget',
                                   amount: currency.format(_remainingMonthlyBudget),
-                                  subtitle: _monthlyBudgetCap > 0 ? 'Cap: ${currency.format(_monthlyBudgetCap)}' : 'Tap to set cap',
+                                  subtitle: _effectiveMonthlyBudget > 0 ? 'Cap: ${currency.format(_effectiveMonthlyBudget)}' : 'Tap to set cap',
                                   icon: Icons.pie_chart_outline_rounded,
                                   isHighlighted: _activeStatIndex == 2,
                                 ),
@@ -1238,27 +1244,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     if (alerts.isNotEmpty && mounted) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 22),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  alerts.first,
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 12.5),
+      final prefs = await SharedPreferences.getInstance();
+      final todayKey = DateTime.now().toIso8601String().substring(0, 10);
+      final lastShownDate = prefs.getString('last_budget_warning_snackbar_date');
+
+      // Only show the on-screen warning SnackBar once per day
+      if (lastShownDate != todayKey) {
+        await prefs.setString('last_budget_warning_snackbar_date', todayKey);
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    alerts.first,
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 12.5),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+            backgroundColor: const Color(0xFFB42318),
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
-          backgroundColor: const Color(0xFFB42318),
-          duration: const Duration(seconds: 4),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-      );
+        );
+      }
     }
   }
 

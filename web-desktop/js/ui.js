@@ -77,12 +77,14 @@ window.ExpenseValidator = {
 };
 
 
-// Helper to trigger Native Windows OS & Web Toast Notifications for 80% and 100% budget caps
+// Helper to trigger Native Windows OS & Web Toast Notifications for 80% and 100% budget caps (Once per day)
 function triggerDesktopBudgetNotification(title, body, notificationKey) {
   try {
-    const lastTrigger = sessionStorage.getItem('notif_sent_' + notificationKey);
+    const todayStr = getLocalDateString();
+    const storageKey = 'budget_notif_sent_' + notificationKey + '_' + todayStr;
+    const lastTrigger = localStorage.getItem(storageKey);
     if (lastTrigger) return;
-    sessionStorage.setItem('notif_sent_' + notificationKey, 'true');
+    localStorage.setItem(storageKey, 'true');
 
     if (window.electronAPI && window.electronAPI.showNativeNotification) {
       window.electronAPI.showNativeNotification(title, body);
@@ -521,20 +523,6 @@ function updateUI() {
   });
 
   const totalSpent = filteredMonthExpenses.reduce((sum, item) => sum + Number(item.amount), 0);
-  const remaining = budget - totalSpent;
-  const spentRatio = budget > 0 ? (totalSpent / budget) * 100 : 0;
-  const remainingPercent = Math.max(0, 100 - spentRatio);
-
-  if (activeMonthLabelEl) {
-    activeMonthLabelEl.textContent = selectedMonth === 'ALL' ? 'All Time' : formatMonthLabel(selectedMonth);
-  }
-
-  // Update Stat Cards & Topbar Budget Edit Button Label
-  if (btnEditBudget) {
-    btnEditBudget.innerHTML = budget > 0 
-      ? '<i class="fa-solid fa-pen-to-square"></i> Edit Budget' 
-      : '<i class="fa-solid fa-sliders"></i> Set Budget';
-  }
 
   // Filter Incomes by Selected Month
   const filteredMonthIncomes = incomes.filter(item => {
@@ -546,7 +534,24 @@ function updateUI() {
   const totalAllTimeIncome = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const totalAllTimeSpent = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const totalAccountMoney = accountBalance + totalAllTimeIncome;
-  const availableMoney = budget > 0 ? Math.max(0, totalAccountMoney - budget) : totalAccountMoney;
+
+  // Dynamic Budgeting: Effective Monthly Budget = Base Set Budget + Active Month's Extra Income
+  const effectiveMonthlyBudget = (budget > 0 || totalIncome > 0) ? (budget + totalIncome) : 0;
+  const remaining = effectiveMonthlyBudget - totalSpent;
+  const spentRatio = effectiveMonthlyBudget > 0 ? (totalSpent / effectiveMonthlyBudget) * 100 : 0;
+  const remainingPercent = Math.max(0, 100 - spentRatio);
+  const availableMoney = effectiveMonthlyBudget > 0 ? Math.max(0, totalAccountMoney - effectiveMonthlyBudget) : totalAccountMoney;
+
+  if (activeMonthLabelEl) {
+    activeMonthLabelEl.textContent = selectedMonth === 'ALL' ? 'All Time' : formatMonthLabel(selectedMonth);
+  }
+
+  // Update Stat Cards & Topbar Budget Edit Button Label
+  if (btnEditBudget) {
+    btnEditBudget.innerHTML = budget > 0 
+      ? '<i class="fa-solid fa-pen-to-square"></i> Edit Budget' 
+      : '<i class="fa-solid fa-sliders"></i> Set Budget';
+  }
 
   const statAccountBalanceEl = document.getElementById('stat-account-balance');
   const statIncomeEl = document.getElementById('stat-income');
@@ -560,8 +565,8 @@ function updateUI() {
   const statAccountSubtextEl = document.getElementById('stat-account-subtext');
   if (statAccountSubtextEl) {
     const totalGoalSaved = savingsGoals.reduce((sum, g) => sum + Number(g.savedAmount || 0), 0);
-    if (budget > 0) {
-      statAccountSubtextEl.innerHTML = `Gross Total: <strong>${formatCurrency(totalAccountMoney, 'stat-account-balance')}</strong> (${formatCurrency(budget)} budgeted) <span class="edit-hint">(Edit ✏️)</span>`;
+    if (effectiveMonthlyBudget > 0) {
+      statAccountSubtextEl.innerHTML = `Gross Total: <strong>${formatCurrency(totalAccountMoney, 'stat-account-balance')}</strong> (${formatCurrency(effectiveMonthlyBudget)} budgeted) <span class="edit-hint">(Edit ✏️)</span>`;
     } else if (totalGoalSaved > 0) {
       statAccountSubtextEl.innerHTML = `Allocated to Goals: <strong>${formatCurrency(totalGoalSaved, 'stat-account-balance')}</strong> <span class="edit-hint">(Edit ✏️)</span>`;
     } else {
@@ -576,30 +581,30 @@ function updateUI() {
   }
 
   if (statRemainingEl) {
-    statRemainingEl.textContent = budget > 0 ? formatCurrency(remaining, 'stat-remaining') : (isCardMasked('stat-remaining') ? '••••••' : '₹0.00');
-    statRemainingEl.className = (budget > 0 && remaining < 0) ? 'stat-value text-rose mono' : 'stat-value text-emerald mono';
+    statRemainingEl.textContent = effectiveMonthlyBudget > 0 ? formatCurrency(remaining, 'stat-remaining') : (isCardMasked('stat-remaining') ? '••••••' : '₹0.00');
+    statRemainingEl.className = (effectiveMonthlyBudget > 0 && remaining < 0) ? 'stat-value text-rose mono' : 'stat-value text-emerald mono';
   }
 
   if (statPercentEl) {
-    if (budget === 0) {
+    if (effectiveMonthlyBudget === 0) {
       statPercentEl.textContent = 'Budget Limit Not Set (Click to Set ✏️)';
     } else {
       statPercentEl.textContent = `${spentRatio.toFixed(1)}% Spent of Cap (${remainingPercent.toFixed(1)}% Left)`;
     }
   }
 
-  // Trigger Windows OS Toast Notification & Web Notification for 80% and 100% Budget Thresholds
-  if (budget > 0) {
+  // Trigger Windows OS Toast Notification & Web Notification for 80% and 100% Budget Thresholds (Once per day)
+  if (effectiveMonthlyBudget > 0) {
     if (spentRatio >= 100) {
       triggerDesktopBudgetNotification(
         '⚠️ Monthly Budget Exceeded!',
-        `You have spent ${formatCurrency(totalSpent)} of your ${formatCurrency(budget)} limit (${spentRatio.toFixed(1)}%).`,
+        `You have spent ${formatCurrency(totalSpent)} of your ${formatCurrency(effectiveMonthlyBudget)} limit (${spentRatio.toFixed(1)}%).`,
         `budget_exceeded_${selectedMonth}`
       );
     } else if (spentRatio >= 80) {
       triggerDesktopBudgetNotification(
         '🔔 80% Budget Threshold Reached',
-        `You have used ${spentRatio.toFixed(1)}% of your monthly budget limit (${formatCurrency(totalSpent)} / ${formatCurrency(budget)}).`,
+        `You have used ${spentRatio.toFixed(1)}% of your monthly budget limit (${formatCurrency(totalSpent)} / ${formatCurrency(effectiveMonthlyBudget)}).`,
         `budget_80_${selectedMonth}`
       );
     }
@@ -608,7 +613,7 @@ function updateUI() {
   const leftoverIconEl = document.getElementById('status-icon');
   if (leftoverIconEl) {
     leftoverIconEl.className = 'fa-solid stat-icon';
-    if (budget > 0) {
+    if (effectiveMonthlyBudget > 0) {
       if (remaining < 0) {
         leftoverIconEl.classList.add('fa-circle-exclamation', 'text-rose');
       } else if (spentRatio >= 80) {
@@ -626,12 +631,21 @@ function updateUI() {
     statIncomeCountEl.innerHTML = `${filteredMonthIncomes.length} extra source${filteredMonthIncomes.length === 1 ? '' : 's'} <span class="edit-hint">(+Add)</span>`;
   }
 
-  if (statBudgetEl) statBudgetEl.textContent = formatCurrency(budget, 'stat-budget');
+  if (statBudgetEl) statBudgetEl.textContent = formatCurrency(effectiveMonthlyBudget, 'stat-budget');
+  const statBudgetSubtextEl = document.getElementById('stat-budget-subtext');
+  if (statBudgetSubtextEl) {
+    if (totalIncome > 0) {
+      statBudgetSubtextEl.innerHTML = `Base: ${formatCurrency(budget)} + Extra: ${formatCurrency(totalIncome)} <span class="edit-hint">(Edit ✏️)</span>`;
+    } else {
+      statBudgetSubtextEl.innerHTML = `Monthly Spending Limit <span class="edit-hint">(Edit ✏️)</span>`;
+    }
+  }
+
   if (statSpentEl) statSpentEl.textContent = formatCurrency(totalSpent, 'stat-spent');
   if (statCountEl) statCountEl.textContent = `${filteredMonthExpenses.length} transaction${filteredMonthExpenses.length === 1 ? '' : 's'}`;
 
   const sidebarBudgetVal = document.getElementById('sidebar-budget-val');
-  if (sidebarBudgetVal) sidebarBudgetVal.textContent = formatCurrency(budget, 'sb-budget-val');
+  if (sidebarBudgetVal) sidebarBudgetVal.textContent = formatCurrency(effectiveMonthlyBudget, 'sb-budget-val');
 
   // Balance Indicator Colors
   if (statRemainingEl && statusIconEl) {
