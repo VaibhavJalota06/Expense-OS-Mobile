@@ -2234,11 +2234,16 @@ select option {
   align-items: center;
   gap: 0.35rem;
 }
-.action-btn-del {
+.action-btn-del,
+.action-btn-edit {
   color: var(--text-low);
+  transition: var(--transition);
 }
 .action-btn-del:hover {
   color: var(--rose);
+}
+.action-btn-edit:hover {
+  color: var(--sky);
 }
 
 /* Empty States */

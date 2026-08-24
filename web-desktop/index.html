@@ -1296,7 +1296,7 @@
   <div id="sub-modal" class="modal-overlay hidden">
     <div class="modal-card glass-panel">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-calendar-plus"></i> Add Recurring Bill</h3>
+        <h3 id="sub-modal-title"><i class="fa-solid fa-calendar-plus"></i> Add Recurring Bill</h3>
         <button id="sub-modal-close" class="icon-btn" onclick="if(window.closeSubModal)window.closeSubModal(event);"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <form id="sub-form" class="modal-form">
@@ -1334,7 +1334,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" id="sub-modal-cancel" class="btn btn-secondary" onclick="if(window.closeSubModal)window.closeSubModal(event);">Cancel</button>
-          <button type="submit" class="btn btn-primary">Add Subscription</button>
+          <button type="submit" id="sub-submit-btn" class="btn btn-primary">Add Subscription</button>
         </div>
       </form>
     </div>

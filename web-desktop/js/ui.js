@@ -294,6 +294,8 @@ const modalTitleText = document.getElementById('modal-title-text');
 const statBudgetCard = document.getElementById('stat-budget-card');
 
 const subModal = document.getElementById('sub-modal');
+const subModalTitle = document.getElementById('sub-modal-title');
+const subSubmitBtn = document.getElementById('sub-submit-btn');
 const subForm = document.getElementById('sub-form');
 const subNameInput = document.getElementById('sub-name');
 const subAmountInput = document.getElementById('sub-amount');
@@ -302,6 +304,7 @@ const subDueDayInput = document.getElementById('sub-due-day');
 const subCategorySelect = document.getElementById('sub-category');
 const subModalCloseBtn = document.getElementById('sub-modal-close');
 const subModalCancelBtn = document.getElementById('sub-modal-cancel');
+let editingSubId = null;
 
 let activeCurrency = 'INR';
 let incomes = [];
@@ -913,13 +916,18 @@ function renderSubscriptions() {
         card.className = 'sub-card-item';
         card.innerHTML = `
           <div class="sub-card-header">
-            <div>
+            <div style="cursor: pointer;" onclick="if(window.editSubscription){window.editSubscription('${sub.id}');}">
               <div class="sub-title">${escapeHtml(sub.name)}</div>
               <div class="sub-due">${escapeHtml(sub.category)}</div>
             </div>
-            <button type="button" class="icon-btn action-btn-del" data-delete-sub="${sub.id}" title="Delete Subscription" onclick="if(window.deleteSubscription){event.preventDefault();event.stopPropagation();window.deleteSubscription('${sub.id}');}">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
+            <div style="display: flex; align-items: center; gap: 0.35rem;">
+              <button type="button" class="icon-btn action-btn-edit" data-edit-sub="${sub.id}" title="Edit Subscription" onclick="if(window.editSubscription){event.preventDefault();event.stopPropagation();window.editSubscription('${sub.id}');}">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button type="button" class="icon-btn action-btn-del" data-delete-sub="${sub.id}" title="Delete Subscription" onclick="if(window.deleteSubscription){event.preventDefault();event.stopPropagation();window.deleteSubscription('${sub.id}');}">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
           </div>
           <div class="sub-amount">${formatCurrency(sub.amount)} <span class="per-mo">/ mo</span></div>
           <div class="sub-actions">
@@ -1932,6 +1940,9 @@ window.handleSaveIncome = function(e) {
 // Add Subscription Modal
 function openSubscriptionModal() {
   if (!subNameInput || !subAmountInput || !subDueDayInput || !subModal) return;
+  editingSubId = null;
+  if (subModalTitle) subModalTitle.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> Add Recurring Bill';
+  if (subSubmitBtn) subSubmitBtn.textContent = 'Add Subscription';
   subNameInput.value = '';
   subAmountInput.value = '';
   subDueDayInput.value = '';
@@ -1942,6 +1953,30 @@ function openSubscriptionModal() {
   subModal.classList.remove('hidden');
   subNameInput.focus();
 }
+
+function editSubscription(subId) {
+  if (!subId || !subModal) return;
+  const sub = subscriptions.find(s => String(s.id) === String(subId));
+  if (!sub) return;
+
+  editingSubId = sub.id;
+  if (subModalTitle) subModalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Recurring Bill';
+  if (subSubmitBtn) subSubmitBtn.textContent = 'Save Changes';
+
+  if (subNameInput) subNameInput.value = sub.name || '';
+  if (subAmountInput) subAmountInput.value = sub.amount || '';
+  if (subCategorySelect) subCategorySelect.value = sub.category || 'Services & Subscriptions';
+  if (subStartMonthInput) {
+    const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
+    subStartMonthInput.value = sub.startMonth || currentYM;
+  }
+  if (subDueDayInput) subDueDayInput.value = sub.dueDay || '';
+
+  subModal.classList.remove('hidden');
+  if (subNameInput) subNameInput.focus();
+}
+
+window.editSubscription = editSubscription;
 
 if (btnAddSub) btnAddSub.addEventListener('click', openSubscriptionModal);
 if (btnAddSubInline) btnAddSubInline.addEventListener('click', openSubscriptionModal);
@@ -1961,19 +1996,31 @@ if (subForm) {
       return;
     }
 
-    const newSub = {
-      id: 'sub_' + Date.now().toString(36),
-      name,
-      amount,
-      dueDay,
-      category,
-      startMonth: startMonth || currentYM,
-      lastPaidMonth: ''
-    };
+    if (editingSubId) {
+      const existing = subscriptions.find(s => String(s.id) === String(editingSubId));
+      if (existing) {
+        existing.name = name;
+        existing.amount = amount;
+        existing.dueDay = dueDay;
+        existing.category = category;
+        existing.startMonth = startMonth || currentYM;
+      }
+      editingSubId = null;
+    } else {
+      const newSub = {
+        id: 'sub_' + Date.now().toString(36),
+        name,
+        amount,
+        dueDay,
+        category,
+        startMonth: startMonth || currentYM,
+        lastPaidMonth: ''
+      };
+      subscriptions.push(newSub);
+      try { if (window.dispatchSubscriptionAddedEmail) window.dispatchSubscriptionAddedEmail(newSub); } catch(err){}
+    }
 
-    subscriptions.push(newSub);
     saveState();
-    try { if (window.dispatchSubscriptionAddedEmail) window.dispatchSubscriptionAddedEmail(newSub); } catch(err){}
     updateUI();
     closeModal(subModal);
   });
