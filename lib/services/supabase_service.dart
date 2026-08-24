@@ -812,41 +812,37 @@ class SupabaseService {
             }
           }
 
-          // Merge subscriptions from relational table too
-          try {
-            final tableSubs = await client
-                .from('subscriptions')
-                .select()
-                .eq('user_id', userId);
-            final existingIds = cloudSubs.map((s) => s['id']?.toString()).toSet();
-            for (var row in tableSubs) {
-              final m = Map<String, dynamic>.from(row);
-              if (!existingIds.contains(m['id']?.toString())) {
-                cloudSubs.add(m);
+          // Fallback to relational tables ONLY if user_data didn't contain subscriptions
+          if (cloudSubs.isEmpty) {
+            try {
+              final tableSubs = await client
+                  .from('subscriptions')
+                  .select()
+                  .eq('user_id', userId);
+              for (var row in tableSubs) {
+                cloudSubs.add(Map<String, dynamic>.from(row));
               }
-            }
-          } catch (_) {}
+            } catch (_) {}
+          }
 
-          // Merge split bills from relational table too
-          try {
-            final tableBills = await client
-                .from('split_bills')
-                .select()
-                .eq('user_id', userId)
-                .order('date', ascending: false);
-            final existingIds = cloudGroup.map((g) => g['id']?.toString()).toSet();
-            for (var row in tableBills) {
-              final m = Map<String, dynamic>.from(row);
-              // Convert relational fields to the format expected locally
-              m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
-              m['paidBy'] = m['paid_by'] ?? m['paidBy'];
-              m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
-              m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
-              if (!existingIds.contains(m['id']?.toString())) {
+          // Fallback to relational tables ONLY if user_data didn't contain split bills
+          if (cloudGroup.isEmpty) {
+            try {
+              final tableBills = await client
+                  .from('split_bills')
+                  .select()
+                  .eq('user_id', userId)
+                  .order('date', ascending: false);
+              for (var row in tableBills) {
+                final m = Map<String, dynamic>.from(row);
+                m['totalAmount'] = m['total_amount'] ?? m['totalAmount'];
+                m['paidBy'] = m['paid_by'] ?? m['paidBy'];
+                m['customShares'] = m['custom_shares'] ?? m['customShares'] ?? {};
+                m['settledStatus'] = m['settled_status'] ?? m['settledStatus'] ?? {};
                 cloudGroup.add(m);
               }
-            }
-          } catch (_) {}
+            } catch (_) {}
+          }
 
           final cleanSubs = _deduplicateSubscriptionMaps(cloudSubs);
           await prefs.setString('user_saved_subscriptions', jsonEncode(cleanSubs));
