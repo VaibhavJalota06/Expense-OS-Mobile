@@ -2323,19 +2323,20 @@ select option {
 /* Recurring Bills View */
 .subs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 1.35rem;
+  padding-bottom: 1.5rem;
 }
 .sub-card-item {
   background: var(--glass);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  padding: 1.15rem 1.25rem;
+  padding: 1.25rem 1.25rem 1.35rem 1.25rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 170px;
-  gap: 0.75rem;
+  min-height: 190px;
+  gap: 0.85rem;
   box-sizing: border-box;
   overflow: visible;
   transition: var(--transition);
@@ -2379,13 +2380,15 @@ select option {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
   width: 100%;
   box-sizing: border-box;
   margin-top: auto;
+  padding-top: 0.35rem;
+  padding-bottom: 0.15rem;
 }
 .sub-actions .btn {
-  padding: 0.28rem 0.6rem !important;
+  padding: 0.32rem 0.65rem !important;
   font-size: 0.72rem !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
