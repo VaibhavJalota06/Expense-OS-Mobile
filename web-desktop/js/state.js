@@ -801,8 +801,17 @@ function startSupabaseSync(userId) {
   }
   if (typeof setSyncStatus === 'function') setSyncStatus('syncing');
 
+  let _lastCloudDataSnapshotHash = '';
   function applyCloudData(data) {
     if (!data) return;
+
+    // Fast change detection: If the cloud data snapshot is unchanged, do not trigger any UI re-render
+    const dataHash = (data.updated_at || '') + '_' + (data.budget || 0) + '_' + (data.expenses ? data.expenses.length : 0) + '_' + (data.subscriptions ? data.subscriptions.length : 0) + '_' + (data.incomes ? data.incomes.length : 0) + '_' + (data.currency || '');
+    if (_lastCloudDataSnapshotHash === dataHash) {
+      if (typeof setSyncStatus === 'function') setSyncStatus('synced');
+      return;
+    }
+    _lastCloudDataSnapshotHash = dataHash;
 
     if (typeof data.budget === 'number' && Number.isFinite(data.budget)) {
       budget = data.budget;
@@ -1064,11 +1073,8 @@ function startSupabaseSync(userId) {
   }, 12000);
 }
 
-window.addEventListener('focus', () => {
-  if (currentUserId && typeof startSupabaseSync === 'function') {
-    startSupabaseSync(currentUserId);
-  }
-});
+// Realtime Supabase channel is already persistent; no need to re-subscribe on focus
+
 
 function stopSupabaseSync() {
   const supaClient = (typeof getSupabaseClient === 'function' ? getSupabaseClient() : (typeof supabase !== 'undefined' ? supabase : null));
