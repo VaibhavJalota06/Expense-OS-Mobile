@@ -1066,21 +1066,21 @@ async function deleteSubscription(subId) {
 
 window.deleteSubscription = deleteSubscription;
 
-// Chart.js Category Donut Breakdown
+// Chart.js Category Donut Breakdown - Stable Zero-Animation Engine
 function renderCategoryBreakdown(filteredList, totalSpent) {
-  if (breakdownChartInstance) { breakdownChartInstance.destroy(); breakdownChartInstance = null; }
-  if (fullAnalyticsChartInstance) { fullAnalyticsChartInstance.destroy(); fullAnalyticsChartInstance = null; }
-
   const containers = [
     { chart: breakdownChartContainer, list: breakdownListEl, getInstance: () => breakdownChartInstance, setInstance: (inst) => { breakdownChartInstance = inst; } },
     { chart: fullAnalyticsChartContainer, list: fullAnalyticsListEl, getInstance: () => fullAnalyticsChartInstance, setInstance: (inst) => { fullAnalyticsChartInstance = inst; } }
   ];
 
-  containers.forEach(({ chart, list, setInstance }) => {
+  containers.forEach(({ chart, list, getInstance, setInstance }) => {
     if (list) list.innerHTML = '';
-    if (chart) chart.innerHTML = '';
 
     if (filteredList.length === 0 || totalSpent === 0) {
+      if (getInstance()) {
+        try { getInstance().destroy(); } catch(e) {}
+        setInstance(null);
+      }
       if (chart) {
         chart.innerHTML = `
           <div class="empty-state-small">
@@ -1099,85 +1099,115 @@ function renderCategoryBreakdown(filteredList, totalSpent) {
     });
 
     const sortedCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+    const labels = sortedCategories.map(c => c[0]);
+    const data = sortedCategories.map(c => c[1]);
+    const bgColors = sortedCategories.map(c => categoryColors[c[0]] || '#34D399');
 
     // Chart.js or SVG Donut Chart Fallback
     if (chart) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'donut-chart-wrapper';
+      const existingInst = getInstance();
+      const existingCanvas = chart.querySelector('canvas');
+      const existingCenterVal = chart.querySelector('.donut-total-val');
 
-      if (typeof Chart !== 'undefined') {
-        const canvas = document.createElement('canvas');
-        wrapper.appendChild(canvas);
-
-        const centerText = document.createElement('div');
-        centerText.className = 'donut-center-text';
-        centerText.innerHTML = `
-          <span class="donut-total-title">Total Spent</span>
-          <span class="donut-total-val mono">${formatCurrency(totalSpent)}</span>
-        `;
-        wrapper.appendChild(centerText);
-        chart.appendChild(wrapper);
-
-        const inst = new Chart(canvas, {
-          type: 'doughnut',
-          data: {
-            labels: sortedCategories.map(c => c[0]),
-            datasets: [{
-              data: sortedCategories.map(c => c[1]),
-              backgroundColor: sortedCategories.map(c => categoryColors[c[0]] || '#34D399'),
-              borderColor: '#0E131A',
-              borderWidth: 2,
-              hoverOffset: 6
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: { animateScale: true, animateRotate: true },
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: 'rgba(14, 19, 26, 0.95)',
-                titleColor: '#F2F5FA',
-                bodyColor: '#A6B0C3',
-                borderColor: 'rgba(255, 255, 255, 0.1)',
-                borderWidth: 1,
-                callbacks: {
-                  label: function(context) {
-                    const val = context.raw || 0;
-                    const pct = ((val / totalSpent) * 100).toFixed(1);
-                    return `${context.label}: ${formatCurrency(val)} (${pct}%)`;
-                  }
-                }
-              }
-            },
-            cutout: '74%'
-          }
-        });
-        setInstance(inst);
+      if (existingInst && existingCanvas) {
+        // Fast instant update without recreating canvas or triggering re-animation
+        existingInst.data.labels = labels;
+        existingInst.data.datasets[0].data = data;
+        existingInst.data.datasets[0].backgroundColor = bgColors;
+        existingInst.update('none');
+        if (existingCenterVal) existingCenterVal.textContent = formatCurrency(totalSpent);
       } else {
-        // SVG Donut Ring Fallback for offline or instant load
-        let cumulativePercent = 0;
-        const svgSegments = sortedCategories.map(([catName, catAmount]) => {
-          const pct = (catAmount / totalSpent);
-          const dashArray = `${pct * 283} ${283 - (pct * 283)}`;
-          const dashOffset = -(cumulativePercent * 283);
-          cumulativePercent += pct;
-          const color = categoryColors[catName] || '#34D399';
-          return `<circle cx="50" cy="50" r="45" fill="none" stroke="${color}" stroke-width="9" stroke-dasharray="${dashArray}" stroke-dashoffset="${dashOffset}" transform="rotate(-90 50 50)"></circle>`;
-        }).join('');
+        if (existingInst) {
+          try { existingInst.destroy(); } catch(e) {}
+        }
+        chart.innerHTML = '';
 
-        wrapper.innerHTML = `
-          <svg viewBox="0 0 100 100" class="donut-svg-fallback" style="width: 100%; height: 100%;">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="9"></circle>
-            ${svgSegments}
-          </svg>
-          <div class="donut-center-text">
+        const wrapper = document.createElement('div');
+        wrapper.className = 'donut-chart-wrapper';
+
+        if (typeof Chart !== 'undefined') {
+          const canvas = document.createElement('canvas');
+          wrapper.appendChild(canvas);
+
+          const centerText = document.createElement('div');
+          centerText.className = 'donut-center-text';
+          centerText.innerHTML = `
             <span class="donut-total-title">Total Spent</span>
             <span class="donut-total-val mono">${formatCurrency(totalSpent)}</span>
-          </div>
-        `;
-        chart.appendChild(wrapper);
+          `;
+          wrapper.appendChild(centerText);
+          chart.appendChild(wrapper);
+
+          const inst = new Chart(canvas, {
+            type: 'doughnut',
+            data: {
+              labels: labels,
+              datasets: [{
+                data: data,
+                backgroundColor: bgColors,
+                borderColor: '#0E131A',
+                borderWidth: 2,
+                hoverOffset: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: false,
+              animations: {
+                colors: false,
+                x: false,
+                y: false
+              },
+              transitions: {
+                active: { animation: { duration: 0 } },
+                resize: { animation: { duration: 0 } }
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: 'rgba(14, 19, 26, 0.95)',
+                  titleColor: '#F2F5FA',
+                  bodyColor: '#A6B0C3',
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
+                  borderWidth: 1,
+                  callbacks: {
+                    label: function(context) {
+                      const val = context.raw || 0;
+                      const pct = ((val / totalSpent) * 100).toFixed(1);
+                      return `${context.label}: ${formatCurrency(val)} (${pct}%)`;
+                    }
+                  }
+                }
+              },
+              cutout: '74%'
+            }
+          });
+          setInstance(inst);
+        } else {
+          // Instant SVG Donut Ring Fallback
+          let cumulativePercent = 0;
+          const svgSegments = sortedCategories.map(([catName, catAmount]) => {
+            const pct = (catAmount / totalSpent);
+            const dashArray = `${pct * 283} ${283 - (pct * 283)}`;
+            const dashOffset = -(cumulativePercent * 283);
+            cumulativePercent += pct;
+            const color = categoryColors[catName] || '#34D399';
+            return `<circle cx="50" cy="50" r="45" fill="none" stroke="${color}" stroke-width="9" stroke-dasharray="${dashArray}" stroke-dashoffset="${dashOffset}" transform="rotate(-90 50 50)"></circle>`;
+          }).join('');
+
+          wrapper.innerHTML = `
+            <svg viewBox="0 0 100 100" class="donut-svg-fallback" style="width: 100%; height: 100%;">
+              <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="9"></circle>
+              ${svgSegments}
+            </svg>
+            <div class="donut-center-text">
+              <span class="donut-total-title">Total Spent</span>
+              <span class="donut-total-val mono">${formatCurrency(totalSpent)}</span>
+            </div>
+          `;
+          chart.appendChild(wrapper);
+        }
       }
     }
 
