@@ -69,7 +69,7 @@ class SupabaseService {
       resolvedAvatar = meta['avatar_url'] ?? meta['picture'] ?? meta['avatar'];
     }
 
-    if ((resolvedName == null || resolvedName.isEmpty || resolvedName == 'Expense User') &&
+    if ((resolvedName == null || resolvedName.isEmpty || resolvedName == 'Expense User' || resolvedName == 'Tech Bounty Hunter' || resolvedName == 'User') &&
         user.email != null &&
         user.email!.contains('@')) {
       final prefix = user.email!.split('@').first.replaceAll(RegExp(r'[._]'), ' ');
@@ -82,10 +82,15 @@ class SupabaseService {
 
     if (resolvedName != null && resolvedName.isNotEmpty) {
       await prefs.setString('custom_user_name', resolvedName);
+    } else {
+      await prefs.remove('custom_user_name');
     }
     if (resolvedAvatar != null && resolvedAvatar.isNotEmpty) {
       await prefs.setString('google_user_avatar', resolvedAvatar);
+    } else {
+      await prefs.remove('google_user_avatar');
     }
+    await prefs.remove('custom_avatar_path');
 
     // Sync profile to relational profiles table on login
     try {

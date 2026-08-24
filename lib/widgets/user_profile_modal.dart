@@ -18,7 +18,7 @@ class _UserProfileModalState extends State<UserProfileModal> {
   final SupabaseService _supabaseService = SupabaseService();
 
   String _displayName = 'User';
-  String _email = 'user@gmail.com';
+  String _email = '';
   String? _avatarUrl;
   String? _customAvatarPath;
   bool _isLoading = true;
@@ -33,12 +33,23 @@ class _UserProfileModalState extends State<UserProfileModal> {
     final prefs = await SharedPreferences.getInstance();
     final user = _supabaseService.currentUser;
 
+    if (user != null) {
+      final lastActiveId = prefs.getString('last_active_user_id');
+      if (lastActiveId != null && lastActiveId != user.id) {
+        await prefs.remove('custom_user_name');
+        await prefs.remove('custom_avatar_path');
+        await prefs.remove('google_user_email');
+        await prefs.remove('google_user_avatar');
+      }
+      await prefs.setString('last_active_user_id', user.id);
+    }
+
     final googleEmail = prefs.getString('google_user_email');
     final googleAvatar = prefs.getString('google_user_avatar');
     final customName = prefs.getString('custom_user_name');
     final customAvatar = prefs.getString('custom_avatar_path');
 
-    String email = user?.email ?? googleEmail ?? 'Member';
+    String email = user?.email ?? googleEmail ?? '';
     String? name = customName;
     if (name == null || name.isEmpty || name == 'Expense User' || name == 'User') {
       name = user?.userMetadata?['full_name'] ??
