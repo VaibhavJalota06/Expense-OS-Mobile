@@ -586,32 +586,32 @@ function checkAndSendSubscriptionReminders() {
 function renderRadialGauge(spentRatio, totalSpent, budgetLimit) {
   if (!radialGaugeContainer) return;
 
-  const size = 190;
-  const strokeWidth = 14;
+  const size = 200;
+  const strokeWidth = 12;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const clampPercent = Math.min(100, Math.max(0, spentRatio));
   const strokeDashoffset = circumference - (clampPercent / 100) * circumference;
 
-  let strokeColor = '#34D399';
-  let statusText = 'Normal Spending';
+  let strokeColor = '#10B981';
+  let statusText = 'Healthy';
   let badgeClass = 'gauge-success';
 
   if (budgetLimit === 0) {
-    statusText = 'Set Budget Limit';
-    strokeColor = '#5F6A80';
+    statusText = 'Set Limit';
+    strokeColor = '#71717A';
     badgeClass = 'gauge-muted';
   } else if (spentRatio > 100) {
-    statusText = 'Over Budget Cap!';
+    statusText = 'Over Budget';
     strokeColor = '#FB7185';
     badgeClass = 'gauge-danger';
   } else if (spentRatio >= 80) {
-    statusText = 'High Spending Warning';
-    strokeColor = '#FBBF24';
+    statusText = 'High Spending';
+    strokeColor = '#F59E0B';
     badgeClass = 'gauge-warning';
   } else {
-    statusText = 'Budget Healthy';
-    strokeColor = '#34D399';
+    statusText = 'Healthy';
+    strokeColor = '#10B981';
     badgeClass = 'gauge-success';
   }
 
