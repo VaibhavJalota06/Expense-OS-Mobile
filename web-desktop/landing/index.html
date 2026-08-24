@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="/landing/style.css?v=3.6.1">
+  <link rel="stylesheet" href="/landing/style.css?v=3.7.0">
 </head>
 <body>
 
@@ -804,7 +804,20 @@
   </footer>
 
   <!-- Custom Script -->
-  <script src="/landing/script.js?v=3.6.1"></script>
+  <script src="/landing/script.js?v=3.7.0"></script>
+
+  <!-- Fail-safe Preloader Auto-Dismissal -->
+  <script>
+    setTimeout(function() {
+      var p = document.getElementById('landing-preloader');
+      if (p && !p.classList.contains('loaded')) {
+        p.classList.add('loaded');
+        setTimeout(function() {
+          if (p && p.parentNode) p.style.display = 'none';
+        }, 500);
+      }
+    }, 700);
+  </script>
 
   <!-- Motion ESM Animations -->
   <script type="module">

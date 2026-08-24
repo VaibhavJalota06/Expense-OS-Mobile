@@ -9,60 +9,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressBar = document.getElementById('preloader-progress-bar');
   const statusText = document.getElementById('preloader-status-text');
 
-  if (preloader && progressBar && statusText) {
-    let progress = 20;
-    progressBar.style.width = '20%';
-
-    const statusSteps = [
-      { at: 35, msg: 'LOADING LOCAL DATABASE SCHEMAS...' },
-      { at: 65, msg: 'INITIALIZING CLIENT-SIDE ENCRYPTION...' },
-      { at: 85, msg: 'VERIFYING ECOSYSTEM PROTOCOLS...' },
-      { at: 100, msg: 'EXPENSE OS READY' }
-    ];
+  if (preloader) {
+    let progress = 35;
+    if (progressBar) progressBar.style.width = '35%';
 
     const progressInterval = setInterval(() => {
-      if (progress < 92) {
-        progress += Math.floor(Math.random() * 12) + 6;
-        if (progress > 92) progress = 92;
-        progressBar.style.width = `${progress}%`;
-
-        for (const step of statusSteps) {
-          if (progress >= step.at && step.at < 100) {
-            statusText.textContent = step.msg;
-          }
-        }
+      if (progress < 90) {
+        progress += 20;
+        if (progressBar) progressBar.style.width = `${progress}%`;
+        if (statusText && progress > 60) statusText.textContent = 'INITIALIZING SYSTEM...';
       }
-    }, 75);
+    }, 60);
 
     const finishPreloader = () => {
       clearInterval(progressInterval);
-      progressBar.style.width = '100%';
-      statusText.textContent = 'EXPENSE OS READY';
+      if (progressBar) progressBar.style.width = '100%';
+      if (statusText) statusText.textContent = 'EXPENSE OS READY';
 
       setTimeout(() => {
         preloader.classList.add('loaded');
         setTimeout(() => {
-          if (preloader.parentNode) {
+          if (preloader && preloader.parentNode) {
             preloader.style.display = 'none';
           }
-        }, 650);
-      }, 300);
+        }, 500);
+      }, 150);
     };
 
-    // Ensure smooth minimum duration so loading screen is visually crisp and never flashes abruptly
-    const minLoadTime = new Promise(resolve => setTimeout(resolve, 800));
-    const pageLoaded = new Promise(resolve => {
-      if (document.readyState === 'complete') {
-        resolve();
-      } else {
-        window.addEventListener('load', resolve);
-      }
-    });
-
-    Promise.all([minLoadTime, pageLoaded]).then(finishPreloader);
-
-    // Fallback safety timeout
-    setTimeout(finishPreloader, 2200);
+    setTimeout(finishPreloader, 450);
   }
 
   // ---------- 1. Soothing Financial Ambient Node Canvas ----------
@@ -264,24 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (simSpendSlider) {
     simSpendSlider.addEventListener('input', updateSavingsSim);
     updateSavingsSim();
-  }
-
-  // ---------- 5c. Searchable FAQ Accordion Filter ----------
-  const faqSearchInput = document.getElementById('faq-search-input');
-  const faqCards = document.querySelectorAll('.faq-card');
-
-  if (faqSearchInput && faqCards.length > 0) {
-    faqSearchInput.addEventListener('input', () => {
-      const query = faqSearchInput.value.toLowerCase().trim();
-      faqCards.forEach(card => {
-        const text = card.textContent.toLowerCase();
-        if (!query || text.includes(query)) {
-          card.style.display = 'block';
-        } else {
-          card.style.display = 'none';
-        }
-      });
-    });
   }
 
   // ---------- 6. Interactive 3D Showcase Tabs ----------
