@@ -1,14 +1,15 @@
 {
   "id": "com.expenseos.app",
-  "name": "Expense OS",
+  "name": "Expense OS - Personal Finance Command Center",
   "short_name": "Expense OS",
-  "description": "Futuristic Glassmorphic Personal Finance Command Center",
+  "description": "Futuristic Pure OLED Personal Finance Command Center for tracking expenses, managing budgets, and analyzing wealth.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#090C11",
-  "theme_color": "#050811",
-  "orientation": "portrait-primary",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "any",
   "categories": ["finance", "productivity", "utilities"],
   "icons": [
     {
@@ -22,6 +23,29 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Log Expense",
+      "short_name": "Add Expense",
+      "description": "Quickly record a new transaction",
+      "url": "./index.html#quick-log",
+      "icons": [{ "src": "icon.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Analytics & Trends",
+      "short_name": "Analytics",
+      "description": "View monthly spending and income charts",
+      "url": "./index.html#analytics",
+      "icons": [{ "src": "icon.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Recurring Bills",
+      "short_name": "Bills",
+      "description": "Track subscriptions and upcoming bills",
+      "url": "./index.html#bills",
+      "icons": [{ "src": "icon.png", "sizes": "512x512" }]
     }
   ]
 }
