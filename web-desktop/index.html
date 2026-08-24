@@ -1299,7 +1299,7 @@
         <h3 id="sub-modal-title"><i class="fa-solid fa-calendar-plus"></i> Add Recurring Bill</h3>
         <button id="sub-modal-close" class="icon-btn" onclick="if(window.closeSubModal)window.closeSubModal(event);"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form id="sub-form" class="modal-form">
+      <form id="sub-form" class="modal-form" onsubmit="if(window.handleSubFormSubmit){window.handleSubFormSubmit(event);}else{event.preventDefault();}">
         <div class="modal-body modal-form-gap">
           <div class="form-group">
             <label for="sub-name">Subscription / Bill Name</label>

@@ -1939,19 +1939,23 @@ window.handleSaveIncome = function(e) {
 
 // Add Subscription Modal
 function openSubscriptionModal() {
-  if (!subNameInput || !subAmountInput || !subDueDayInput || !subModal) return;
+  if (!subModal) return;
   editingSubId = null;
   if (subModalTitle) subModalTitle.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> Add Recurring Bill';
   if (subSubmitBtn) subSubmitBtn.textContent = 'Add Subscription';
-  subNameInput.value = '';
-  subAmountInput.value = '';
-  subDueDayInput.value = '';
+  if (subNameInput) subNameInput.value = '';
+  if (subAmountInput) subAmountInput.value = '';
+  if (subDueDayInput) subDueDayInput.value = '';
   if (subStartMonthInput) {
     const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
     subStartMonthInput.value = currentYM;
   }
   subModal.classList.remove('hidden');
-  subNameInput.focus();
+  subModal.style.removeProperty('display');
+  subModal.style.removeProperty('opacity');
+  subModal.style.removeProperty('visibility');
+  subModal.style.removeProperty('pointer-events');
+  if (subNameInput) subNameInput.focus();
 }
 
 function editSubscription(subId) {
@@ -1963,68 +1967,94 @@ function editSubscription(subId) {
   if (subModalTitle) subModalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Recurring Bill';
   if (subSubmitBtn) subSubmitBtn.textContent = 'Save Changes';
 
-  if (subNameInput) subNameInput.value = sub.name || '';
+  if (subNameInput) subNameInput.value = sub.name || sub.title || '';
   if (subAmountInput) subAmountInput.value = sub.amount || '';
   if (subCategorySelect) subCategorySelect.value = sub.category || 'Services & Subscriptions';
   if (subStartMonthInput) {
     const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
-    subStartMonthInput.value = sub.startMonth || currentYM;
+    subStartMonthInput.value = sub.startMonth || sub.start_month || currentYM;
   }
-  if (subDueDayInput) subDueDayInput.value = sub.dueDay || '';
+  if (subDueDayInput) subDueDayInput.value = sub.dueDay || sub.due_day || (sub.due_date ? new Date(sub.due_date).getDate() : 1);
 
   subModal.classList.remove('hidden');
+  subModal.style.removeProperty('display');
+  subModal.style.removeProperty('opacity');
+  subModal.style.removeProperty('visibility');
+  subModal.style.removeProperty('pointer-events');
   if (subNameInput) subNameInput.focus();
 }
 
 window.editSubscription = editSubscription;
 
+function handleSubFormSubmit(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (e && e.stopPropagation) e.stopPropagation();
+
+  const name = subNameInput ? subNameInput.value.trim() : '';
+  const amount = subAmountInput ? parseFloat(subAmountInput.value) : NaN;
+  const dueDay = subDueDayInput ? parseInt(subDueDayInput.value, 10) : NaN;
+  const category = subCategorySelect ? subCategorySelect.value : 'Services & Subscriptions';
+  const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
+  const startMonth = subStartMonthInput && subStartMonthInput.value ? subStartMonthInput.value : currentYM;
+
+  if (!name || isNaN(amount) || amount <= 0 || isNaN(dueDay) || dueDay < 1 || dueDay > 31) {
+    showAlert('Invalid Details', 'Please enter a valid subscription name, positive amount, and due day (1–31).');
+    return false;
+  }
+
+  const [yr, mo] = startMonth.split('-');
+  const padDay = String(dueDay).padStart(2, '0');
+  const computedDueDate = `${yr}-${mo}-${padDay}`;
+
+  if (editingSubId) {
+    const existing = subscriptions.find(s => String(s.id) === String(editingSubId));
+    if (existing) {
+      existing.name = name;
+      existing.title = name;
+      existing.amount = amount;
+      existing.dueDay = dueDay;
+      existing.due_day = dueDay;
+      existing.category = category;
+      existing.startMonth = startMonth;
+      existing.start_month = startMonth;
+      existing.dueDate = computedDueDate;
+      existing.due_date = computedDueDate;
+      existing.updated_at = new Date().toISOString();
+    }
+    editingSubId = null;
+    showToast('Recurring bill updated successfully');
+  } else {
+    const newSub = {
+      id: 'sub_' + Date.now().toString(36),
+      name,
+      title: name,
+      amount,
+      dueDay,
+      due_day: dueDay,
+      category,
+      startMonth,
+      start_month: startMonth,
+      dueDate: computedDueDate,
+      due_date: computedDueDate,
+      lastPaidMonth: '',
+      is_active: true
+    };
+    subscriptions.push(newSub);
+    try { if (window.dispatchSubscriptionAddedEmail) window.dispatchSubscriptionAddedEmail(newSub); } catch(err){}
+    showToast('Recurring bill added successfully');
+  }
+
+  saveState();
+  updateUI();
+  closeModal(subModal);
+  return false;
+}
+
+window.handleSubFormSubmit = handleSubFormSubmit;
+
 if (btnAddSub) btnAddSub.addEventListener('click', openSubscriptionModal);
 if (btnAddSubInline) btnAddSubInline.addEventListener('click', openSubscriptionModal);
-
-if (subForm) {
-  subForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = subNameInput.value.trim();
-    const amount = parseFloat(subAmountInput.value);
-    const dueDay = parseInt(subDueDayInput.value, 10);
-    const category = subCategorySelect.value;
-    const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
-    const startMonth = subStartMonthInput ? subStartMonthInput.value : currentYM;
-
-    if (!name || isNaN(amount) || amount <= 0 || isNaN(dueDay) || dueDay < 1 || dueDay > 31) {
-      showAlert('Invalid Details', 'Please enter valid subscription details.');
-      return;
-    }
-
-    if (editingSubId) {
-      const existing = subscriptions.find(s => String(s.id) === String(editingSubId));
-      if (existing) {
-        existing.name = name;
-        existing.amount = amount;
-        existing.dueDay = dueDay;
-        existing.category = category;
-        existing.startMonth = startMonth || currentYM;
-      }
-      editingSubId = null;
-    } else {
-      const newSub = {
-        id: 'sub_' + Date.now().toString(36),
-        name,
-        amount,
-        dueDay,
-        category,
-        startMonth: startMonth || currentYM,
-        lastPaidMonth: ''
-      };
-      subscriptions.push(newSub);
-      try { if (window.dispatchSubscriptionAddedEmail) window.dispatchSubscriptionAddedEmail(newSub); } catch(err){}
-    }
-
-    saveState();
-    updateUI();
-    closeModal(subModal);
-  });
-}
+if (subForm) subForm.addEventListener('submit', handleSubFormSubmit);
 
 // Export CSV
 if (btnExportCsv) {
