@@ -332,12 +332,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               scrollDirection: Axis.horizontal,
                               clipBehavior: Clip.none,
                               children: [
-                                // Card 1: Total Money (Bank Funds = Initial Starting Balance + Incomes)
+                                // Card 1: Total Money (Bank Funds = Total Bank Account Balance)
                                 _buildStatCard(
                                   index: 0,
                                   title: 'Total Money',
-                                  amount: currency.format(_availableMoney),
-                                  subtitle: _monthlyBudgetCap > 0 ? 'Gross: ${currency.format(_totalIncome)}' : null,
+                                  amount: currency.format(_startingBalance),
+                                  subtitle: 'Total Bank Cash',
                                   icon: Icons.account_balance_wallet_outlined,
                                   isHighlighted: _activeStatIndex == 0,
                                 ),

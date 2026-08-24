@@ -549,29 +549,21 @@ function updateUI() {
   const spentRatio = effectiveBudget > 0 ? (totalSpent / effectiveBudget) * 100 : 0;
   const remainingPercent = Math.max(0, 100 - spentRatio);
 
-  // Total Account Money represents untouched bank savings outside the monthly budget
+  // Total Account Money represents the user's total bank account cash
   const totalAccountMoney = accountBalance;
-  const availableMoney = budget > 0 ? Math.max(0, totalAccountMoney - budget) : totalAccountMoney;
 
   const statAccountBalanceEl = document.getElementById('stat-account-balance');
   const statIncomeEl = document.getElementById('stat-income');
   const statIncomeCountEl = document.getElementById('stat-income-count');
 
   if (statAccountBalanceEl) {
-    statAccountBalanceEl.textContent = formatCurrency(availableMoney, 'stat-account-balance');
-    statAccountBalanceEl.className = availableMoney >= 0 ? 'stat-value text-emerald mono' : 'stat-value text-rose mono';
+    statAccountBalanceEl.textContent = formatCurrency(totalAccountMoney, 'stat-account-balance');
+    statAccountBalanceEl.className = totalAccountMoney >= 0 ? 'stat-value text-emerald mono' : 'stat-value text-rose mono';
   }
 
   const statAccountSubtextEl = document.getElementById('stat-account-subtext');
   if (statAccountSubtextEl) {
-    const totalGoalSaved = savingsGoals.reduce((sum, g) => sum + Number(g.savedAmount || 0), 0);
-    if (budget > 0) {
-      statAccountSubtextEl.innerHTML = `Gross Savings: <strong>${formatCurrency(totalAccountMoney, 'stat-account-balance')}</strong> (${formatCurrency(budget)} budgeted) <span class="edit-hint">(Edit ✏️)</span>`;
-    } else if (totalGoalSaved > 0) {
-      statAccountSubtextEl.innerHTML = `Allocated to Goals: <strong>${formatCurrency(totalGoalSaved, 'stat-account-balance')}</strong> <span class="edit-hint">(Edit ✏️)</span>`;
-    } else {
-      statAccountSubtextEl.innerHTML = `Total Account Savings <span class="edit-hint">(Edit ✏️)</span>`;
-    }
+    statAccountSubtextEl.innerHTML = `Total Bank Cash <span class="edit-hint">(Edit ✏️)</span>`;
   }
 
   const statLeftoverEl = document.getElementById('stat-leftover');
