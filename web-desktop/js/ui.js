@@ -521,9 +521,6 @@ function updateUI() {
   });
 
   const totalSpent = filteredMonthExpenses.reduce((sum, item) => sum + Number(item.amount), 0);
-  const remaining = budget - totalSpent;
-  const spentRatio = budget > 0 ? (totalSpent / budget) * 100 : 0;
-  const remainingPercent = Math.max(0, 100 - spentRatio);
 
   if (activeMonthLabelEl) {
     activeMonthLabelEl.textContent = selectedMonth === 'ALL' ? 'All Time' : formatMonthLabel(selectedMonth);
@@ -545,7 +542,15 @@ function updateUI() {
   const totalIncome = filteredMonthIncomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const totalAllTimeIncome = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const totalAllTimeSpent = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const totalAccountMoney = accountBalance + totalAllTimeIncome;
+
+  // Extra income earned directly boosts the Monthly Spending Budget Pool!
+  const effectiveBudget = budget > 0 ? (budget + totalIncome) : totalIncome;
+  const remaining = effectiveBudget - totalSpent;
+  const spentRatio = effectiveBudget > 0 ? (totalSpent / effectiveBudget) * 100 : 0;
+  const remainingPercent = Math.max(0, 100 - spentRatio);
+
+  // Total Account Money represents the starting bank balance
+  const totalAccountMoney = accountBalance;
   const availableMoney = budget > 0 ? Math.max(0, totalAccountMoney - budget) : totalAccountMoney;
 
   const statAccountBalanceEl = document.getElementById('stat-account-balance');
@@ -565,24 +570,32 @@ function updateUI() {
     } else if (totalGoalSaved > 0) {
       statAccountSubtextEl.innerHTML = `Allocated to Goals: <strong>${formatCurrency(totalGoalSaved, 'stat-account-balance')}</strong> <span class="edit-hint">(Edit ✏️)</span>`;
     } else {
-      statAccountSubtextEl.innerHTML = `Total Account Cash + Extra Incomes <span class="edit-hint">(Edit ✏️)</span>`;
+      statAccountSubtextEl.innerHTML = `Total Account Cash <span class="edit-hint">(Edit ✏️)</span>`;
     }
   }
 
   const statLeftoverEl = document.getElementById('stat-leftover');
   const statLeftoverSubtextEl = document.getElementById('stat-leftover-subtext');
-  const leftoverVal = budget > 0 ? remaining : 0;
+  if (statLeftoverSubtextEl) {
+    if (totalIncome > 0) {
+      statLeftoverSubtextEl.innerHTML = `Budget Cap (${formatCurrency(budget)}) + Income (${formatCurrency(totalIncome)}) − Expenses`;
+    } else {
+      statLeftoverSubtextEl.textContent = `Budget Cap − Expenses`;
+    }
+  }
 
   if (statRemainingEl) {
-    statRemainingEl.textContent = budget > 0 ? formatCurrency(remaining, 'stat-remaining') : (isCardMasked('stat-remaining') ? '••••••' : '₹0.00');
-    statRemainingEl.className = (budget > 0 && remaining < 0) ? 'stat-value text-rose mono' : 'stat-value text-emerald mono';
+    statRemainingEl.textContent = (budget > 0 || totalIncome > 0) ? formatCurrency(remaining, 'stat-remaining') : (isCardMasked('stat-remaining') ? '••••••' : '₹0.00');
+    statRemainingEl.className = (remaining < 0) ? 'stat-value text-rose mono' : 'stat-value text-emerald mono';
   }
 
   if (statPercentEl) {
-    if (budget === 0) {
+    if (budget === 0 && totalIncome === 0) {
       statPercentEl.textContent = 'Budget Limit Not Set (Click to Set ✏️)';
+    } else if (totalIncome > 0) {
+      statPercentEl.innerHTML = `${spentRatio.toFixed(1)}% Spent (${formatCurrency(budget)} cap + ${formatCurrency(totalIncome)} income) <span class="edit-hint">(Edit ✏️)</span>`;
     } else {
-      statPercentEl.textContent = `${spentRatio.toFixed(1)}% Spent of Cap (${remainingPercent.toFixed(1)}% Left)`;
+      statPercentEl.innerHTML = `${spentRatio.toFixed(1)}% Spent of Cap (${remainingPercent.toFixed(1)}% Left) <span class="edit-hint">(Edit ✏️)</span>`;
     }
   }
 
@@ -624,20 +637,12 @@ function updateUI() {
     statIncomeCountEl.innerHTML = `${filteredMonthIncomes.length} extra source${filteredMonthIncomes.length === 1 ? '' : 's'} <span class="edit-hint">(+Add)</span>`;
   }
 
-  if (statBudgetEl) statBudgetEl.textContent = formatCurrency(budget, 'stat-budget');
+  if (statBudgetEl) statBudgetEl.textContent = formatCurrency(effectiveBudget, 'stat-budget');
   if (statSpentEl) statSpentEl.textContent = formatCurrency(totalSpent, 'stat-spent');
   if (statCountEl) statCountEl.textContent = `${filteredMonthExpenses.length} transaction${filteredMonthExpenses.length === 1 ? '' : 's'}`;
 
   const sidebarBudgetVal = document.getElementById('sidebar-budget-val');
   if (sidebarBudgetVal) sidebarBudgetVal.textContent = formatCurrency(budget, 'sb-budget-val');
-
-  if (budget === 0) {
-    if (statRemainingEl) statRemainingEl.textContent = isCardMasked('stat-remaining') ? '••••••' : formatCurrency(0, 'stat-remaining');
-    if (statPercentEl) statPercentEl.textContent = 'Budget Not Set (Click to Set ✏️)';
-  } else {
-    if (statRemainingEl) statRemainingEl.textContent = formatCurrency(remaining, 'stat-remaining');
-    if (statPercentEl) statPercentEl.textContent = `${spentRatio.toFixed(1)}% Spent of Cap (${remainingPercent.toFixed(1)}% Left)`;
-  }
 
   // Balance Indicator Colors
   if (statRemainingEl && statusIconEl) {

@@ -201,15 +201,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  double get _totalIncome {
-    final loggedIncome = _expenses.where((e) => e.type == 'income').fold(0.0, (sum, e) => sum + e.amount);
-    return _startingBalance + loggedIncome;
+  double get _currentMonthIncome {
+    final now = DateTime.now();
+    return _expenses
+        .where((e) => e.type == 'income' && e.date.year == now.year && e.date.month == now.month)
+        .fold(0.0, (sum, e) => sum + e.amount);
   }
 
-  /// Available money after monthly budget allocation is deducted
+  double get _effectiveBudgetCap {
+    return _monthlyBudgetCap + _currentMonthIncome;
+  }
+
+  double get _totalIncome {
+    return _startingBalance;
+  }
+
+  /// Available money in bank account after monthly budget allocation is deducted
   double get _availableMoney {
-    if (_monthlyBudgetCap <= 0) return _totalIncome;
-    return (_totalIncome - _monthlyBudgetCap).clamp(0.0, double.infinity);
+    if (_monthlyBudgetCap <= 0) return _startingBalance;
+    return (_startingBalance - _monthlyBudgetCap).clamp(0.0, double.infinity);
   }
 
   double get _currentMonthExpenses {
@@ -220,8 +230,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   double get _remainingMonthlyBudget {
-    if (_monthlyBudgetCap <= 0) return 0.0;
-    return _monthlyBudgetCap - _currentMonthExpenses;
+    if (_effectiveBudgetCap <= 0) return 0.0;
+    return _effectiveBudgetCap - _currentMonthExpenses;
   }
 
   void _openAddExpenseSheet([Expense? expenseToEdit]) {
@@ -348,7 +358,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   index: 2,
                                   title: 'Remaining Budget',
                                   amount: currency.format(_remainingMonthlyBudget),
-                                  subtitle: _monthlyBudgetCap > 0 ? 'Cap: ${currency.format(_monthlyBudgetCap)}' : 'Tap to set cap',
+                                  subtitle: _monthlyBudgetCap > 0 
+                                      ? (_currentMonthIncome > 0 ? 'Cap: ${currency.format(_effectiveBudgetCap)} (+${currency.format(_currentMonthIncome)})' : 'Cap: ${currency.format(_monthlyBudgetCap)}') 
+                                      : (_currentMonthIncome > 0 ? 'Income: ${currency.format(_currentMonthIncome)}' : 'Tap to set cap'),
                                   icon: Icons.pie_chart_outline_rounded,
                                   isHighlighted: _activeStatIndex == 2,
                                 ),
