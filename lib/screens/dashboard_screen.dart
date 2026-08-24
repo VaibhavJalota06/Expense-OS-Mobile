@@ -213,13 +213,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   double get _totalIncome {
-    return _startingBalance;
+    final loggedIncome = _expenses.where((e) => e.type == 'income').fold(0.0, (sum, e) => sum + e.amount);
+    return _startingBalance + loggedIncome;
   }
 
   /// Available money in bank account after monthly budget allocation is deducted
   double get _availableMoney {
-    if (_monthlyBudgetCap <= 0) return _startingBalance;
-    return (_startingBalance - _monthlyBudgetCap).clamp(0.0, double.infinity);
+    if (_monthlyBudgetCap <= 0) return _totalIncome;
+    return (_totalIncome - _monthlyBudgetCap).clamp(0.0, double.infinity);
   }
 
   double get _currentMonthExpenses {

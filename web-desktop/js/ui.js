@@ -549,8 +549,8 @@ function updateUI() {
   const spentRatio = effectiveBudget > 0 ? (totalSpent / effectiveBudget) * 100 : 0;
   const remainingPercent = Math.max(0, 100 - spentRatio);
 
-  // Total Account Money represents the starting bank balance
-  const totalAccountMoney = accountBalance;
+  // Total Account Money represents starting bank balance + earned incomes
+  const totalAccountMoney = accountBalance + totalAllTimeIncome;
   const availableMoney = budget > 0 ? Math.max(0, totalAccountMoney - budget) : totalAccountMoney;
 
   const statAccountBalanceEl = document.getElementById('stat-account-balance');
