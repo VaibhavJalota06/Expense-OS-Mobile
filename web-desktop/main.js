@@ -178,6 +178,23 @@ ipcMain.on('restart-and-install', () => {
   }
 });
 
+ipcMain.handle('scan-receipt-ocr', async (_e, imgData) => {
+  try {
+    if (!imgData) return { success: false, error: 'No image data provided' };
+    const base64Data = imgData.replace(/^data:image\/\w+;base64,/, '');
+    const imgBuffer = Buffer.from(base64Data, 'base64');
+    let Tesseract = null;
+    try { Tesseract = require('tesseract.js'); } catch (e) {}
+    if (Tesseract && typeof Tesseract.recognize === 'function') {
+      const result = await Tesseract.recognize(imgBuffer, 'eng');
+      return { success: true, text: result && result.data ? result.data.text : '' };
+    }
+    return { success: false, error: 'Tesseract engine unavailable' };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 // Lightweight static file server for local HTTP protocol (enables OAuth in Electron)
 const mimeTypes = {
   '.html': 'text/html',

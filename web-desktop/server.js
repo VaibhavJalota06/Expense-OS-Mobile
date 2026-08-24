@@ -33,6 +33,50 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Handle /api/scan-receipt (Node-based OCR Engine)
+  if (req.method === 'POST' && req.url === '/api/scan-receipt') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const imgData = payload.image || '';
+        if (!imgData) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Missing image data' }));
+          return;
+        }
+
+        const base64Data = imgData.replace(/^data:image\/\w+;base64,/, '');
+        const imgBuffer = Buffer.from(base64Data, 'base64');
+
+        let Tesseract = null;
+        try {
+          Tesseract = require('tesseract.js');
+        } catch (e) {
+          console.warn('[OCR Server] tesseract.js require failed:', e.message);
+        }
+
+        if (Tesseract && typeof Tesseract.recognize === 'function') {
+          console.log('[OCR Server] Processing receipt with Node Tesseract.js...');
+          const result = await Tesseract.recognize(imgBuffer, 'eng');
+          const text = result && result.data ? result.data.text : '';
+          console.log('[OCR Server] OCR complete! Extracted', text.length, 'characters.');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, text }));
+        } else {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'OCR engine not initialized' }));
+        }
+      } catch (err) {
+        console.error('[OCR Server] OCR Error:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
   // Handle /api/send-email and /api/test-email
   if (req.method === 'POST' && (req.url === '/api/send-email' || req.url === '/api/test-email')) {
     let body = '';
