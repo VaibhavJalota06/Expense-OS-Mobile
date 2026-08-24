@@ -35,7 +35,7 @@ jobs:
           # Copy entire web app to root and /app/
           cp -r web-desktop/index.html _site/
           cp -r web-desktop/style.css _site/
-          cp -r web-desktop/script.js _site/
+          cp -r web-desktop/main.js _site/
           cp -r web-desktop/auth.js _site/
           cp -r web-desktop/auth-callback.html _site/
           cp -r web-desktop/supabase-config.js _site/
@@ -44,13 +44,12 @@ jobs:
           cp -r web-desktop/icon.png _site/
           cp -r web-desktop/icon.ico _site/
           cp -r web-desktop/js _site/
-          cp -r web-desktop/supabase _site/
           cp -r web-desktop/templates _site/
 
           # Also mirror to /app/
           cp -r web-desktop/index.html _site/app/
           cp -r web-desktop/style.css _site/app/
-          cp -r web-desktop/script.js _site/app/
+          cp -r web-desktop/main.js _site/app/
           cp -r web-desktop/auth.js _site/app/
           cp -r web-desktop/auth-callback.html _site/app/
           cp -r web-desktop/supabase-config.js _site/app/
@@ -59,7 +58,6 @@ jobs:
           cp -r web-desktop/icon.png _site/app/
           cp -r web-desktop/icon.ico _site/app/
           cp -r web-desktop/js _site/app/
-          cp -r web-desktop/supabase _site/app/
           cp -r web-desktop/templates _site/app/
 
           # Copy landing page to /landing/
