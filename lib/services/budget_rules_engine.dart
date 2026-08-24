@@ -68,7 +68,7 @@ class BudgetRulesEngine {
     await prefs.setBool('rule_$ruleId', enabled);
   }
 
-  /// Evaluates all rules against current transactions and fires real device push notifications
+  /// Evaluates all rules against current transactions and fires real device push notifications (deduplicated to once per day)
   Future<List<String>> evaluateRules({
     required List<Expense> expenses,
     required double budgetCap,
@@ -77,6 +77,9 @@ class BudgetRulesEngine {
   }) async {
     final triggeredAlerts = <String>[];
     final rules = await loadRules();
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
     final totalSpent = expenses.where((e) => e.type == 'expense').fold(0.0, (sum, e) => sum + e.amount);
 
@@ -85,11 +88,16 @@ class BudgetRulesEngine {
     if (r1.isEnabled && budgetCap > 0 && totalSpent >= (budgetCap * 0.8)) {
       final msg = '80% Spending Cap Warning: You have used ${(totalSpent / budgetCap * 100).toInt()}% of your $currencySymbol${budgetCap.toStringAsFixed(0)} limit.';
       triggeredAlerts.add(msg);
-      await NotificationService().showNotification(
-        id: 301,
-        title: '⚠️ 80% Budget Cap Warning',
-        body: msg,
-      );
+      
+      final lastNotified = prefs.getString('last_notified_day_rule_80_cap');
+      if (lastNotified != todayKey) {
+        await prefs.setString('last_notified_day_rule_80_cap', todayKey);
+        await NotificationService().showNotification(
+          id: 301,
+          title: '⚠️ 80% Budget Cap Warning',
+          body: msg,
+        );
+      }
     }
 
     // Rule 2: Dining & Entertainment Guard (35% threshold)
@@ -102,11 +110,16 @@ class BudgetRulesEngine {
       if (diningSpent >= (budgetCap * 0.35)) {
         final msg = 'Dining Guard: Leisure spending ($currencySymbol${diningSpent.toStringAsFixed(0)}) exceeded 35% of total budget.';
         triggeredAlerts.add(msg);
-        await NotificationService().showNotification(
-          id: 302,
-          title: '🛡️ Dining & Entertainment Guard Alert',
-          body: msg,
-        );
+
+        final lastNotified = prefs.getString('last_notified_day_rule_dining_guard');
+        if (lastNotified != todayKey) {
+          await prefs.setString('last_notified_day_rule_dining_guard', todayKey);
+          await NotificationService().showNotification(
+            id: 302,
+            title: '🛡️ Dining & Entertainment Guard Alert',
+            body: msg,
+          );
+        }
       }
     }
 
@@ -117,11 +130,16 @@ class BudgetRulesEngine {
       if (netBalance < (totalIncome * 0.20)) {
         final msg = 'Savings Protection: Net savings balance ($currencySymbol${netBalance.toStringAsFixed(0)}) is below the recommended 20% safety threshold.';
         triggeredAlerts.add(msg);
-        await NotificationService().showNotification(
-          id: 303,
-          title: '💰 Net Balance Savings Alert',
-          body: msg,
-        );
+
+        final lastNotified = prefs.getString('last_notified_day_rule_savings_protection');
+        if (lastNotified != todayKey) {
+          await prefs.setString('last_notified_day_rule_savings_protection', todayKey);
+          await NotificationService().showNotification(
+            id: 303,
+            title: '💰 Net Balance Savings Alert',
+            body: msg,
+          );
+        }
       }
     }
 
@@ -130,11 +148,16 @@ class BudgetRulesEngine {
     if (r4.isEnabled && budgetCap > 0 && budgetCap > totalIncome) {
       final msg = 'Allocation Guard: Monthly budget ($currencySymbol${budgetCap.toStringAsFixed(0)}) exceeds your total bank account money ($currencySymbol${totalIncome.toStringAsFixed(0)}).';
       triggeredAlerts.add(msg);
-      await NotificationService().showNotification(
-        id: 304,
-        title: '🏦 Budget Exceeds Bank Balance',
-        body: msg,
-      );
+
+      final lastNotified = prefs.getString('last_notified_day_rule_budget_allocation_guard');
+      if (lastNotified != todayKey) {
+        await prefs.setString('last_notified_day_rule_budget_allocation_guard', todayKey);
+        await NotificationService().showNotification(
+          id: 304,
+          title: '🏦 Budget Exceeds Bank Balance',
+          body: msg,
+        );
+      }
     }
 
     return triggeredAlerts;
