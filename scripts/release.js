@@ -123,6 +123,47 @@ async function main() {
     }
   }
 
+  // Step 5c: Update index.html Cache-Busting Version Query Parameters
+  const indexHtmlPath = path.join(rootDir, 'web-desktop', 'index.html');
+  if (fs.existsSync(indexHtmlPath)) {
+    let htmlContent = fs.readFileSync(indexHtmlPath, 'utf8');
+    const updatedHtml = htmlContent
+      .replace(/\?v=[0-9.]+[a-z]?/g, `?v=${nextSemver}`)
+      .replace(/Cache Busted v[0-9.]+/g, `Cache Busted ${tagName}`);
+    if (updatedHtml !== htmlContent) {
+      fs.writeFileSync(indexHtmlPath, updatedHtml, 'utf8');
+      log(`Updated web-desktop/index.html cache-busting query strings to v${nextSemver}`, '✅');
+    }
+  }
+
+  // Step 5d: Update service-worker.js Cache Name & Static Assets
+  const swPath = path.join(rootDir, 'web-desktop', 'service-worker.js');
+  if (fs.existsSync(swPath)) {
+    let swContent = fs.readFileSync(swPath, 'utf8');
+    const updatedSw = swContent
+      .replace(/CACHE_NAME = 'expense-os-pwa-v[0-9.]+[a-z]?';/, `CACHE_NAME = 'expense-os-pwa-${tagName}';`)
+      .replace(/\?v=[0-9.]+[a-z]?/g, `?v=${nextSemver}`);
+    if (updatedSw !== swContent) {
+      fs.writeFileSync(swPath, updatedSw, 'utf8');
+      log(`Updated web-desktop/service-worker.js cache to ${tagName}`, '✅');
+    }
+  }
+
+  // Step 5e: Update landing/index.html Version & Asset Paths
+  const landingHtmlPath = path.join(rootDir, 'web-desktop', 'landing', 'index.html');
+  if (fs.existsSync(landingHtmlPath)) {
+    let landingContent = fs.readFileSync(landingHtmlPath, 'utf8');
+    const updatedLanding = landingContent
+      .replace(/\?v=[0-9.]+[a-z]?/g, `?v=${nextSemver}`)
+      .replace(/<span class="brand-tag">v[0-9.]+<\/span>/g, `<span class="brand-tag">${tagName}</span>`)
+      .replace(/Expense OS v[0-9.]+ Released/g, `Expense OS ${tagName} Released`)
+      .replace(/releases\/download\/v[0-9.]+\/Expense-OS-Setup-[0-9.]+\.exe/g, `releases/download/${tagName}/Expense-OS-Setup-${nextSemver}.exe`);
+    if (updatedLanding !== landingContent) {
+      fs.writeFileSync(landingHtmlPath, updatedLanding, 'utf8');
+      log(`Updated web-desktop/landing/index.html version to ${tagName}`, '✅');
+    }
+  }
+
   // Step 6: Git Staging, Commit, Tag & Push
   log('Staging changes and committing to Git...', '📝');
   run('git add .');
