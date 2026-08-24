@@ -1928,11 +1928,21 @@ window.renderIncomeList = function() {
 
 window.deleteIncome = function(incomeId) {
   if (!incomeId) return;
-  incomes = incomes.filter(inc => inc.id !== incomeId);
+  const target = incomes.find(inc => String(inc.id) === String(incomeId));
+  const amt = target ? Number(target.amount || 0) : 0;
+  const wasAddedToBudget = target ? (target.addedToBudget !== false) : true;
+
+  incomes = incomes.filter(inc => String(inc.id) !== String(incomeId));
+
+  // If this income was added to monthly budget, deduct it from budget on deletion
+  if (amt > 0 && wasAddedToBudget && typeof budget !== 'undefined' && budget > 0) {
+    budget = Math.max(0, Number(budget || 0) - amt);
+  }
+
   saveState();
   updateUI();
   if (window.renderIncomeList) window.renderIncomeList();
-  showToast('Income source deleted successfully');
+  showToast('Income record removed & budget updated');
 };
 
 // ---------- Income Modal Logic ----------
@@ -1941,8 +1951,10 @@ window.openIncomeModal = function(e) {
   const incomeModal = document.getElementById('income-modal');
   const sourceInput = document.getElementById('income-source-input');
   const amountInput = document.getElementById('income-amount-input');
+  const addToBudgetCheck = document.getElementById('income-add-to-budget');
   if (sourceInput) sourceInput.value = '';
   if (amountInput) amountInput.value = '';
+  if (addToBudgetCheck) addToBudgetCheck.checked = true;
   if (window.renderIncomeList) window.renderIncomeList();
   if (incomeModal) {
     incomeModal.classList.remove('hidden');
@@ -1969,8 +1981,10 @@ window.handleSaveIncome = function(e) {
   if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err){} }
   const sourceInput = document.getElementById('income-source-input');
   const amountInput = document.getElementById('income-amount-input');
+  const addToBudgetCheck = document.getElementById('income-add-to-budget');
   const source = sourceInput ? sourceInput.value.trim() : '';
   const amount = amountInput ? parseFloat(amountInput.value) : 0;
+  const addToBudget = addToBudgetCheck ? addToBudgetCheck.checked : true;
 
   if (!source || isNaN(amount) || amount <= 0) {
     showAlert('Invalid Income Details', 'Please enter a valid income source description and positive amount.');
@@ -1981,14 +1995,21 @@ window.handleSaveIncome = function(e) {
     id: 'inc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     source: source,
     amount: amount,
-    date: getLocalDateString()
+    date: getLocalDateString(),
+    addedToBudget: addToBudget
   };
 
   incomes.push(newIncome);
+
+  // If user selected to add to Monthly Spending Budget, increase budget directly
+  if (addToBudget) {
+    budget = Number(budget || 0) + amount;
+  }
+
   saveState();
   updateUI();
   if (window.renderIncomeList) window.renderIncomeList();
-  showToast('Income source logged successfully');
+  showToast(addToBudget ? '✓ Income logged & added to Monthly Budget!' : '✓ Income logged to Total Account Money!');
   if (sourceInput) sourceInput.value = '';
   if (amountInput) amountInput.value = '';
 };
@@ -3932,32 +3953,74 @@ function preprocessReceiptForOcr(imageSource) {
   });
 }
 
-// 3. OCR Text Scanning via Tesseract.js & Regex Extractor
+// 3. Multi-Tier OCR Text Scanning (Electron Native -> Server Engine -> Browser Fallback)
 async function scanReceiptOCR(file, compressedDataUrl) {
   const ocrBadge = document.getElementById('ocr-status-badge');
   if (ocrBadge) {
     ocrBadge.classList.remove('hidden');
+    ocrBadge.className = 'ocr-status-badge text-emerald';
     ocrBadge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ⚡ Scanning receipt items & totals via OCR...';
   }
 
-  try {
-    if (typeof Tesseract === 'undefined') {
-      await loadExternalScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
-    }
+  let extractedText = '';
 
-    if (typeof Tesseract !== 'undefined') {
-      const processedUrl = await preprocessReceiptForOcr(compressedDataUrl);
-      const result = await Tesseract.recognize(processedUrl, 'eng');
-      const text = result && result.data ? result.data.text : '';
-      parseReceiptText(text);
+  // Tier 1: Electron Native IPC (100% offline Node OCR)
+  if (window.electronAPI && typeof window.electronAPI.scanReceiptOcr === 'function') {
+    try {
+      const res = await window.electronAPI.scanReceiptOcr(compressedDataUrl);
+      if (res && res.success && res.text) {
+        extractedText = res.text;
+      }
+    } catch (e) {
+      console.warn('Electron OCR IPC notice:', e);
     }
+  }
+
+  // Tier 2: Server API endpoint /api/scan-receipt
+  if (!extractedText) {
+    try {
+      const resp = await fetch('/api/scan-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: compressedDataUrl })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && data.success && data.text) {
+          extractedText = data.text;
+        }
+      }
+    } catch (e) {
+      console.warn('Server OCR endpoint notice:', e);
+    }
+  }
+
+  // Tier 3: Client-side Tesseract.js fallback
+  if (!extractedText) {
+    try {
+      if (typeof Tesseract === 'undefined') {
+        await loadExternalScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+      }
+      if (typeof Tesseract !== 'undefined') {
+        const processedUrl = await preprocessReceiptForOcr(compressedDataUrl);
+        const result = await Tesseract.recognize(processedUrl, 'eng');
+        if (result && result.data && result.data.text) {
+          extractedText = result.data.text;
+        }
+      }
+    } catch (e) {
+      console.warn('Client-side Tesseract fallback notice:', e);
+    }
+  }
+
+  if (extractedText && extractedText.trim().length > 0) {
+    parseReceiptText(extractedText);
     if (ocrBadge) {
       ocrBadge.className = 'ocr-status-badge text-emerald';
       ocrBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> OCR Scan & Item Breakdown Complete!';
       setTimeout(() => ocrBadge.classList.add('hidden'), 3500);
     }
-  } catch (err) {
-    console.warn('OCR scanning fallback:', err);
+  } else {
     if (ocrBadge) {
       ocrBadge.className = 'ocr-status-badge text-amber';
       ocrBadge.innerHTML = '<i class="fa-solid fa-paperclip"></i> Receipt attached! (Fill amount manually)';
