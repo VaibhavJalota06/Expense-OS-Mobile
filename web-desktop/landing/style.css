@@ -641,41 +641,47 @@ body {
 }
 
 /* Hero Social Proof Trust Strip */
+.hero-social-proof,
 .hero-trust-strip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 1.25rem;
   flex-wrap: wrap;
-  padding: 0.6rem 1.6rem;
-  background: rgba(255, 255, 255, 0.025);
+  padding: 0.65rem 1.65rem;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-pill);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  margin-top: 0.5rem;
-  margin-bottom: 2rem;
+  margin-top: 1.25rem;
+  margin-bottom: 2.75rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
+.proof-item,
 .trust-item {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: var(--text-med);
   letter-spacing: 0.02em;
 }
 
+.proof-item i,
 .trust-item i {
-  color: var(--planet-emerald);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
 }
 
+.proof-divider,
 .trust-sep {
-  color: rgba(255, 255, 255, 0.25);
-  font-weight: bold;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: inline-block;
 }
 
 /* ==========================================================================
