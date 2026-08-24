@@ -412,34 +412,55 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- 8. Live Dynamic GitHub Releases Fetcher ----------
   async function fetchLatestRelease() {
     try {
-      const res = await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile/releases/latest');
+      const res = await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile/releases');
       if (!res.ok) return;
-      const data = await res.json();
-      if (!data || !data.tag_name) return;
+      const releases = await res.json();
+      if (!Array.isArray(releases) || releases.length === 0) return;
 
-      const tagName = data.tag_name;
+      const latest = releases[0];
+      const tagName = latest.tag_name || 'v3.3.6';
+
       // Update all release version tags on page
-      document.querySelectorAll('.release-version-tag').forEach(el => {
-        el.textContent = tagName;
+      document.querySelectorAll('.release-version-tag, .footer-status-text').forEach(el => {
+        if (el.classList.contains('footer-status-text')) {
+          el.textContent = `All Systems Operational · ${tagName}`;
+        } else {
+          el.textContent = tagName;
+        }
       });
 
-      // Update download assets if specific asset URLs exist in release
-      if (Array.isArray(data.assets) && data.assets.length > 0) {
-        data.assets.forEach(asset => {
-          const name = asset.name.toLowerCase();
-          const downloadUrl = asset.browser_download_url;
+      // Scan releases to find latest available binaries
+      let foundApk = false;
+      let foundExe = false;
+      let foundIpa = false;
 
-          if (name.endsWith('.apk')) {
-            const apkBtn = document.querySelector('a[data-platform="android"]');
-            if (apkBtn) apkBtn.href = downloadUrl;
-          } else if (name.endsWith('.exe') || name.endsWith('.msi')) {
-            const exeBtn = document.querySelector('a[data-platform="windows"]');
-            if (exeBtn) exeBtn.href = downloadUrl;
-          } else if (name.endsWith('.ipa')) {
-            const ipaBtn = document.querySelector('a[data-platform="ios"]');
-            if (ipaBtn) ipaBtn.href = downloadUrl;
+      for (const release of releases) {
+        if (Array.isArray(release.assets)) {
+          for (const asset of release.assets) {
+            const name = (asset.name || '').toLowerCase();
+            const downloadUrl = asset.browser_download_url;
+
+            if (!foundApk && name.endsWith('.apk') && !name.includes('debug')) {
+              document.querySelectorAll('a[data-platform="android"]').forEach(btn => {
+                btn.href = downloadUrl;
+              });
+              foundApk = true;
+            }
+            if (!foundExe && (name.endsWith('.exe') || name.endsWith('.msi'))) {
+              document.querySelectorAll('a[data-platform="windows"]').forEach(btn => {
+                btn.href = downloadUrl;
+              });
+              foundExe = true;
+            }
+            if (!foundIpa && name.endsWith('.ipa')) {
+              document.querySelectorAll('a[data-platform="ios"]').forEach(btn => {
+                btn.href = downloadUrl;
+              });
+              foundIpa = true;
+            }
           }
-        });
+        }
+        if (foundApk && foundExe && foundIpa) break;
       }
     } catch (e) {
       console.log('Using default universal release endpoints:', e);
