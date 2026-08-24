@@ -1,31 +1,35 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Subscription Due Alert</title></head>
-<body style="margin:0; padding:20px; background:#050811; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#e2e8f0;">
-  <div style="max-width:580px; margin:0 auto; background:#0f172a; border-radius:16px; border:1px solid rgba(168,85,247,0.3); overflow:hidden; box-shadow:0 20px 25px rgba(0,0,0,0.5);">
-    <div style="background:linear-gradient(135deg, #0f172a, #581c87); padding:1.75rem; text-align:center;">
-      <div style="font-size:3rem;">🎬</div>
-      <h1 style="color:#c084fc; margin:0.3rem 0 0 0; font-size:1.5rem;">Upcoming Subscription Renewal</h1>
+<head><meta charset="utf-8"><title>Upcoming Subscription Bill - Expense OS</title></head>
+<body style="margin:0; padding:24px; background:#000000; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#FFFFFF;">
+  <div style="max-width:580px; margin:0 auto; background:#121214; border-radius:16px; border:1px solid rgba(56,189,248,0.3); overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.8);">
+    <div style="background:linear-gradient(135deg, #18181B, #0C4A6E); padding:2rem; text-align:center; border-bottom:1px solid rgba(56,189,248,0.2);">
+      <div style="font-size:3.5rem;">🔔</div>
+      <h1 style="color:#38BDF8; margin:0.5rem 0 0 0; font-size:1.6rem; font-weight:800;">Bill Reminder</h1>
+      <p style="color:#BAE6FD; margin:0.25rem 0 0 0; font-size:0.9rem;">Upcoming Recurring Subscription</p>
     </div>
     <div style="padding:2rem;">
-      <p style="color:#94a3b8; line-height:1.6;">Hello {{to_name}}, your recurring subscription for <strong>Netflix Premium</strong> is scheduled for auto-debit soon.</p>
-      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem; margin:1.5rem 0;">
-        <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:0.5rem;">
-          <span style="color:#64748b;">Service</span>
-          <span style="color:#fff; font-weight:700;">Netflix Premium</span>
+      <p style="color:#A1A1AA; line-height:1.6; font-size:0.95rem;">Hello {{to_name}}, your recurring subscription for <strong style="color:#FFFFFF;">{{bill_name}}</strong> is scheduled to charge soon:</p>
+      <div style="background:#18181B; border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:1.25rem; margin:1.5rem 0;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.9rem;">
+          <span style="color:#A1A1AA;">Bill / Service:</span>
+          <strong style="color:#FFFFFF;">{{bill_name}}</strong>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:0.5rem;">
-          <span style="color:#64748b;">Amount</span>
-          <span style="color:#34d399; font-weight:700;">₹649.00 / month</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.9rem;">
+          <span style="color:#A1A1AA;">Amount:</span>
+          <strong style="color:#38BDF8;">{{bill_amount}}</strong>
         </div>
         <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
-          <span style="color:#64748b;">Auto-Debit Date</span>
-          <span style="color:#c084fc; font-weight:700;">In 2 Days</span>
+          <span style="color:#A1A1AA;">Due Date:</span>
+          <strong style="color:#F59E0B;">{{due_date}}</strong>
         </div>
       </div>
       <div style="text-align:center; margin-top:1.5rem;">
-        <a href="http://localhost:58420" style="display:inline-block; background:#c084fc; color:#000; font-weight:800; padding:0.85rem 1.75rem; border-radius:10px; text-decoration:none;">Manage Subscriptions →</a>
+        <a href="{{app_url}}" style="display:inline-block; background:#38BDF8; color:#000000; font-weight:800; padding:0.85rem 1.75rem; border-radius:10px; text-decoration:none; font-size:0.95rem;">Manage Subscriptions & Bills →</a>
       </div>
+    </div>
+    <div style="background:#09090B; padding:1rem; text-align:center; font-size:0.75rem; color:#71717A; border-top:1px solid rgba(255,255,255,0.06);">
+      Sent automatically by Expense OS Recurring Bills Engine
     </div>
   </div>
 </body>

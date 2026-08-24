@@ -72,8 +72,8 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx http-server . -p 8000',
-    url: 'http://localhost:8000',
+    command: 'npx -y serve -p 3000 .',
+    url: 'http://localhost:3000',
     reuseExistingServer: true,
     timeout: 15000,
   },

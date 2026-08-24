@@ -1,21 +1,31 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Budget Threshold Warning</title></head>
-<body style="margin:0; padding:20px; background:#050811; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#e2e8f0;">
-  <div style="max-width:580px; margin:0 auto; background:#0f172a; border-radius:16px; border:1px solid rgba(244,63,94,0.4); overflow:hidden; box-shadow:0 20px 25px rgba(0,0,0,0.5);">
-    <div style="background:linear-gradient(135deg, #0f172a, #881337); padding:1.75rem; text-align:center;">
-      <div style="font-size:3rem;">⚠️</div>
-      <h1 style="color:#f43f5e; margin:0.3rem 0 0 0; font-size:1.5rem;">Budget Threshold Warning</h1>
+<head><meta charset="utf-8"><title>Budget Warning - Expense OS</title></head>
+<body style="margin:0; padding:24px; background:#000000; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#FFFFFF;">
+  <div style="max-width:580px; margin:0 auto; background:#121214; border-radius:16px; border:1px solid rgba(245,158,11,0.4); overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.8);">
+    <div style="background:linear-gradient(135deg, #18181B, #451A03); padding:2rem; text-align:center; border-bottom:1px solid rgba(245,158,11,0.2);">
+      <div style="font-size:3.5rem;">⚠️</div>
+      <h1 style="color:#F59E0B; margin:0.5rem 0 0 0; font-size:1.6rem; font-weight:800;">Budget Cap Warning</h1>
+      <p style="color:#FDE68A; margin:0.25rem 0 0 0; font-size:0.9rem;">You have utilized {{budget_used_percent}}% of your monthly cap</p>
     </div>
     <div style="padding:2rem;">
-      <p style="color:#94a3b8; line-height:1.6;">Hello {{to_name}}, you have used <strong>82% (₹24,600)</strong> of your monthly limit of <strong>₹30,000</strong>. Remaining allowance: <strong style="color:#34d399;">₹5,400</strong>.</p>
-      <div style="background:rgba(244,63,94,0.1); border-left:4px solid #f43f5e; padding:1rem; margin:1.5rem 0; border-radius:4px;">
-        <strong style="color:#fb7185;">💡 AI Recommendation:</strong>
-        <p style="margin:0.4rem 0 0 0; font-size:0.88rem; color:#fda4af;">Pause discretionary dining and online purchases for the remaining days to earn your <strong>+250 Emerald Budget Discipline Bonus</strong>!</p>
+      <p style="color:#A1A1AA; line-height:1.6; font-size:0.95rem;">Attention {{to_name}}, your spending pace for <strong style="color:#FFFFFF;">{{month_name}}</strong> has reached <strong style="color:#F59E0B;">{{budget_used_percent}}%</strong> of your total budget cap.</p>
+      <div style="background:#18181B; border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:1.25rem; margin:1.5rem 0;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.9rem;">
+          <span style="color:#A1A1AA;">Spent so far:</span>
+          <strong style="color:#FB7185;">{{total_spent}}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+          <span style="color:#A1A1AA;">Remaining Buffer:</span>
+          <strong style="color:#10B981;">{{remaining_buffer}}</strong>
+        </div>
       </div>
       <div style="text-align:center; margin-top:1.5rem;">
-        <a href="http://localhost:58420" style="display:inline-block; background:#f43f5e; color:#fff; font-weight:800; padding:0.85rem 1.75rem; border-radius:10px; text-decoration:none;">Review Budget Caps →</a>
+        <a href="{{app_url}}" style="display:inline-block; background:#F59E0B; color:#000000; font-weight:800; padding:0.85rem 1.75rem; border-radius:10px; text-decoration:none; font-size:0.95rem;">Adjust Budget or Review Logs →</a>
       </div>
+    </div>
+    <div style="background:#09090B; padding:1rem; text-align:center; font-size:0.75rem; color:#71717A; border-top:1px solid rgba(255,255,255,0.06);">
+      Sent automatically by Expense OS Real-Time Budget Sentinel
     </div>
   </div>
 </body>

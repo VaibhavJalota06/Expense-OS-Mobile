@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Expense OS Security & Authentication Verification Tests', () => {
   test('Unauthenticated user remains on login screen and cannot access workspace', async ({ page }) => {
-    await page.goto('http://localhost:8000/index.html');
+    await page.goto('http://localhost:3000/index.html');
     const loginScreen = page.locator('#login-screen');
     await expect(loginScreen).toBeVisible({ timeout: 5000 });
 
@@ -11,7 +11,7 @@ test.describe('Expense OS Security & Authentication Verification Tests', () => {
   });
 
   test('Guest mode button does not exist in DOM', async ({ page }) => {
-    await page.goto('http://localhost:8000/index.html');
+    await page.goto('http://localhost:3000/index.html');
     const guestBtn = page.locator('#btn-continue-guest');
     await expect(guestBtn).toHaveCount(0);
   });
@@ -28,7 +28,7 @@ test.describe('Expense OS Security & Authentication Verification Tests', () => {
       }));
     });
 
-    await page.goto('http://localhost:8000/index.html');
+    await page.goto('http://localhost:3000/index.html');
     
     // Login screen must remain visible because local storage keys are untrusted
     const loginScreen = page.locator('#login-screen');
@@ -40,14 +40,14 @@ test.describe('Expense OS Security & Authentication Verification Tests', () => {
       window.sessionStorage.setItem('expense_cal_guest_mode', 'true');
     });
 
-    await page.goto('http://localhost:8000/index.html');
+    await page.goto('http://localhost:3000/index.html');
     
     const loginScreen = page.locator('#login-screen');
     await expect(loginScreen).toBeVisible({ timeout: 5000 });
   });
 
   test('XSS helper safely escapes script tags to plain text', async ({ page }) => {
-    await page.goto('http://localhost:8000/index.html');
+    await page.goto('http://localhost:3000/index.html');
     const escaped = await page.evaluate(() => {
       if (typeof window.escapeHTML === 'function') {
         return window.escapeHTML('<script>alert(document.domain)</script>');
@@ -67,7 +67,7 @@ test.describe('Expense OS Security & Authentication Verification Tests', () => {
 
     for (const vp of viewports) {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto('http://localhost:8000/index.html');
+      await page.goto('http://localhost:3000/index.html');
       await expect(page.locator('#login-screen')).toBeVisible();
     }
   });
