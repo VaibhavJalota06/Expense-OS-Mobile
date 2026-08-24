@@ -1028,8 +1028,11 @@ function startSupabaseSync(userId) {
         if (payload.new && (String(payload.new.user_id) === String(userId) || !payload.new.user_id)) {
           const p = payload.new;
           if (p.starting_balance !== undefined && p.starting_balance !== null) {
-            accountBalance = Number(p.starting_balance || 0);
-            try { localStorage.setItem('expense_cal_web_account_balance', accountBalance.toString()); } catch(e) {}
+            const incomingBal = Number(p.starting_balance || 0);
+            if (incomingBal > 0 || !accountBalance) {
+              accountBalance = incomingBal;
+              try { localStorage.setItem('expense_cal_web_account_balance', accountBalance.toString()); } catch(e) {}
+            }
           }
           let stored = {};
           try { stored = JSON.parse(localStorage.getItem('expense_cal_user_profile') || '{}'); } catch(e) {}
