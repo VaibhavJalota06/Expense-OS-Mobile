@@ -5559,77 +5559,7 @@ window.renderLeaderboardView = function() {
       isCurrentUser: true
     };
 
-    // Global Community Peer Contenders (Active leaderboard community)
-    const GLOBAL_COMMUNITY_CONTENDERS = [
-      {
-        userId: 'global_c1',
-        name: 'Aria Chen',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face',
-        emeralds: 3450,
-        stage: 8,
-        badge: '👑',
-        title: 'Venture Capitalist',
-        stickers: ['💎', '⚡', '☕', '🚀'],
-        isCurrentUser: false
-      },
-      {
-        userId: 'global_c2',
-        name: 'Marcus Vance',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-        emeralds: 2200,
-        stage: 6,
-        badge: '🏦',
-        title: 'Asset Allocator',
-        stickers: ['🏦', '📊', '🐖'],
-        isCurrentUser: false
-      },
-      {
-        userId: 'global_c3',
-        name: 'Elena Rostova',
-        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face',
-        emeralds: 1650,
-        stage: 5,
-        badge: '💼',
-        title: 'Portfolio Strategist',
-        stickers: ['🎯', '✨', '⚡'],
-        isCurrentUser: false
-      },
-      {
-        userId: 'global_c4',
-        name: 'Kenji Sato',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
-        emeralds: 950,
-        stage: 3,
-        badge: '📈',
-        title: 'Market Apprentice',
-        stickers: ['📈', '☕'],
-        isCurrentUser: false
-      },
-      {
-        userId: 'global_c5',
-        name: 'Sophia Patel',
-        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face',
-        emeralds: 620,
-        stage: 2,
-        badge: '🛡️',
-        title: 'Pocket Guard',
-        stickers: ['🛡️', '🐖'],
-        isCurrentUser: false
-      },
-      {
-        userId: 'global_c6',
-        name: 'Liam Gallagher',
-        avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&h=100&fit=crop&crop=face',
-        emeralds: 310,
-        stage: 1,
-        badge: '🌱',
-        title: 'Bronze Saver',
-        stickers: ['🌱'],
-        isCurrentUser: false
-      }
-    ];
-
-    // Helper to render array of users into table
+    // Helper to render array of authentic users into table
     const renderTableRows = (userList) => {
       // Sort descending by emeralds
       const sorted = [...userList].sort((a, b) => b.emeralds - a.emeralds);
@@ -5662,28 +5592,23 @@ window.renderLeaderboardView = function() {
       `).join('');
     };
 
-    // Initial render with current user + global community contenders
-    const initialUsers = [currentUserObj, ...GLOBAL_COMMUNITY_CONTENDERS];
-    renderTableRows(initialUsers);
+    // Initial render with current user only
+    renderTableRows([currentUserObj]);
 
-    // Async fetch all registered users from Supabase (profiles, rewards, user_data)
+    // Async fetch all registered authentic users from Supabase (profiles & rewards)
     try {
       const supaClient = typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null;
       if (supaClient) {
         Promise.all([
           supaClient.from('profiles').select('*'),
-          supaClient.from('user_emerald_rewards').select('*'),
-          supaClient.from('user_data').select('user_id, expenses, updated_at')
-        ]).then(([profilesRes, rewardsRes, userDataRes]) => {
+          supaClient.from('user_emerald_rewards').select('*')
+        ]).then(([profilesRes, rewardsRes]) => {
           const cloudUsersMap = new Map();
 
-          // 1. Seed with global community contenders
-          GLOBAL_COMMUNITY_CONTENDERS.forEach(c => cloudUsersMap.set(c.userId, c));
-
-          // 2. Add current user
+          // 1. Add current user
           cloudUsersMap.set(currentUserId, currentUserObj);
 
-          // 3. Build reward and profile maps
+          // 2. Build reward map
           const rewardMap = {};
           if (rewardsRes && Array.isArray(rewardsRes.data)) {
             rewardsRes.data.forEach(r => {
@@ -5691,7 +5616,7 @@ window.renderLeaderboardView = function() {
             });
           }
 
-          // 4. Process all profiles found in Supabase
+          // 3. Process all authentic profiles from Supabase
           if (profilesRes && Array.isArray(profilesRes.data) && profilesRes.data.length > 0) {
             profilesRes.data.forEach(p => {
               const uId = p.user_id || p.id;
@@ -5721,7 +5646,7 @@ window.renderLeaderboardView = function() {
             });
           }
 
-          // 5. Also process any rewards entries that might not have a profile row
+          // 4. Process any extra reward rows
           if (rewardsRes && Array.isArray(rewardsRes.data)) {
             rewardsRes.data.forEach(r => {
               if (!r.user_id || r.user_id === currentUserId || cloudUsersMap.has(r.user_id)) return;
@@ -5734,7 +5659,7 @@ window.renderLeaderboardView = function() {
 
               cloudUsersMap.set(r.user_id, {
                 userId: r.user_id,
-                name: 'Verified Trader',
+                name: 'Verified User',
                 avatar: '',
                 emeralds: emeralds,
                 stage: st.stage,
