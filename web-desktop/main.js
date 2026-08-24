@@ -527,6 +527,10 @@ function createWindow(port) {
       autoUpdater.checkForUpdatesAndNotify().catch(err => {
         console.log('Auto update check status:', err.message);
       });
+      // Periodic automatic update check every 2 hours while app remains open
+      setInterval(() => {
+        autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+      }, 2 * 60 * 60 * 1000);
     }
   });
 
