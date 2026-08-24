@@ -109,6 +109,20 @@ async function main() {
     }
   }
 
+  // Step 5b: Update CURRENT_APP_VERSION in web-desktop/js/ui.js
+  const uiJsPath = path.join(rootDir, 'web-desktop', 'js', 'ui.js');
+  if (fs.existsSync(uiJsPath)) {
+    let uiContent = fs.readFileSync(uiJsPath, 'utf8');
+    const updatedUi = uiContent.replace(
+      /const CURRENT_APP_VERSION = 'v[0-9.]+';/,
+      `const CURRENT_APP_VERSION = '${tagName}';`
+    );
+    if (updatedUi !== uiContent) {
+      fs.writeFileSync(uiJsPath, updatedUi, 'utf8');
+      log(`Updated web-desktop/js/ui.js CURRENT_APP_VERSION to ${tagName}`, '✅');
+    }
+  }
+
   // Step 6: Git Staging, Commit, Tag & Push
   log('Staging changes and committing to Git...', '📝');
   run('git add .');

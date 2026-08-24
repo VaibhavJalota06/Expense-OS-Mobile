@@ -1251,14 +1251,17 @@ window.closeEditProfileModal = function(e) {
       });
     }
 
-    // Debounced focus handler — prevents redundant Supabase API calls
-    // and UI flicker when switching windows rapidly
+    // Focus handler: ONLY evaluate if user is waiting on login screen for OAuth return
+    // (Prevents UI reload / lag / open-close stutter when Alt-Tabbing during normal app usage)
     let _focusEvalTimer = null;
     window.addEventListener('focus', () => {
       if (_focusEvalTimer) clearTimeout(_focusEvalTimer);
       _focusEvalTimer = setTimeout(() => {
         _focusEvalTimer = null;
-        evaluateAuthState();
+        const al = getAppLayout();
+        if (!currentAppUser && (!al || al.classList.contains('hidden'))) {
+          evaluateAuthState();
+        }
       }, 400);
     });
 
