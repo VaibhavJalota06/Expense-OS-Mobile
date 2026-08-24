@@ -465,6 +465,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.log('Using default universal release endpoints:', e);
     }
+  }
+
   // ---------- 9. Interactive FAQ Accordion & Live Filter ----------
   const faqContainer = document.getElementById('faq-grid-container');
   const faqSearchInput = document.getElementById('faq-search-input');
