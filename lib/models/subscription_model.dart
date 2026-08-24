@@ -10,6 +10,7 @@ class SubscriptionItem {
   final bool isPaid;
   final DateTime? lastPaidDate;
   final bool remindOnDueDate;
+  final bool autoPay;
 
   SubscriptionItem({
     required this.id,
@@ -23,6 +24,7 @@ class SubscriptionItem {
     this.isPaid = false,
     this.lastPaidDate,
     this.remindOnDueDate = true,
+    this.autoPay = false,
   });
 
   SubscriptionItem copyWith({
@@ -37,6 +39,7 @@ class SubscriptionItem {
     bool? isPaid,
     DateTime? lastPaidDate,
     bool? remindOnDueDate,
+    bool? autoPay,
   }) {
     return SubscriptionItem(
       id: id ?? this.id,
@@ -50,6 +53,7 @@ class SubscriptionItem {
       isPaid: isPaid ?? this.isPaid,
       lastPaidDate: lastPaidDate ?? this.lastPaidDate,
       remindOnDueDate: remindOnDueDate ?? this.remindOnDueDate,
+      autoPay: autoPay ?? this.autoPay,
     );
   }
 
@@ -73,6 +77,8 @@ class SubscriptionItem {
       dueDate = DateTime.now().add(const Duration(days: 15));
     }
 
+    final bool autoPayBool = json['autoPay'] == true || json['auto_pay'] == true;
+
     return SubscriptionItem(
       id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
       title: json['title'] ?? json['name'] ?? 'Subscription',
@@ -87,6 +93,7 @@ class SubscriptionItem {
           ? DateTime.tryParse(json['last_paid_date'].toString()) 
           : (json['lastPaidDate'] != null ? DateTime.tryParse(json['lastPaidDate'].toString()) : (isPaidBool ? now : null)),
       remindOnDueDate: json['remind_on_due_date'] ?? json['remindOnDueDate'] ?? true,
+      autoPay: autoPayBool,
     );
   }
 
@@ -113,6 +120,8 @@ class SubscriptionItem {
       if (lastPaidDate != null) 'lastPaidDate': lastPaidDate!.toIso8601String().split('T')[0],
       'remind_on_due_date': remindOnDueDate,
       'remindOnDueDate': remindOnDueDate,
+      'autoPay': autoPay,
+      'auto_pay': autoPay,
       'type': 'subscription',
     };
   }
@@ -134,6 +143,7 @@ class SubscriptionItem {
       'is_paid': isPaid,
       if (lastPaidStr != null) 'last_paid_date': lastPaidStr,
       'remind_on_due_date': remindOnDueDate,
+      'auto_pay': autoPay,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
   }

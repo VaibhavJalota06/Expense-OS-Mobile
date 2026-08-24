@@ -894,36 +894,62 @@ function renderSubscriptions() {
       `;
     } else {
       subsGridContainer.classList.remove('empty-grid');
+      const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
       subscriptions.forEach(sub => {
         const isPaidThisMonth = sub.lastPaidMonth === currentYM;
         let urgencyBadge = '';
 
+        // Calculate exact target due date
+        let targetDueDate;
+        const sDay = Number(sub.dueDay || sub.due_day || 15);
         if (sub.startMonth && currentYM < sub.startMonth) {
-          const parts = sub.startMonth.split('-');
-          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const mName = monthNames[parseInt(parts[1], 10) - 1] || sub.startMonth;
-          urgencyBadge = `<span class="bill-urgency-badge normal"><i class="fa-regular fa-calendar-days"></i> Starts ${mName} (Day ${sub.dueDay})</span>`;
-        } else if (isPaidThisMonth) {
-          urgencyBadge = `<span class="bill-urgency-badge paid"><i class="fa-solid fa-circle-check"></i> Paid this Month</span>`;
-        } else {
-          const daysLeft = sub.dueDay - currentDay;
-          if (daysLeft < 0) {
-            urgencyBadge = `<span class="bill-urgency-badge overdue"><i class="fa-solid fa-triangle-exclamation"></i> Overdue (Day ${sub.dueDay})</span>`;
-          } else if (daysLeft <= 2) {
-            const text = daysLeft === 0 ? 'Due Today' : (daysLeft === 1 ? 'Due Tomorrow' : `Due in 2d (Day ${sub.dueDay})`);
-            urgencyBadge = `<span class="bill-urgency-badge due-soon"><i class="fa-solid fa-clock"></i> ${text}</span>`;
+          const [y, m] = sub.startMonth.split('-').map(Number);
+          targetDueDate = new Date(y, m - 1, sDay);
+        } else if (sub.dueDate || sub.due_date) {
+          const raw = sub.dueDate || sub.due_date;
+          if (raw.includes('-')) {
+            const [y, m, d] = raw.split('-').map(Number);
+            targetDueDate = new Date(y, m - 1, d || sDay);
           } else {
-            urgencyBadge = `<span class="bill-urgency-badge normal"><i class="fa-regular fa-calendar"></i> Due Day ${sub.dueDay}</span>`;
+            targetDueDate = new Date(now.getFullYear(), now.getMonth(), sDay);
           }
+        } else {
+          targetDueDate = new Date(now.getFullYear(), now.getMonth(), sDay);
         }
+
+        const diffTime = targetDueDate - todayDate;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const dayNum = targetDueDate.getDate();
+        const formattedTargetDate = `${String(dayNum).padStart(2, '0')} ${monthNames[targetDueDate.getMonth()]}`;
+
+        if (isPaidThisMonth) {
+          urgencyBadge = `<span class="bill-urgency-badge paid"><i class="fa-solid fa-circle-check"></i> Paid for ${monthNames[now.getMonth()]}</span>`;
+        } else if (diffDays < 0) {
+          urgencyBadge = `<span class="bill-urgency-badge overdue"><i class="fa-solid fa-triangle-exclamation"></i> Overdue (${formattedTargetDate})</span>`;
+        } else if (diffDays === 0) {
+          urgencyBadge = `<span class="bill-urgency-badge due-soon"><i class="fa-solid fa-clock"></i> Due Today ⚠️</span>`;
+        } else if (diffDays === 1) {
+          urgencyBadge = `<span class="bill-urgency-badge due-soon"><i class="fa-solid fa-clock"></i> Due in 1 day (${formattedTargetDate})</span>`;
+        } else if (diffDays <= 2) {
+          urgencyBadge = `<span class="bill-urgency-badge due-soon"><i class="fa-solid fa-clock"></i> Due in 2 days (${formattedTargetDate})</span>`;
+        } else {
+          urgencyBadge = `<span class="bill-urgency-badge normal"><i class="fa-regular fa-calendar-days"></i> Due in ${diffDays} days (${formattedTargetDate})</span>`;
+        }
+
+        // Auto-Pay pill badge if enabled
+        const autoPayBadge = (sub.autoPay || sub.auto_pay) 
+          ? `<span style="display: inline-flex; align-items: center; gap: 3px; font-size: 0.68rem; font-weight: 700; color: #a855f7; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.25); padding: 1px 6px; border-radius: 6px; margin-left: 6px;">⚡ Auto-Pay</span>`
+          : '';
 
         const card = document.createElement('div');
         card.className = 'sub-card-item';
         card.innerHTML = `
           <div class="sub-card-header">
             <div style="cursor: pointer;" onclick="if(window.editSubscription){window.editSubscription('${sub.id}');}">
-              <div class="sub-title">${escapeHtml(sub.name)}</div>
-              <div class="sub-due">${escapeHtml(sub.category)}</div>
+              <div class="sub-title" style="display: flex; align-items: center;">${escapeHtml(sub.name || sub.title || 'Subscription')} ${autoPayBadge}</div>
+              <div class="sub-due">${escapeHtml(sub.category || 'Services & Subscriptions')}</div>
             </div>
             <div style="display: flex; align-items: center; gap: 0.35rem;">
               <button type="button" class="icon-btn action-btn-edit" data-edit-sub="${sub.id}" title="Edit Subscription" onclick="if(window.editSubscription){event.preventDefault();event.stopPropagation();window.editSubscription('${sub.id}');}">
@@ -1955,6 +1981,9 @@ function openSubscriptionModal() {
     const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
     subStartMonthInput.value = currentYM;
   }
+  const autoPayEl = document.getElementById('sub-autopay');
+  if (autoPayEl) autoPayEl.checked = false;
+
   subModal.classList.remove('hidden');
   subModal.style.removeProperty('display');
   subModal.style.removeProperty('opacity');
@@ -1980,6 +2009,8 @@ function editSubscription(subId) {
     subStartMonthInput.value = sub.startMonth || sub.start_month || currentYM;
   }
   if (subDueDayInput) subDueDayInput.value = sub.dueDay || sub.due_day || (sub.due_date ? new Date(sub.due_date).getDate() : 1);
+  const autoPayEl = document.getElementById('sub-autopay');
+  if (autoPayEl) autoPayEl.checked = Boolean(sub.autoPay || sub.auto_pay);
 
   subModal.classList.remove('hidden');
   subModal.style.removeProperty('display');
@@ -2001,6 +2032,8 @@ function handleSubFormSubmit(e) {
   const category = subCategorySelect ? subCategorySelect.value : 'Services & Subscriptions';
   const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
   const startMonth = subStartMonthInput && subStartMonthInput.value ? subStartMonthInput.value : currentYM;
+  const autoPayEl = document.getElementById('sub-autopay');
+  const autoPay = autoPayEl ? autoPayEl.checked : false;
 
   if (!name || isNaN(amount) || amount <= 0 || isNaN(dueDay) || dueDay < 1 || dueDay > 31) {
     showAlert('Invalid Details', 'Please enter a valid subscription name, positive amount, and due day (1–31).');
@@ -2024,6 +2057,8 @@ function handleSubFormSubmit(e) {
       existing.start_month = startMonth;
       existing.dueDate = computedDueDate;
       existing.due_date = computedDueDate;
+      existing.autoPay = autoPay;
+      existing.auto_pay = autoPay;
       existing.updated_at = new Date().toISOString();
     }
     editingSubId = null;
@@ -2041,6 +2076,8 @@ function handleSubFormSubmit(e) {
       start_month: startMonth,
       dueDate: computedDueDate,
       due_date: computedDueDate,
+      autoPay,
+      auto_pay: autoPay,
       lastPaidMonth: '',
       is_active: true
     };

@@ -1331,6 +1331,12 @@
               <input type="number" id="sub-due-day" placeholder="1 to 31" min="1" max="31" required />
             </div>
           </div>
+          <div class="form-group" style="margin-top: 0.5rem; background: rgba(255, 255, 255, 0.03); padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--border-color);">
+            <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0;">
+              <input type="checkbox" id="sub-autopay" style="width: 16px; height: 16px; accent-color: #8b5cf6; cursor: pointer;" />
+              <span>⚡ <strong>Enable Auto-Pay (Optional)</strong> <br/><span style="color: var(--text-secondary); font-size: 0.75rem;">Automatically deducts &amp; logs to expense ledger when due</span></span>
+            </label>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" id="sub-modal-cancel" class="btn btn-secondary" onclick="if(window.closeSubModal)window.closeSubModal(event);">Cancel</button>

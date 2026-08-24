@@ -108,6 +108,28 @@ class _BillsScreenState extends State<BillsScreen> {
 
       final due = DateTime(item.dueDate.year, item.dueDate.month, item.dueDate.day);
 
+      // Auto-Pay execution when bill is due and has Auto-Pay enabled
+      if (item.autoPay && !item.isPaid && (today.isAfter(due) || today.isAtSameMomentAs(due))) {
+        _subscriptions[i] = item.copyWith(
+          isPaid: true,
+          lastPaidDate: now,
+        );
+        changed = true;
+
+        // Auto-log bill payment to Expense Logs & sync to Web
+        final payExpense = Expense(
+          id: 'bill_pay_${item.id}_${now.millisecondsSinceEpoch}',
+          title: 'Bill Payment: ${item.title}',
+          amount: item.amount,
+          category: item.category.isNotEmpty ? item.category : 'Services & Subscriptions',
+          type: 'expense',
+          date: now,
+          paymentMethod: 'Auto-Pay',
+        );
+        SupabaseService().addExpense(payExpense).catchError((_) {});
+        continue;
+      }
+
       // If a bill was marked PAID and today has passed its due date, advance to next cycle and reset to pending
       if (item.isPaid && today.isAfter(due)) {
         DateTime nextDue = item.dueDate;
@@ -182,6 +204,7 @@ class _BillsScreenState extends State<BillsScreen> {
     String cycle = itemToEdit?.cycle ?? 'monthly';
     DateTime selectedDueDate = itemToEdit?.dueDate ?? DateTime.now().add(const Duration(days: 7));
     bool remind = itemToEdit?.remindOnDueDate ?? true;
+    bool autoPay = itemToEdit?.autoPay ?? false;
 
     final List<String> categories = [
       'Services & Subscriptions',
@@ -475,6 +498,46 @@ class _BillsScreenState extends State<BillsScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 10),
+
+                    // Auto-Pay toggle (Optional)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0D1322) : const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4E7EC)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.bolt_rounded, size: 18, color: Color(0xFF9333EA)),
+                              const SizedBox(width: 8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Enable Auto-Pay (Optional)',
+                                    style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary),
+                                  ),
+                                  Text(
+                                    'Auto-deducts when due',
+                                    style: GoogleFonts.plusJakartaSans(fontSize: 10, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085)),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Switch.adaptive(
+                            value: autoPay,
+                            activeTrackColor: const Color(0xFF9333EA),
+                            onChanged: (val) => setSheetState(() => autoPay = val),
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 20),
 
                     // Save Button
@@ -492,6 +555,7 @@ class _BillsScreenState extends State<BillsScreen> {
                           cycle: cycle,
                           dueDate: selectedDueDate,
                           remindOnDueDate: remind,
+                          autoPay: autoPay,
                           isPaid: isEdit ? itemToEdit.isPaid : false,
                         );
 
@@ -742,7 +806,27 @@ class _BillsScreenState extends State<BillsScreen> {
                                                       ),
                                                     ),
                                                   ),
-                                                  if (item.isPaid)
+                                                  if (item.autoPay && !item.isPaid) ...[
+                                                    const SizedBox(width: 6),
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: isDark ? const Color(0xFF2E1065) : const Color(0xFFF3E8FF),
+                                                        borderRadius: BorderRadius.circular(6),
+                                                        border: Border.all(color: const Color(0xFF9333EA).withValues(alpha: 0.3)),
+                                                      ),
+                                                      child: Text(
+                                                        '⚡ Auto-Pay',
+                                                        style: GoogleFonts.plusJakartaSans(
+                                                          fontSize: 10,
+                                                          fontWeight: FontWeight.w700,
+                                                          color: const Color(0xFF9333EA),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  if (item.isPaid) ...[
+                                                    const SizedBox(width: 6),
                                                     Container(
                                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                       decoration: BoxDecoration(
@@ -758,6 +842,7 @@ class _BillsScreenState extends State<BillsScreen> {
                                                         ),
                                                       ),
                                                     ),
+                                                  ],
                                                 ],
                                               ),
                                               const SizedBox(height: 3),
