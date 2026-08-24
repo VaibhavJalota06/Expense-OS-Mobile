@@ -536,8 +536,9 @@ function createWindow(port) {
 }
 
 app.whenReady().then(() => {
-  // Strip Electron-identifying headers and set consistent Chrome UA for all requests
+  // Strip Electron-identifying headers and clear stale cache on startup
   if (session && session.defaultSession) {
+    session.defaultSession.clearCache().catch(() => {});
     session.defaultSession.setUserAgent(standardChromeUserAgent);
     session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
       details.requestHeaders['User-Agent'] = standardChromeUserAgent;
