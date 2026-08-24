@@ -234,15 +234,14 @@ class SupabaseService {
 
         return true;
       } catch (nativeError) {
-        debugPrint('[GoogleSignIn] Native Google sign-in failed: $nativeError');
-        rethrow;
+        debugPrint('[GoogleSignIn] Native Google sign-in failed ($nativeError), falling back to Supabase browser OAuth...');
       }
     }
 
-    // 2. Web & Desktop: Direct OAuth
+    // 2. Web, Desktop & Mobile Fallback: Direct OAuth
     try {
       final String redirectUrl = kIsWeb ? Uri.base.origin : 'com.expensecalculator.expenseosmobile://login-callback';
-      debugPrint('[GoogleSignIn] Using direct OAuth for Web/Desktop: $redirectUrl');
+      debugPrint('[GoogleSignIn] Using direct OAuth: $redirectUrl');
 
       final success = await client.auth.signInWithOAuth(
         OAuthProvider.google,
