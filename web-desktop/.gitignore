@@ -15,3 +15,10 @@ release/
 
 *.pdf
 implementation_plan.md
+
+# Security — never track credentials
+docs/Expense_OS_Admin_Credentials.*
+
+# Dead / duplicate files
+script.js
+vercel.json
