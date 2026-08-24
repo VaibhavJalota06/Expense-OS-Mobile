@@ -2,67 +2,48 @@
   "version": 2,
   "outputDirectory": "web-desktop",
   "cleanUrls": true,
-  "headers": [
+  "routes": [
     {
-      "source": "/service-worker.js",
-      "headers": [
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
+      "src": "^/service-worker.js$",
+      "headers": {
+        "Service-Worker-Allowed": "/",
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      },
+      "dest": "/service-worker.js"
     },
     {
-      "source": "/manifest.json",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/manifest+json"
-        }
-      ]
+      "src": "^/manifest.json$",
+      "headers": {
+        "Content-Type": "application/manifest+json"
+      },
+      "dest": "/manifest.json"
     },
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/landing/index.html"
+      "src": "^/app(/.*)?$",
+      "dest": "/index.html"
     },
     {
-      "source": "/app",
-      "destination": "/index.html"
+      "src": "^/dashboard(/.*)?$",
+      "dest": "/index.html"
     },
     {
-      "source": "/dashboard",
-      "destination": "/index.html"
+      "src": "^/auth-callback(/.*)?$",
+      "dest": "/auth-callback.html"
     },
     {
-      "source": "/landing",
-      "destination": "/landing/index.html"
+      "src": "^/landing(/.*)?$",
+      "dest": "/landing/index.html"
     },
     {
-      "source": "/auth-callback",
-      "destination": "/auth-callback.html"
+      "src": "^/$",
+      "dest": "/landing/index.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
