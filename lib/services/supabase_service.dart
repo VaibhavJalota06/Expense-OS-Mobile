@@ -776,15 +776,18 @@ class SupabaseService {
               } else if (type == 'system_financial_meta' || map['id'] == 'system_financial_meta') {
                 foundMeta = true;
                 final b = (map['starting_balance'] as num?)?.toDouble() ?? 0.0;
-                await prefs.setDouble('user_starting_balance', b);
+                if (b > 0) {
+                  await prefs.setDouble('user_starting_balance', b);
+                }
               } else {
                 cloudSubs.add(map);
               }
             }
           }
 
-          if (!foundMeta) {
-            if (incomeInitialBalance != null) {
+          if (incomeInitialBalance != null && incomeInitialBalance > 0) {
+            final currentBal = prefs.getDouble('user_starting_balance') ?? 0.0;
+            if (currentBal == 0.0 || !foundMeta) {
               await prefs.setDouble('user_starting_balance', incomeInitialBalance);
             }
           }
