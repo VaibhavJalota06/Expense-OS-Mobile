@@ -1675,6 +1675,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   border: 1px solid rgba(52, 211, 153, 0.35);
 }
 
+.bill-urgency-badge.normal {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
 @keyframes pulse-red-urgency {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(251, 113, 133, 0.4);

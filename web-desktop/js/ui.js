@@ -166,12 +166,12 @@ function renderDashboardBillReminders() {
   const currentYM = typeof getCurrentYearMonth === 'function' ? getCurrentYearMonth() : new Date().toISOString().slice(0, 7);
   const currentDay = new Date().getDate();
 
-  // Find unpaid bills due in <= 3 days or overdue
+  // Find unpaid bills due in <= 2 days (today, tomorrow, or in 2 days) or overdue
   const alertBills = (subscriptions || []).filter(sub => {
     if (sub.lastPaidMonth === currentYM) return false;
     const dueDay = Number(sub.dueDay || 1);
     const diff = dueDay - currentDay;
-    return diff <= 3;
+    return diff <= 2;
   });
 
   if (alertBills.length === 0) {
@@ -890,13 +890,16 @@ function renderSubscriptions() {
 
         if (isPaidThisMonth) {
           urgencyBadge = `<span class="bill-urgency-badge paid"><i class="fa-solid fa-circle-check"></i> Paid this Month</span>`;
-        } else if (currentDay > sub.dueDay) {
-          urgencyBadge = `<span class="bill-urgency-badge overdue"><i class="fa-solid fa-triangle-exclamation"></i> Overdue (Day ${sub.dueDay})</span>`;
-        } else if (sub.dueDay - currentDay <= 7) {
-          const daysLeft = sub.dueDay - currentDay;
-          urgencyBadge = `<span class="bill-urgency-badge due-soon"><i class="fa-solid fa-clock"></i> ${daysLeft === 0 ? 'Due Today' : `Due in ${daysLeft}d (Day ${sub.dueDay})`}</span>`;
         } else {
-          urgencyBadge = `<span class="status-badge due">Due Day ${sub.dueDay}</span>`;
+          const daysLeft = sub.dueDay - currentDay;
+          if (daysLeft < 0) {
+            urgencyBadge = `<span class="bill-urgency-badge overdue"><i class="fa-solid fa-triangle-exclamation"></i> Overdue (Day ${sub.dueDay})</span>`;
+          } else if (daysLeft <= 2) {
+            const text = daysLeft === 0 ? 'Due Today' : (daysLeft === 1 ? 'Due Tomorrow' : `Due in 2d (Day ${sub.dueDay})`);
+            urgencyBadge = `<span class="bill-urgency-badge due-soon"><i class="fa-solid fa-clock"></i> ${text}</span>`;
+          } else {
+            urgencyBadge = `<span class="bill-urgency-badge normal"><i class="fa-regular fa-calendar"></i> Due Day ${sub.dueDay}</span>`;
+          }
         }
 
         const card = document.createElement('div');
