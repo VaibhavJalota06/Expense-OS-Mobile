@@ -1,3 +1,81 @@
+// ────────────────────────────────────────────────────────────
+// Production Console Guard — suppress logs on live deployments
+// ────────────────────────────────────────────────────────────
+(function() {
+  const IS_DEV = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if (!IS_DEV) {
+    const noop = function() {};
+    console.log = noop;
+    console.debug = noop;
+    // Keep console.warn and console.error for critical runtime issues
+  }
+})();
+
+// ────────────────────────────────────────────────────────────
+// Input Validation & Sanitization Utilities
+// ────────────────────────────────────────────────────────────
+window.ExpenseValidator = {
+  sanitizeHTML: function(str) {
+    if (!str || typeof str !== 'string') return '';
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  },
+
+  validateAmount: function(amount) {
+    const num = parseFloat(amount);
+    if (isNaN(num) || num <= 0) return { valid: false, error: 'Amount must be a positive number' };
+    if (num > 999999.99) return { valid: false, error: 'Amount cannot exceed 999,999.99' };
+    return { valid: true, value: Math.round(num * 100) / 100 };
+  },
+
+  validateTitle: function(title) {
+    if (!title || typeof title !== 'string') return { valid: false, error: 'Title is required' };
+    const trimmed = title.trim();
+    if (trimmed.length === 0) return { valid: false, error: 'Title cannot be empty' };
+    if (trimmed.length > 100) return { valid: false, error: 'Title must be 100 characters or less' };
+    return { valid: true, value: trimmed };
+  },
+
+  validateCategory: function(category) {
+    if (!category || typeof category !== 'string') return { valid: false, error: 'Category is required' };
+    const trimmed = category.trim();
+    if (trimmed.length === 0) return { valid: false, error: 'Category cannot be empty' };
+    if (trimmed.length > 50) return { valid: false, error: 'Category must be 50 characters or less' };
+    return { valid: true, value: trimmed };
+  },
+
+  validateDate: function(dateStr) {
+    if (!dateStr) return { valid: false, error: 'Date is required' };
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return { valid: false, error: 'Invalid date format' };
+    return { valid: true, value: dateStr };
+  },
+
+  validateExpense: function(expense) {
+    const errors = [];
+    const titleResult = this.validateTitle(expense.title || expense.name);
+    if (!titleResult.valid) errors.push(titleResult.error);
+    const amountResult = this.validateAmount(expense.amount);
+    if (!amountResult.valid) errors.push(amountResult.error);
+    const categoryResult = this.validateCategory(expense.category);
+    if (!categoryResult.valid) errors.push(categoryResult.error);
+    const dateResult = this.validateDate(expense.date);
+    if (!dateResult.valid) errors.push(dateResult.error);
+
+    if (errors.length > 0) return { valid: false, errors: errors };
+    return {
+      valid: true,
+      sanitized: {
+        title: this.sanitizeHTML(titleResult.value),
+        amount: amountResult.value,
+        category: this.sanitizeHTML(categoryResult.value),
+        date: dateResult.value
+      }
+    };
+  }
+};
+
 // Helper to trigger Native Windows OS & Web Toast Notifications for 80% and 100% budget caps
 function triggerDesktopBudgetNotification(title, body, notificationKey) {
   try {
@@ -5425,19 +5503,36 @@ window.buyShopItem = function(itemId, cost) {
   window.renderLeaderboardView();
 };
 
-window.switchLeaderboardSubTab = function(tabName) {
+window.switchLeaderboardSubTab = function(tabName, evt) {
   const panes = ['ranks', 'stickers', 'shop', 'empire', 'quests'];
   panes.forEach(p => {
     const pane = document.getElementById(`lb-tab-content-${p}`);
     if (pane) {
-      if (p === tabName) pane.classList.remove('hidden');
-      else pane.classList.add('hidden');
+      if (p === tabName) {
+        pane.classList.remove('hidden');
+        pane.style.removeProperty('display');
+      } else {
+        pane.classList.add('hidden');
+        pane.style.setProperty('display', 'none', 'important');
+      }
     }
   });
 
   const buttons = document.querySelectorAll('.lb-tab-btn');
-  buttons.forEach(btn => btn.classList.remove('active'));
-  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+  buttons.forEach(btn => {
+    btn.classList.remove('active');
+    const onclickStr = btn.getAttribute('onclick') || '';
+    if (onclickStr.includes(`'${tabName}'`)) {
+      btn.classList.add('active');
+    }
+  });
+
+  if (tabName === 'empire' && typeof window.renderWealthEmpireView === 'function') {
+    window.renderWealthEmpireView();
+  }
+  if (tabName === 'quests' && typeof window.renderSavingsQuestsView === 'function') {
+    window.renderSavingsQuestsView();
+  }
 };
 
 window.renderLeaderboardView = function() {
@@ -5731,4 +5826,89 @@ if (document.readyState === 'loading') {
   setTimeout(window.renderLeaderboardView, 800);
 }
 
+// ────────────────────────────────────────────────────────────
+// Keyboard Shortcuts for Power Users
+// ────────────────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  // Skip if user is typing in an input, textarea, or contenteditable
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
 
+  // Skip if any modifier key is held (Ctrl, Alt, Meta)
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+  switch (e.key) {
+    case 'n':
+    case 'N':
+      // Open Add Expense modal
+      e.preventDefault();
+      if (typeof window.switchView === 'function') window.switchView('expenses');
+      setTimeout(() => {
+        const addBtn = document.getElementById('btn-open-add-modal') || document.getElementById('btn-add-expense');
+        if (addBtn) addBtn.click();
+      }, 200);
+      break;
+
+    case 'd':
+    case 'D':
+      e.preventDefault();
+      if (typeof window.switchView === 'function') window.switchView('dashboard');
+      break;
+
+    case 't':
+    case 'T':
+      e.preventDefault();
+      if (typeof window.switchView === 'function') window.switchView('expenses');
+      break;
+
+    case 'l':
+    case 'L':
+      e.preventDefault();
+      if (typeof window.switchView === 'function') window.switchView('leaderboard');
+      break;
+
+    case 's':
+    case 'S':
+      e.preventDefault();
+      if (typeof window.switchView === 'function') window.switchView('savings-goals');
+      break;
+
+    case 'b':
+    case 'B':
+      e.preventDefault();
+      if (typeof window.switchView === 'function') window.switchView('subscriptions');
+      break;
+
+    case 'r':
+    case 'R':
+      e.preventDefault();
+      if (typeof window.switchView === 'function') window.switchView('reports');
+      break;
+
+    case '/':
+      e.preventDefault();
+      const searchInput = document.getElementById('expense-search') || document.querySelector('[type="search"]');
+      if (searchInput) searchInput.focus();
+      break;
+
+    case 'Escape':
+      // Close any open modal
+      document.querySelectorAll('.modal:not(.hidden), .modal-overlay:not(.hidden)').forEach(m => {
+        m.classList.add('hidden');
+      });
+      // Close dropdown
+      const dd = document.getElementById('user-dropdown-menu');
+      if (dd && !dd.classList.contains('hidden')) dd.classList.add('hidden');
+      break;
+
+    case '?':
+      // Show keyboard shortcut help toast
+      if (typeof window.showToast === 'function') {
+        window.showToast(
+          '⌨️ Shortcuts: N=Add, D=Dashboard, T=Transactions, L=Leaderboard, S=Savings, B=Bills, R=Reports, /=Search, Esc=Close',
+          'info'
+        );
+      }
+      break;
+  }
+});

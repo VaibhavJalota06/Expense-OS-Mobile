@@ -4811,4 +4811,61 @@ select option {
 }
 
 
+/* ── Loading Skeleton Shimmer Animation ── */
+@keyframes skeleton-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
 
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 400px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md, 10px);
+}
+
+.skeleton-line {
+  height: 14px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.skeleton-line.short { width: 40%; }
+.skeleton-line.medium { width: 65%; }
+.skeleton-line.long { width: 90%; }
+
+.skeleton-card {
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  min-height: 120px;
+}
+
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.skeleton-stat {
+  height: 48px;
+  border-radius: 10px;
+}
+
+/* ── Keyboard Shortcut Badge ── */
+.kbd-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-mid);
+  font-weight: 600;
+  line-height: 1;
+}

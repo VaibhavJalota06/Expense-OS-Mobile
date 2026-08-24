@@ -22,11 +22,8 @@
   <link rel="apple-touch-icon" href="icon.png" />
   <link rel="manifest" href="manifest.json" />
   <!-- Custom Stylesheet (Cache Busted v3.9.4 - Budget Gauge Fix) -->
-  <link rel="stylesheet" href="style.css?v=3.9.4" />
-  <!-- SheetJS Library for XLSX & XLS parsing -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- PDF.js Library for PDF Bank Statement parsing -->
-  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <link rel="stylesheet" href="style.css?v=3.9.8" />
+  <!-- SheetJS & PDF.js are loaded on-demand when user opens the import feature -->
   <script>
     window.toggleUserDropdown = function(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -1878,12 +1875,12 @@
   </script>
 
   <!-- App Scripts (order matters — cache-busted to v3.9.4) -->
-  <script src="supabase-config.js?v=3.9.7"></script>
-  <script src="js/state.js?v=3.9.7"></script>
-  <script src="js/ui.js?v=3.9.7"></script>
-  <script src="js/features.js?v=3.9.7"></script>
-  <script src="js/gamification.js?v=3.9.7"></script>
-  <script src="auth.js?v=3.9.7"></script>
+  <script src="supabase-config.js?v=3.9.8"></script>
+  <script src="js/state.js?v=3.9.8"></script>
+  <script src="js/ui.js?v=3.9.8"></script>
+  <script src="js/features.js?v=3.9.8"></script>
+  <script src="js/gamification.js?v=3.9.8"></script>
+  <script src="auth.js?v=3.9.8"></script>
 
   <!-- Progressive Web App (PWA) Service Worker Registration & Install Engine -->
   <script>
