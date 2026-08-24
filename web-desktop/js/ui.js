@@ -5622,6 +5622,10 @@ window.renderLeaderboardView = function() {
               const uId = p.user_id || p.id;
               if (!uId || uId === currentUserId) return;
 
+              const emailStr = (p.email || '').toLowerCase();
+              const nameStr = (p.full_name || p.name || '').toLowerCase();
+              if (emailStr.includes('admin@expenseos.com') || nameStr === 'admin' || p.role === 'admin') return;
+
               const r = rewardMap[uId] || {};
               const name = p.full_name || p.name || (p.email ? p.email.split('@')[0] : 'Expense User');
               const avatar = p.avatar_url || p.picture || p.photo_url || '';
