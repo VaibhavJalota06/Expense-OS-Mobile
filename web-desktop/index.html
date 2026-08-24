@@ -6,25 +6,6 @@
   <title>Expense OS - Personal Finance Command Center</title>
   <meta name="description" content="Expense OS — a personal finance command center to track expenses, manage budgets, and analyze spending habits with real-time cloud sync." />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://localhost:* ws://localhost:*; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; connect-src 'self' http://localhost:* wss://localhost:* https://*.googleapis.com https://api.github.com https://api.emailjs.com https://*.supabase.co wss://*.supabase.co wss://*.supabase.com;" />
-  <!-- Ensure Landing Page is visited first before opening web app -->
-  <script>
-    (function() {
-      try {
-        const path = window.location.pathname;
-        const search = window.location.search;
-        const hash = window.location.hash;
-        
-        // Skip redirect if explicitly opening app route, auth token, or coming from landing page
-        const isAppExplicit = path.includes('/app') || path.includes('/dashboard') || search.includes('access_token') || search.includes('code') || hash.includes('access_token');
-        const fromLanding = document.referrer.includes('/landing') || sessionStorage.getItem('expense_os_landing_visited');
-
-        if (!isAppExplicit && !fromLanding) {
-          sessionStorage.setItem('expense_os_landing_visited', 'true');
-          window.location.href = '/landing/index.html';
-        }
-      } catch (e) {}
-    })();
-  </script>
   <!-- Google Fonts: Poppins & IBM Plex Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,8 +19,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.json" />
-  <!-- Custom Stylesheet (Cache Busted v3.8.3) -->
-  <link rel="stylesheet" href="style.css?v=3.8.3" />
+  <!-- Custom Stylesheet (Cache Busted v3.9.2 - Pure OLED Minimalist Permanent) -->
+  <link rel="stylesheet" href="style.css?v=3.9.2" />
   <!-- SheetJS Library for XLSX & XLS parsing -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- PDF.js Library for PDF Bank Statement parsing -->
@@ -162,6 +143,10 @@
 
           <div id="login-error" class="auth-error hidden"></div>
           <button type="submit" class="btn btn-primary btn-block" onclick="if(window.handleSignInSubmit){window.handleSignInSubmit(event);}">Sign In</button>
+          
+          <button type="button" class="btn btn-secondary btn-block" style="margin-top: 0.65rem; border-color: rgba(52, 211, 153, 0.3); color: #34d399;" onclick="if(window.devAdminLogin){window.devAdminLogin();}" title="Instant 1-Click Super Admin Login">
+            <i class="fa-solid fa-shield-halved"></i> ⚡ Quick Admin Sign-In
+          </button>
         </form>
 
         <p class="auth-switch">Don't have an account? <a href="#" id="btn-show-signup" onclick="if(window.handleShowSignupClick)window.handleShowSignupClick(event);">Create one</a></p>
@@ -372,10 +357,6 @@
             <i class="fa-solid fa-rotate-left"></i>
             <span>Reset Data</span>
           </button>
-          <button id="btn-sidebar-signout" class="btn-sidebar-reset" style="margin-top: 0.35rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.25);" title="Sign Out of Expense OS" onclick="if(window.promptSignOut) window.promptSignOut(event); else if(window.handleSignOut) window.handleSignOut(event);">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span>Sign Out</span>
-          </button>
         </div>
       </div>
     </aside>
@@ -492,80 +473,80 @@
         <section id="view-dashboard" class="view-panel active">
           <!-- Overview Key Metrics Grid -->
           <div class="stats-grid">
-            <div class="glass-panel stat-card clickable-card" id="stat-account-card" title="Click to edit starting account balance" onclick="if(window.openAccountBalanceModal)window.openAccountBalanceModal(event);">
+            <div class="glass-panel stat-card stat-card-glow-emerald clickable-card" id="stat-account-card" title="Click to edit starting account balance" onclick="if(window.openAccountBalanceModal)window.openAccountBalanceModal(event);">
               <div class="stat-header">
                 <span>Total Account Money</span>
                 <div class="stat-header-actions">
                   <button type="button" class="btn-card-eye" data-privacy-card="stat-account-balance" title="Hide/Show Amount" onclick="event.stopPropagation(); window.toggleSingleCardPrivacy('stat-account-balance', this, event);">
                     <i class="fa-solid fa-eye"></i>
                   </button>
-                  <i class="fa-solid fa-building-columns text-emerald"></i>
+                  <i class="fa-solid fa-building-columns text-emerald stat-icon-glow"></i>
                 </div>
               </div>
               <div id="stat-account-balance" class="stat-value text-emerald mono">₹0.00</div>
               <div id="stat-account-subtext" class="stat-subtext text-muted">Initial Cash + Incomes − Expenses <span class="edit-hint">(Edit ✏️)</span></div>
             </div>
 
-            <div class="glass-panel stat-card stat-leftover-balance">
+            <div class="glass-panel stat-card stat-card-glow-emerald stat-leftover-balance">
               <div class="stat-header">
                 <span>Leftover Budget</span>
                 <div class="stat-header-actions">
                   <button type="button" class="btn-card-eye" data-privacy-card="stat-remaining" title="Hide/Show Amount" onclick="event.stopPropagation(); window.toggleSingleCardPrivacy('stat-remaining', this, event);">
                     <i class="fa-solid fa-eye"></i>
                   </button>
-                  <i class="fa-solid fa-piggy-bank text-emerald" id="status-icon"></i>
+                  <i class="fa-solid fa-piggy-bank text-emerald stat-icon-glow" id="status-icon"></i>
                 </div>
               </div>
               <div id="stat-remaining" class="stat-value text-emerald mono">₹0.00</div>
               <div id="stat-leftover-subtext" class="stat-subtext text-muted">Budget Cap − Expenses</div>
             </div>
 
-            <div class="glass-panel stat-card clickable-card" id="stat-income-card" title="Click to log extra freelance income" onclick="if(window.openIncomeModal)window.openIncomeModal(event);">
+            <div class="glass-panel stat-card stat-card-glow-sky clickable-card" id="stat-income-card" title="Click to log extra freelance income" onclick="if(window.openIncomeModal)window.openIncomeModal(event);">
               <div class="stat-header">
                 <span>Extra Income Earned</span>
                 <div class="stat-header-actions">
                   <button type="button" class="btn-card-eye" data-privacy-card="stat-income" title="Hide/Show Amount" onclick="event.stopPropagation(); window.toggleSingleCardPrivacy('stat-income', this, event);">
                     <i class="fa-solid fa-eye"></i>
                   </button>
-                  <i class="fa-solid fa-arrow-trend-up text-sky"></i>
+                  <i class="fa-solid fa-arrow-trend-up text-sky stat-icon-glow"></i>
                 </div>
               </div>
               <div id="stat-income" class="stat-value text-sky mono">₹0.00</div>
               <div id="stat-income-count" class="stat-subtext text-muted">0 extra sources <span class="edit-hint">(+Add)</span></div>
             </div>
 
-            <div class="glass-panel stat-card">
+            <div class="glass-panel stat-card stat-card-glow-rose">
               <div class="stat-header">
                 <span>Total Expenses (<span id="active-month-label">Current</span>)</span>
                 <div class="stat-header-actions">
                   <button type="button" class="btn-card-eye" data-privacy-card="stat-spent" title="Hide/Show Amount" onclick="event.stopPropagation(); window.toggleSingleCardPrivacy('stat-spent', this, event);">
                     <i class="fa-solid fa-eye"></i>
                   </button>
-                  <i class="fa-solid fa-receipt text-rose"></i>
+                  <i class="fa-solid fa-receipt text-rose stat-icon-glow"></i>
                 </div>
               </div>
               <div id="stat-spent" class="stat-value text-rose mono">₹0.00</div>
               <div id="stat-count" class="stat-subtext text-muted">0 transactions recorded</div>
             </div>
 
-            <div class="glass-panel stat-card clickable-card" id="stat-budget-card" title="Click to change monthly budget cap" onclick="if(window.openBudgetModal)window.openBudgetModal(event);">
+            <div class="glass-panel stat-card stat-card-glow-amber clickable-card" id="stat-budget-card" title="Click to change monthly budget cap" onclick="if(window.openBudgetModal)window.openBudgetModal(event);">
               <div class="stat-header">
                 <span>Monthly Budget Cap</span>
                 <div class="stat-header-actions">
                   <button type="button" class="btn-card-eye" data-privacy-card="stat-budget" title="Hide/Show Amount" onclick="event.stopPropagation(); window.toggleSingleCardPrivacy('stat-budget', this, event);">
                     <i class="fa-solid fa-eye"></i>
                   </button>
-                  <i class="fa-solid fa-wallet text-amber"></i>
+                  <i class="fa-solid fa-wallet text-amber stat-icon-glow"></i>
                 </div>
               </div>
               <div id="stat-budget" class="stat-value text-amber mono">₹0.00</div>
               <div id="stat-percent" class="stat-subtext text-muted">No budget limit set <span class="edit-hint">(Edit ✏️)</span></div>
             </div>
 
-            <div class="glass-panel stat-card health-score-card" id="stat-health-card" title="AI Financial Health Score & Spending Discipline">
+            <div class="glass-panel stat-card stat-card-glow-emerald health-score-card" id="stat-health-card" title="AI Financial Health Score & Spending Discipline">
               <div class="stat-header">
                 <span>AI Health Score</span>
-                <i class="fa-solid fa-heart-pulse text-emerald" id="health-icon"></i>
+                <i class="fa-solid fa-heart-pulse text-emerald stat-icon-glow" id="health-icon"></i>
               </div>
               <div class="health-card-body">
                 <div class="health-gauge-box">
@@ -580,6 +561,36 @@
                   <div id="health-score-advice" class="stat-subtext text-muted">Healthy savings ratio &amp; budget buffer</div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Dashboard Quick Actions Bar -->
+          <div class="quick-actions-bar glass-panel">
+            <div class="quick-actions-label">
+              <i class="fa-solid fa-bolt-lightning text-amber"></i>
+              <span>Quick Actions</span>
+            </div>
+            <div class="quick-actions-pills">
+              <button type="button" class="quick-action-btn action-emerald" onclick="document.getElementById('exp-amount').focus();" title="Log an expense in the form below">
+                <i class="fa-solid fa-plus-circle"></i>
+                <span>Log Expense</span>
+              </button>
+              <button type="button" class="quick-action-btn action-sky" onclick="if(window.openIncomeModal)window.openIncomeModal(event);" title="Log Freelance or Extra Income">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+                <span>Add Income</span>
+              </button>
+              <button type="button" class="quick-action-btn action-amber" onclick="if(window.openBudgetModal)window.openBudgetModal(event);" title="Change Monthly Budget Limit">
+                <i class="fa-solid fa-wallet"></i>
+                <span>Edit Budget</span>
+              </button>
+              <button type="button" class="quick-action-btn action-violet" onclick="if(window.switchView)window.switchView('bills');" title="Manage Subscriptions and Recurring Bills">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span>Recurring Bills</span>
+              </button>
+              <button type="button" class="quick-action-btn action-rose" onclick="if(window.switchView)window.switchView('export');" title="Import Statement or Export PDF/CSV Reports">
+                <i class="fa-solid fa-file-arrow-up"></i>
+                <span>Import / Export</span>
+              </button>
             </div>
           </div>
 
@@ -762,9 +773,25 @@
                 <h3 class="panel-title" style="margin-bottom: 0.2rem;"><i class="fa-solid fa-arrows-rotate text-purple"></i> Recurring Bills &amp; Subscriptions</h3>
                 <p class="stat-subtext">Manage upcoming monthly payments and due dates</p>
               </div>
-              <button id="btn-add-sub-inline" class="btn btn-primary btn-sm" onclick="if(window.openSubModal)window.openSubModal(event);">
-                <i class="fa-solid fa-plus"></i> Add New Bill
-              </button>
+              <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                <button id="btn-mark-all-paid" class="btn btn-secondary btn-sm" style="border-color: rgba(52, 211, 153, 0.4); color: #34d399;" onclick="if(window.markAllDueBillsAsPaid)window.markAllDueBillsAsPaid();">
+                  <i class="fa-solid fa-check"></i> Mark All Due as Paid
+                </button>
+                <button id="btn-add-sub-inline" class="btn btn-primary btn-sm" onclick="if(window.openSubModal)window.openSubModal(event);">
+                  <i class="fa-solid fa-plus"></i> Add New Bill
+                </button>
+              </div>
+            </div>
+
+            <!-- Monthly Bills Health & Progress Strip -->
+            <div id="bills-summary-strip" class="bills-summary-strip">
+              <div class="bills-summary-info">
+                <span class="bills-summary-label"><i class="fa-solid fa-calendar-check text-emerald"></i> Monthly Bill Progress</span>
+                <span id="bills-progress-text" class="bills-progress-text">0 of 0 Paid (0%)</span>
+              </div>
+              <div class="bills-progress-track">
+                <div id="bills-progress-fill-bar" class="bills-progress-fill-bar" style="width: 0%;"></div>
+              </div>
             </div>
 
             <div id="subs-grid-container" class="subs-grid" style="margin-top: 1.25rem;"></div>
@@ -775,17 +802,25 @@
         <section id="view-analytics" class="view-panel">
           <div class="analytics-top-grid">
             <div class="glass-panel">
-              <h3 class="panel-title"><i class="fa-solid fa-chart-column"></i> 6-Month Expenditure Trend</h3>
+              <div class="panel-title justify-between" style="flex-wrap: wrap; gap: 0.75rem;">
+                <span><i class="fa-solid fa-chart-column text-emerald"></i> <span id="trend-chart-title">Expenditure Trend</span></span>
+                <div class="chart-range-pills" id="analytics-range-selector">
+                  <button type="button" class="chart-range-btn" data-range="7D" onclick="if(window.switchAnalyticsRange)window.switchAnalyticsRange('7D');">7 Days</button>
+                  <button type="button" class="chart-range-btn" data-range="30D" onclick="if(window.switchAnalyticsRange)window.switchAnalyticsRange('30D');">30 Days</button>
+                  <button type="button" class="chart-range-btn active" data-range="6M" onclick="if(window.switchAnalyticsRange)window.switchAnalyticsRange('6M');">6 Months</button>
+                  <button type="button" class="chart-range-btn" data-range="1Y" onclick="if(window.switchAnalyticsRange)window.switchAnalyticsRange('1Y');">1 Year</button>
+                  <button type="button" class="chart-range-btn" data-range="ALL" onclick="if(window.switchAnalyticsRange)window.switchAnalyticsRange('ALL');">All Time</button>
+                </div>
+              </div>
               <div id="monthly-trend-chart-container" class="monthly-trend-container"></div>
             </div>
           </div>
 
           <div class="analytics-grid">
             <div class="glass-panel">
-              <h3 class="panel-title"><i class="fa-solid fa-chart-pie"></i> Category Distribution</h3>
+              <h3 class="panel-title"><i class="fa-solid fa-chart-pie text-sky"></i> Category Distribution</h3>
               <div id="full-analytics-chart-container" class="chart-container-large"></div>
             </div>
-
           </div>
         </section>
 
@@ -1825,6 +1860,7 @@
     </div>
   </div>
 
+
   <!-- EmailJS Browser SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
@@ -1843,13 +1879,13 @@
     }
   </script>
 
-  <!-- App Scripts (order matters — cache-busted to v3.8.3) -->
-  <script src="supabase-config.js?v=3.8.3"></script>
-  <script src="js/state.js?v=3.8.3"></script>
-  <script src="js/ui.js?v=3.8.3"></script>
-  <script src="js/features.js?v=3.8.3"></script>
-  <script src="js/gamification.js?v=3.8.3"></script>
-  <script src="auth.js?v=3.8.3"></script>
+  <!-- App Scripts (order matters — cache-busted to v3.9.2) -->
+  <script src="supabase-config.js?v=3.9.2"></script>
+  <script src="js/state.js?v=3.9.2"></script>
+  <script src="js/ui.js?v=3.9.2"></script>
+  <script src="js/features.js?v=3.9.2"></script>
+  <script src="js/gamification.js?v=3.9.2"></script>
+  <script src="auth.js?v=3.9.2"></script>
 
   <!-- Service Worker Auto-Purge & Refresh -->
   <script>

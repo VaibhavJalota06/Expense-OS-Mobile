@@ -120,716 +120,6 @@ const currencyRates = {
   GBP: { rate: 0.0094, symbol: '£', locale: 'en-GB', currency: 'GBP' }
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ---------- Month-Wise Selection & Navigation ----------
 function getAvailableMonths() {
   const monthSet = new Set();
@@ -1271,11 +561,11 @@ function checkAndSendSubscriptionReminders() {
                 user_name: sub.name,
                 subject: `⏰ Subscription Due Reminder: ${sub.name} is due ${daysLeft === 0 ? 'today' : 'in ' + daysLeft + ' days'}!`,
                 message: `Reminder: ${sub.name} (₹${sub.amount.toFixed(2)}) renewal payment is due ${daysLeft === 0 ? 'today' : 'in ' + daysLeft + ' days'}.`,
-                web_app_url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
-                app_url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
-                action_url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
-                url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
-                link: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/'
+                web_app_url: window.location.origin + window.location.pathname,
+                app_url: window.location.origin + window.location.pathname,
+                action_url: window.location.origin + window.location.pathname,
+                url: window.location.origin + window.location.pathname,
+                link: window.location.origin + window.location.pathname
               },
               emailjsConfig.publicKey
             );
@@ -1359,17 +649,33 @@ function renderSubscriptions() {
 
   let totalMonthlySubs = 0;
   let dueSoonCount = 0;
+  let paidCount = 0;
 
   subscriptions.forEach(sub => {
-    totalMonthlySubs += Number(sub.amount);
+    totalMonthlySubs += Number(sub.amount || 0);
     const isPaidThisMonth = sub.lastPaidMonth === currentYM;
-    if (!isPaidThisMonth && (currentDay > sub.dueDay || sub.dueDay - currentDay <= 7)) {
+    if (isPaidThisMonth) {
+      paidCount++;
+    } else if (currentDay > sub.dueDay || sub.dueDay - currentDay <= 7) {
       dueSoonCount++;
     }
   });
 
   if (statSubsTotalEl) statSubsTotalEl.textContent = formatCurrency(totalMonthlySubs);
   if (statSubsCountEl) statSubsCountEl.textContent = `${subscriptions.length} active subscription${subscriptions.length === 1 ? '' : 's'}`;
+
+  // Update Bills Progress Strip
+  const billsProgressText = document.getElementById('bills-progress-text');
+  const billsProgressFillBar = document.getElementById('bills-progress-fill-bar');
+  const totalCount = subscriptions.length;
+  const percentPaid = totalCount > 0 ? Math.round((paidCount / totalCount) * 100) : 0;
+
+  if (billsProgressText) {
+    billsProgressText.textContent = `${paidCount} of ${totalCount} Paid (${percentPaid}%)`;
+  }
+  if (billsProgressFillBar) {
+    billsProgressFillBar.style.width = `${percentPaid}%`;
+  }
 
   // Dedicated Bills View Grid
   if (subsGridContainer) {
@@ -1388,18 +694,17 @@ function renderSubscriptions() {
       subsGridContainer.classList.remove('empty-grid');
       subscriptions.forEach(sub => {
         const isPaidThisMonth = sub.lastPaidMonth === currentYM;
-        let statusClass = 'due';
-        let statusText = `Due Day ${sub.dueDay}`;
+        let urgencyBadge = '';
 
         if (isPaidThisMonth) {
-          statusClass = 'paid';
-          statusText = 'Paid This Month';
+          urgencyBadge = `<span class="bill-urgency-badge paid"><i class="fa-solid fa-circle-check"></i> Paid this Month</span>`;
         } else if (currentDay > sub.dueDay) {
-          statusClass = 'overdue';
-          statusText = `Overdue (Day ${sub.dueDay})`;
+          urgencyBadge = `<span class="bill-urgency-badge overdue"><i class="fa-solid fa-triangle-exclamation"></i> Overdue (Day ${sub.dueDay})</span>`;
         } else if (sub.dueDay - currentDay <= 7) {
-          statusClass = 'due';
-          statusText = `Due in ${sub.dueDay - currentDay} days`;
+          const daysLeft = sub.dueDay - currentDay;
+          urgencyBadge = `<span class="bill-urgency-badge due-soon"><i class="fa-solid fa-clock"></i> ${daysLeft === 0 ? 'Due Today' : `Due in ${daysLeft}d (Day ${sub.dueDay})`}</span>`;
+        } else {
+          urgencyBadge = `<span class="status-badge due">Due Day ${sub.dueDay}</span>`;
         }
 
         const card = document.createElement('div');
@@ -1416,7 +721,7 @@ function renderSubscriptions() {
           </div>
           <div class="sub-amount">${formatCurrency(sub.amount)} <span class="per-mo">/ mo</span></div>
           <div class="sub-actions">
-            <span class="status-badge ${statusClass}">${statusText}</span>
+            ${urgencyBadge}
             ${
               !isPaidThisMonth
                 ? `<button type="button" class="btn btn-secondary btn-sm" data-pay-sub="${sub.id}" onclick="if(window.markSubAsPaid){event.preventDefault();event.stopPropagation();window.markSubAsPaid('${sub.id}');}">
@@ -1460,6 +765,33 @@ function renderSubscriptions() {
     }
   }
 }
+
+window.markAllDueBillsAsPaid = function() {
+  const currentYM = getCurrentYearMonth();
+  const unpaidBills = subscriptions.filter(s => s.lastPaidMonth !== currentYM);
+  if (unpaidBills.length === 0) {
+    if (typeof showToast === 'function') showToast('All monthly bills are already paid for this month! 🎉');
+    return;
+  }
+
+  unpaidBills.forEach(sub => {
+    sub.lastPaidMonth = currentYM;
+    const today = getLocalDateString();
+    expenses.push({
+      id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+      amount: sub.amount,
+      category: sub.category || 'Services & Subscriptions',
+      description: `Bill Payment: ${sub.name}`,
+      payment: 'Auto-Pay',
+      date: today
+    });
+  });
+
+  saveState();
+  updateMonthPickerOptions();
+  updateUI();
+  if (typeof showToast === 'function') showToast(`⚡ Successfully marked ${unpaidBills.length} bills as paid & logged to ledger!`);
+};
 
 function markSubAsPaid(subId) {
   const sub = subscriptions.find(s => String(s.id) === String(subId));
@@ -1642,11 +974,24 @@ function renderCategoryBreakdown(filteredList, totalSpent) {
   });
 }
 
-// Chart.js 6-Month Trend Bar Chart
+// Interactive Time-Range Analytics Filter State
+let activeAnalyticsRange = '6M';
+
+window.switchAnalyticsRange = function(range) {
+  activeAnalyticsRange = range;
+  document.querySelectorAll('#analytics-range-selector .chart-range-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.range === range);
+  });
+  renderMonthlyTrendChart();
+};
+
+// Chart.js Expenditure Trend Multi-Range Chart Engine
 function renderMonthlyTrendChart() {
   if (!monthlyTrendChartContainer) return;
   if (trendChartInstance) { trendChartInstance.destroy(); trendChartInstance = null; }
   monthlyTrendChartContainer.innerHTML = '';
+
+  const titleEl = document.getElementById('trend-chart-title');
 
   if (expenses.length === 0) {
     monthlyTrendChartContainer.innerHTML = `
@@ -1658,18 +1003,58 @@ function renderMonthlyTrendChart() {
     return;
   }
 
-  const monthlyTotals = {};
-  expenses.forEach(item => {
-    if (item.date && item.date.length >= 7) {
-      const ym = item.date.substring(0, 7);
-      monthlyTotals[ym] = (monthlyTotals[ym] || 0) + Number(item.amount);
-    }
-  });
+  let labels = [];
+  let dataPoints = [];
+  let isDaily = false;
+  const today = new Date();
 
-  const months = Object.keys(monthlyTotals).sort();
-  if (months.length === 0) {
-    monthlyTrendChartContainer.innerHTML = '<p class="empty-state-sub">No monthly data available.</p>';
-    return;
+  if (activeAnalyticsRange === '7D') {
+    isDaily = true;
+    if (titleEl) titleEl.textContent = '7-Day Expenditure Trend';
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' });
+      const dayTotal = expenses.filter(e => e.date === dateStr).reduce((sum, e) => sum + Number(e.amount || 0), 0);
+      labels.push(dayLabel);
+      dataPoints.push(dayTotal);
+    }
+  } else if (activeAnalyticsRange === '30D') {
+    isDaily = true;
+    if (titleEl) titleEl.textContent = '30-Day Expenditure Trend';
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const dayTotal = expenses.filter(e => e.date === dateStr).reduce((sum, e) => sum + Number(e.amount || 0), 0);
+      labels.push(dayLabel);
+      dataPoints.push(dayTotal);
+    }
+  } else {
+    // Monthly View (6M, 1Y, ALL)
+    const monthlyTotals = {};
+    expenses.forEach(item => {
+      if (item.date && item.date.length >= 7) {
+        const ym = item.date.substring(0, 7);
+        monthlyTotals[ym] = (monthlyTotals[ym] || 0) + Number(item.amount || 0);
+      }
+    });
+
+    let allMonths = Object.keys(monthlyTotals).sort();
+    if (activeAnalyticsRange === '6M') {
+      if (titleEl) titleEl.textContent = '6-Month Expenditure Trend';
+      allMonths = allMonths.slice(-6);
+    } else if (activeAnalyticsRange === '1Y') {
+      if (titleEl) titleEl.textContent = '12-Month Expenditure Trend';
+      allMonths = allMonths.slice(-12);
+    } else {
+      if (titleEl) titleEl.textContent = 'All-Time Spending History';
+    }
+
+    labels = allMonths.map(ym => formatMonthLabel(ym).split(' ')[0]);
+    dataPoints = allMonths.map(ym => monthlyTotals[ym] || 0);
   }
 
   const canvas = document.createElement('canvas');
@@ -1677,15 +1062,32 @@ function renderMonthlyTrendChart() {
   monthlyTrendChartContainer.appendChild(canvas);
 
   if (typeof Chart !== 'undefined') {
+    const ctx = canvas.getContext('2d');
+    let gradient = null;
+    if (ctx) {
+      gradient = ctx.createLinearGradient(0, 0, 0, 180);
+      gradient.addColorStop(0, 'rgba(52, 211, 153, 0.4)');
+      gradient.addColorStop(1, 'rgba(52, 211, 153, 0.01)');
+    }
+
     trendChartInstance = new Chart(canvas, {
-      type: 'bar',
+      type: isDaily ? 'line' : 'bar',
       data: {
-        labels: months.map(ym => formatMonthLabel(ym).split(' ')[0]),
+        labels: labels,
         datasets: [{
-          data: months.map(ym => monthlyTotals[ym] || 0),
-          backgroundColor: months.map(ym => selectedMonth === ym ? '#34D399' : 'rgba(56, 189, 248, 0.35)'),
-          hoverBackgroundColor: months.map(ym => selectedMonth === ym ? '#34D399' : 'rgba(56, 189, 248, 0.75)'),
-          borderRadius: 6,
+          data: dataPoints,
+          backgroundColor: isDaily ? (gradient || 'rgba(52, 211, 153, 0.2)') : labels.map((_, idx) => (selectedMonth !== 'ALL' && labels[idx] === formatMonthLabel(selectedMonth).split(' ')[0]) ? '#34D399' : 'rgba(56, 189, 248, 0.35)'),
+          hoverBackgroundColor: isDaily ? undefined : labels.map((_, idx) => (selectedMonth !== 'ALL' && labels[idx] === formatMonthLabel(selectedMonth).split(' ')[0]) ? '#34D399' : 'rgba(56, 189, 248, 0.75)'),
+          borderColor: isDaily ? '#34D399' : undefined,
+          borderWidth: isDaily ? 2.5 : 0,
+          pointBackgroundColor: '#34D399',
+          pointBorderColor: '#0E131A',
+          pointBorderWidth: 2,
+          pointRadius: isDaily ? (activeAnalyticsRange === '7D' ? 4 : 2.5) : 0,
+          pointHoverRadius: 6,
+          fill: isDaily,
+          tension: 0.35,
+          borderRadius: isDaily ? 0 : 6,
           borderSkipped: false
         }]
       },
@@ -1693,9 +1095,9 @@ function renderMonthlyTrendChart() {
         responsive: true,
         maintainAspectRatio: false,
         onClick: (e, elements) => {
-          if (elements && elements.length > 0) {
+          if (!isDaily && elements && elements.length > 0) {
             const idx = elements[0].index;
-            selectMonthFromChart(months[idx]);
+            selectMonthFromChart(labels[idx]);
           }
         },
         plugins: {
@@ -1708,7 +1110,7 @@ function renderMonthlyTrendChart() {
             borderWidth: 1,
             callbacks: {
               label: function(context) {
-                return `${formatMonthLabel(months[context.dataIndex])}: ${formatCurrency(context.raw)}`;
+                return `${context.label}: ${formatCurrency(context.raw)}`;
               }
             }
           }
@@ -1812,11 +1214,12 @@ function renderTransactionsTable(monthFilteredExpenses) {
 
     filteredIncomes.forEach(inc => {
       const tr = document.createElement('tr');
+      tr.className = 'tx-table-row';
       tr.innerHTML = `
         <td data-label="Date" class="font-medium mono">${escapeHtml(inc.date || 'Active')}</td>
-        <td data-label="Category"><span class="category-badge" style="border-left: 3px solid var(--sky);">Extra Income</span></td>
+        <td data-label="Category"><span class="category-badge-pill" style="border-left: 3px solid var(--sky); background: rgba(56, 189, 248, 0.08); color: #38bdf8;"><i class="fa-solid fa-coins" style="margin-right: 4px;"></i> Extra Income</span></td>
         <td data-label="Description" class="description-cell">${escapeHtml(inc.source || 'Income Source')}</td>
-        <td data-label="Payment"><span class="payment-badge"><i class="fa-solid fa-hand-holding-dollar text-sky"></i> Freelance / Extra</span></td>
+        <td data-label="Payment"><span class="payment-badge-pill"><i class="fa-solid fa-hand-holding-dollar text-sky"></i> Freelance / Extra</span></td>
         <td data-label="Amount" class="text-right font-bold text-amount text-sky">+${formatCurrency(inc.amount || 0)}</td>
         <td class="text-center td-action">
           <button type="button" class="icon-btn action-btn-del" title="Delete Income Record" onclick="if(window.deleteIncome){event.preventDefault();event.stopPropagation();window.deleteIncome('${inc.id}');}">
@@ -1853,16 +1256,39 @@ function renderTransactionsTable(monthFilteredExpenses) {
   if (emptyTableMsg) emptyTableMsg.classList.add('hidden');
   const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  const catIcons = {
+    'Food & Dining': '🍔',
+    'Transportation': '🚗',
+    'Shopping': '🛍️',
+    'Bills & Utilities': '⚡',
+    'Entertainment': '🎬',
+    'Health & Fitness': '💊',
+    'Services & Subscriptions': '📱',
+    'Miscellaneous': '📦'
+  };
+
+  const paymentIcons = {
+    'UPI': '<i class="fa-solid fa-mobile-screen-button text-emerald"></i>',
+    'Credit Card': '<i class="fa-solid fa-credit-card text-sky"></i>',
+    'Debit Card': '<i class="fa-solid fa-building-columns text-violet"></i>',
+    'Cash': '<i class="fa-solid fa-money-bill-wave text-amber"></i>',
+    'Net Banking': '<i class="fa-solid fa-globe text-rose"></i>',
+    'Auto-Pay': '<i class="fa-solid fa-arrows-rotate text-purple"></i>'
+  };
+
   sorted.forEach(item => {
     const tr = document.createElement('tr');
+    tr.className = 'tx-table-row';
     const color = categoryColors[item.category] || '#3b82f6';
+    const icon = catIcons[item.category] || '🏷️';
+    const payIcon = paymentIcons[item.payment] || '<i class="fa-solid fa-credit-card"></i>';
 
     tr.innerHTML = `
       <td data-label="Date" class="font-medium mono">${escapeHtml(item.date)}</td>
-      <td data-label="Category"><span class="category-badge" style="border-left: 3px solid ${color};">${escapeHtml(item.category)}</span></td>
+      <td data-label="Category"><span class="category-badge-pill" style="border-left: 3px solid ${color}; background: rgba(255,255,255,0.03);"><span class="cat-emoji">${icon}</span> ${escapeHtml(item.category)}</span></td>
       <td data-label="Description" class="description-cell">${escapeHtml(item.description)} ${item.receipt ? '<i class="fa-solid fa-paperclip text-emerald ml-1" title="Receipt Attached"></i>' : ''}</td>
-      <td data-label="Payment"><span class="payment-badge"><i class="fa-solid fa-credit-card"></i> ${escapeHtml(item.payment)}</span></td>
-      <td data-label="Amount" class="text-right font-bold text-amount">${formatCurrency(item.amount)}</td>
+      <td data-label="Payment"><span class="payment-badge-pill">${payIcon} <span>${escapeHtml(item.payment)}</span></span></td>
+      <td data-label="Amount" class="text-right font-bold text-amount text-rose">-${formatCurrency(item.amount)}</td>
       <td class="text-center td-action">
         ${item.receipt ? `<button type="button" class="btn-receipt-view mr-1" title="View Attached Receipt" onclick="if(window.openReceiptModal)window.openReceiptModal('${item.id}')"><i class="fa-solid fa-paperclip"></i></button>` : ''}
         <button type="button" class="icon-btn action-btn-edit mr-1" title="Edit Transaction" onclick="if(window.openEditTransactionModal)window.openEditTransactionModal('${escapeHtml(item.id)}')">
@@ -3011,8 +2437,6 @@ window.exportFormattedFinancialReportCSV = function(e) {
     }
   }
 };
-
-
 
 window.promptResetAllData = function(e) {
   if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err){} }
@@ -6153,7 +5577,7 @@ window.renderLeaderboardView = function() {
           <td class="lb-rank-num">#${u.rank}</td>
           <td>
             <div class="lb-user-col">
-              <div class="lb-user-avatar-wrapper" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: var(--glass-bg); border-radius: 50%; border: 1px solid var(--glass-border); margin-right: 12px; overflow: hidden; position: relative;">
+              <div class="lb-user-avatar-wrapper" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: var(--glass); border-radius: 50%; border: 1px solid var(--glass-border); margin-right: 12px; overflow: hidden; position: relative;">
                 ${u.avatar && (u.avatar.startsWith('data:image/') || u.avatar.startsWith('http')) 
                   ? `<img src="${u.avatar}" referrerpolicy="no-referrer" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="User Avatar" />` 
                   : `<span style="font-size: 1.5rem;">${u.avatar || u.name.charAt(0).toUpperCase()}</span>`}
@@ -6161,7 +5585,7 @@ window.renderLeaderboardView = function() {
               <strong>${u.name} ${u.isCurrentUser ? '(You)' : ''}</strong>
             </div>
           </td>
-          <td><span class="hero-level-badge">Stage ${u.stage}: ${u.badge} ${u.title}</span></td>
+          <td><span class="hero-level-badge">Stage ${stage.stage}: ${stage.badge} ${stage.title}</span></td>
           <td><div class="lb-stickers-row">${u.stickers.map(s => `<span>${s}</span>`).join(' ')}</div></td>
           <td style="text-align: right; font-weight: 800; color: #34d399;">${u.emeralds.toLocaleString()} 💎</td>
         </tr>
@@ -6192,7 +5616,7 @@ window.renderLeaderboardView = function() {
 
             rewardsRes.data.forEach(r => {
               if (!r.user_id) return;
-              if (r.user_id === currentUserId) return; // already represented with latest local state
+              if (r.user_id === currentUserId) return;
 
               const prof = profileMap[r.user_id] || {};
               const name = prof.name || prof.full_name || (prof.email ? prof.email.split('@')[0] : 'Expense User');
@@ -6270,8 +5694,5 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(window.renderLeaderboardView, 800);
 }
-
-
-
 
 

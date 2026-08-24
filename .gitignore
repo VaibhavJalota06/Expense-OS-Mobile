@@ -52,4 +52,5 @@ web-desktop/node_modules/
 web-desktop/dist/
 web-desktop/playwright-report/
 web-desktop/test-results/
+web-desktop/backup-pre-redesign/
 

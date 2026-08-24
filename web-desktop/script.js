@@ -1000,11 +1000,11 @@ function checkAndSendSubscriptionReminders() {
                 user_name: sub.name,
                 subject: `⏰ Subscription Due Reminder: ${sub.name} is due ${daysLeft === 0 ? 'today' : 'in ' + daysLeft + ' days'}!`,
                 message: `Reminder: ${sub.name} (₹${sub.amount.toFixed(2)}) renewal payment is due ${daysLeft === 0 ? 'today' : 'in ' + daysLeft + ' days'}.`,
-                web_app_url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
-                app_url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
-                action_url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
-                url: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/',
-                link: 'https://vaibhavjalota06.github.io/Expense-OS-Mobile/'
+                web_app_url: window.location.origin + window.location.pathname,
+                app_url: window.location.origin + window.location.pathname,
+                action_url: window.location.origin + window.location.pathname,
+                url: window.location.origin + window.location.pathname,
+                link: window.location.origin + window.location.pathname
               },
               emailjsConfig.publicKey
             );
@@ -1541,11 +1541,12 @@ function renderTransactionsTable(monthFilteredExpenses) {
 
     filteredIncomes.forEach(inc => {
       const tr = document.createElement('tr');
+      tr.className = 'tx-table-row';
       tr.innerHTML = `
         <td data-label="Date" class="font-medium mono">${escapeHtml(inc.date || 'Active')}</td>
-        <td data-label="Category"><span class="category-badge" style="border-left: 3px solid var(--sky);">Extra Income</span></td>
+        <td data-label="Category"><span class="category-badge-pill" style="border-left: 3px solid var(--sky); background: rgba(56, 189, 248, 0.08); color: #38bdf8;"><i class="fa-solid fa-coins" style="margin-right: 4px;"></i> Extra Income</span></td>
         <td data-label="Description" class="description-cell">${escapeHtml(inc.source || 'Income Source')}</td>
-        <td data-label="Payment"><span class="payment-badge"><i class="fa-solid fa-hand-holding-dollar text-sky"></i> Freelance / Extra</span></td>
+        <td data-label="Payment"><span class="payment-badge-pill"><i class="fa-solid fa-hand-holding-dollar text-sky"></i> Freelance / Extra</span></td>
         <td data-label="Amount" class="text-right font-bold text-amount text-sky">+${formatCurrency(inc.amount || 0)}</td>
         <td class="text-center td-action">
           <button type="button" class="icon-btn action-btn-del" title="Delete Income Record" onclick="if(window.deleteIncome){event.preventDefault();event.stopPropagation();window.deleteIncome('${inc.id}');}">
@@ -1582,16 +1583,39 @@ function renderTransactionsTable(monthFilteredExpenses) {
   if (emptyTableMsg) emptyTableMsg.classList.add('hidden');
   const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  const catIcons = {
+    'Food & Dining': '🍔',
+    'Transportation': '🚗',
+    'Shopping': '🛍️',
+    'Bills & Utilities': '⚡',
+    'Entertainment': '🎬',
+    'Health & Fitness': '💊',
+    'Services & Subscriptions': '📱',
+    'Miscellaneous': '📦'
+  };
+
+  const paymentIcons = {
+    'UPI': '<i class="fa-solid fa-mobile-screen-button text-emerald"></i>',
+    'Credit Card': '<i class="fa-solid fa-credit-card text-sky"></i>',
+    'Debit Card': '<i class="fa-solid fa-building-columns text-violet"></i>',
+    'Cash': '<i class="fa-solid fa-money-bill-wave text-amber"></i>',
+    'Net Banking': '<i class="fa-solid fa-globe text-rose"></i>',
+    'Auto-Pay': '<i class="fa-solid fa-arrows-rotate text-purple"></i>'
+  };
+
   sorted.forEach(item => {
     const tr = document.createElement('tr');
+    tr.className = 'tx-table-row';
     const color = categoryColors[item.category] || '#3b82f6';
+    const icon = catIcons[item.category] || '🏷️';
+    const payIcon = paymentIcons[item.payment] || '<i class="fa-solid fa-credit-card"></i>';
 
     tr.innerHTML = `
       <td data-label="Date" class="font-medium mono">${escapeHtml(item.date)}</td>
-      <td data-label="Category"><span class="category-badge" style="border-left: 3px solid ${color};">${escapeHtml(item.category)}</span></td>
+      <td data-label="Category"><span class="category-badge-pill" style="border-left: 3px solid ${color}; background: rgba(255,255,255,0.03);"><span class="cat-emoji">${icon}</span> ${escapeHtml(item.category)}</span></td>
       <td data-label="Description" class="description-cell">${escapeHtml(item.description)}</td>
-      <td data-label="Payment"><span class="payment-badge"><i class="fa-solid fa-credit-card"></i> ${escapeHtml(item.payment)}</span></td>
-      <td data-label="Amount" class="text-right font-bold text-amount">${formatCurrency(item.amount)}</td>
+      <td data-label="Payment"><span class="payment-badge-pill">${payIcon} <span>${escapeHtml(item.payment)}</span></span></td>
+      <td data-label="Amount" class="text-right font-bold text-amount text-rose">-${formatCurrency(item.amount)}</td>
       <td class="text-center td-action">
         <button type="button" class="icon-btn action-btn-del" data-delete-tx="${escapeHtml(item.id)}" title="Delete Transaction">
           <i class="fa-solid fa-trash-can"></i>
