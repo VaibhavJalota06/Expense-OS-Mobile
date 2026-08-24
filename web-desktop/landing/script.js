@@ -520,6 +520,233 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ---------- 12. Device Frame Switcher (Desktop vs Mobile) ----------
+  window.setMockupDevice = function(mode) {
+    const frame = document.getElementById('mockup-frame-element');
+    const header = document.getElementById('mockup-header-element');
+    const btnDesktop = document.getElementById('btn-view-desktop');
+    const btnMobile = document.getElementById('btn-view-mobile');
+
+    if (!frame) return;
+
+    if (mode === 'mobile') {
+      frame.className = 'phone-mockup-frame';
+      if (header) {
+        header.innerHTML = `
+          <div class="phone-island">
+            <span class="phone-camera-dot"></span>
+            <span style="font-size: 0.65rem; color: #94a3b8; font-family: var(--font-mono);">9:41</span>
+          </div>
+        `;
+      }
+      if (btnDesktop) btnDesktop.classList.remove('active');
+      if (btnMobile) btnMobile.classList.add('active');
+    } else {
+      frame.className = 'mockup-frame';
+      if (header) {
+        header.innerHTML = `
+          <div class="mockup-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="mockup-url-bar"><i class="fa-solid fa-lock" style="color: var(--planet-emerald); font-size: 0.7rem;"></i> https://expenseos.app/dashboard</div>
+          <a href="/index.html" target="_blank" class="nav-cta-btn" style="padding: 4px 12px; font-size: 0.75rem;">
+            Try Live Demo <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
+        `;
+      }
+      if (btnDesktop) btnDesktop.classList.add('active');
+      if (btnMobile) btnMobile.classList.remove('active');
+    }
+  };
+
+  // ---------- 13. Sideloading & Installation Modal Guides ----------
+  const installGuides = {
+    android: `
+      <div class="install-step-list">
+        <div class="install-step">
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <h4>Download the APK</h4>
+            <p>Tap <strong>Download APK</strong> on this page to download the latest <code>ExpenseOS-Android.apk</code> build directly.</p>
+          </div>
+        </div>
+        <div class="install-step">
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <h4>Allow Install from Browser</h4>
+            <p>When prompted by Android, tap <strong>Settings</strong> &rarr; enable <em>"Allow from this source"</em> &rarr; tap <strong>Install</strong>.</p>
+          </div>
+        </div>
+        <div class="install-step">
+          <div class="step-number">3</div>
+          <div class="step-body">
+            <h4>Launch &amp; Enable Biometrics</h4>
+            <p>Open Expense OS from your app drawer. You can optionally enable Fingerprint / Face Unlock from Settings for instant privacy.</p>
+          </div>
+        </div>
+      </div>
+    `,
+    windows: `
+      <div class="install-step-list">
+        <div class="install-step">
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <h4>Download Windows Executable</h4>
+            <p>Click <strong>Download .EXE</strong> to get the lightweight 5MB standalone package.</p>
+          </div>
+        </div>
+        <div class="install-step">
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <h4>SmartScreen Notice (First Run)</h4>
+            <p>Because Expense OS is an indie open-source tool, Windows Defender may show a prompt. Click <strong>"More info"</strong> &rarr; <strong>"Run anyway"</strong>.</p>
+          </div>
+        </div>
+        <div class="install-step">
+          <div class="step-number">3</div>
+          <div class="step-body">
+            <h4>Ready to Use</h4>
+            <p>Expense OS runs natively on both 64-bit and 32-bit Windows with zero background telemetry services.</p>
+          </div>
+        </div>
+      </div>
+    `,
+    ios: `
+      <div class="install-step-list">
+        <div class="install-step">
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <h4>Download the IPA</h4>
+            <p>Click <strong>Download .IPA</strong> to save the iOS package file on your computer or iPhone.</p>
+          </div>
+        </div>
+        <div class="install-step">
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <h4>Sideload with AltStore / Sideloadly</h4>
+            <p>Open <strong>AltStore</strong>, <strong>Sideloadly</strong>, <strong>TrollStore</strong>, or <strong>Scarlet</strong>, select <code>ExpenseOS-iOS.ipa</code>, and sign it with your Apple ID.</p>
+          </div>
+        </div>
+        <div class="install-step">
+          <div class="step-number">3</div>
+          <div class="step-body">
+            <h4>Trust Developer Certificate</h4>
+            <p>On your iPhone, go to <em>Settings &rarr; General &rarr; VPN &amp; Device Management</em> &rarr; tap your Apple ID &rarr; tap <strong>Trust</strong>.</p>
+          </div>
+        </div>
+      </div>
+    `,
+    web: `
+      <div class="install-step-list">
+        <div class="install-step">
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <h4>Launch in Any Browser</h4>
+            <p>Open <strong><a href="/index.html" target="_blank" style="color: var(--planet-blue); text-decoration: underline;">https://expenseos.app</a></strong> on Chrome, Safari, Edge, or Firefox.</p>
+          </div>
+        </div>
+        <div class="install-step">
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <h4>Install as Desktop App / Home Screen Shortcut</h4>
+            <p>Click the <strong>Install</strong> icon in the address bar (Chrome/Edge), or tap <strong>Share &rarr; Add to Home Screen</strong> on iOS Safari.</p>
+          </div>
+        </div>
+        <div class="install-step">
+          <div class="step-number">3</div>
+          <div class="step-body">
+            <h4>Works 100% Offline</h4>
+            <p>Your records are stored securely in browser IndexedDB with zero server dependency.</p>
+          </div>
+        </div>
+      </div>
+    `
+  };
+
+  window.openInstallModal = function(platform) {
+    const modal = document.getElementById('install-modal');
+    if (modal) {
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      window.switchInstallTab(platform || 'android');
+    }
+  };
+
+  window.closeInstallModal = function() {
+    const modal = document.getElementById('install-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+  };
+
+  window.switchInstallTab = function(platform) {
+    const content = document.getElementById('install-tab-content');
+    if (content && installGuides[platform]) {
+      content.innerHTML = installGuides[platform];
+    }
+    document.querySelectorAll('.modal-tab-btn').forEach(btn => {
+      if (btn.getAttribute('data-tab') === platform) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  };
+
+  // Close modal on outside click or ESC key
+  const modalOverlay = document.getElementById('install-modal');
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) window.closeInstallModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+        window.closeInstallModal();
+      }
+    });
+  }
+
+  // ---------- 14. 3D Card Tilt Physics ----------
+  const tiltCards = document.querySelectorAll('.tilt-card');
+  tiltCards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -6;
+      const rotateY = ((x - centerX) / centerX) * 6;
+
+      card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-4px)`;
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)';
+    });
+  });
+
+  // ---------- 15. Live GitHub Telemetry & Stars ----------
+  async function fetchRepoStats() {
+    try {
+      const res = await fetch('https://api.github.com/repos/VaibhavJalota06/Expense-OS-Mobile');
+      if (res.ok) {
+        const data = await res.json();
+        const stars = data.stargazers_count || 0;
+        const navStar = document.getElementById('nav-star-count');
+        const heroStar = document.getElementById('hero-star-count');
+        if (navStar) navStar.textContent = `${stars} Stars`;
+        if (heroStar) heroStar.textContent = `Star on GitHub (${stars} ⭐)`;
+      }
+    } catch (e) {
+      console.warn('GitHub stats fetch notice:', e);
+    }
+  }
+
+  fetchRepoStats();
   fetchLatestRelease();
 
 });

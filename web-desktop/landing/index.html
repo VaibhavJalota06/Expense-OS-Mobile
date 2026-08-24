@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="/landing/style.css?v=3.7.2">
+  <link rel="stylesheet" href="/landing/style.css?v=3.7.3">
 </head>
 <body>
 
@@ -86,6 +86,9 @@
       </ul>
 
       <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile" target="_blank" rel="noopener noreferrer" class="nav-stars-pill" title="Star on GitHub">
+          <i class="fa-solid fa-star"></i> <span id="nav-star-count">Star</span>
+        </a>
         <a href="/index.html" target="_blank" class="nav-cta-btn" title="Open Web App">
           <i class="fa-solid fa-arrow-right-to-bracket"></i> <span class="cta-btn-text">Open App</span>
         </a>
@@ -122,8 +125,8 @@
         <a href="/index.html" target="_blank" class="btn-hero-secondary">
           <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Web App
         </a>
-        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile" target="_blank" class="btn-hero-github" title="View Source on GitHub" aria-label="View on GitHub">
-          <i class="fa-brands fa-github"></i>
+        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile" target="_blank" rel="noopener noreferrer" class="btn-hero-github" title="Star on GitHub" aria-label="Star on GitHub">
+          <i class="fa-brands fa-github"></i> <span id="hero-star-count">Star on GitHub</span>
         </a>
       </div>
 
@@ -250,7 +253,7 @@
     <div class="platforms-grid">
       
       <!-- Android Package Card -->
-      <div class="glass-panel platform-card android">
+      <div class="glass-panel platform-card android tilt-card">
         <div class="platform-card-body">
           <div class="platform-icon-box">
             <i class="fa-brands fa-android"></i>
@@ -266,13 +269,18 @@
             <li><i class="fa-solid fa-wifi"></i> 100% offline first with auto cloud backup</li>
           </ul>
         </div>
-        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.6/ExpenseOS-Android.apk" target="_blank" rel="noopener noreferrer" class="btn-download btn-dl-android" data-platform="android">
-          <i class="fa-solid fa-download"></i> Download APK
-        </a>
+        <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+          <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.6/ExpenseOS-Android.apk" target="_blank" rel="noopener noreferrer" class="btn-download btn-dl-android" data-platform="android">
+            <i class="fa-solid fa-download"></i> Download APK
+          </a>
+          <button type="button" class="platform-guide-btn" onclick="openInstallModal('android')">
+            <i class="fa-solid fa-circle-question"></i> Sideloading Guide
+          </button>
+        </div>
       </div>
 
       <!-- Windows Desktop Card -->
-      <div class="glass-panel platform-card windows">
+      <div class="glass-panel platform-card windows tilt-card">
         <div class="platform-card-body">
           <div class="platform-icon-box">
             <i class="fa-brands fa-windows"></i>
@@ -288,13 +296,18 @@
             <li><i class="fa-solid fa-shield-halved"></i> Pure standalone executable, zero telemetry</li>
           </ul>
         </div>
-        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.5/ExpenseOS-Windows-Setup.exe" target="_blank" rel="noopener noreferrer" class="btn-download btn-dl-windows" data-platform="windows">
-          <i class="fa-solid fa-download"></i> Download .EXE
-        </a>
+        <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+          <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.5/ExpenseOS-Windows-Setup.exe" target="_blank" rel="noopener noreferrer" class="btn-download btn-dl-windows" data-platform="windows">
+            <i class="fa-solid fa-download"></i> Download .EXE
+          </a>
+          <button type="button" class="platform-guide-btn" onclick="openInstallModal('windows')">
+            <i class="fa-solid fa-circle-question"></i> Setup Instructions
+          </button>
+        </div>
       </div>
 
       <!-- iOS App Card -->
-      <div class="glass-panel platform-card ios">
+      <div class="glass-panel platform-card ios tilt-card">
         <div class="platform-card-body">
           <div class="platform-icon-box">
             <i class="fa-brands fa-apple"></i>
@@ -310,13 +323,18 @@
             <li><i class="fa-solid fa-file-arrow-down"></i> Ready for AltStore, Sideloadly &amp; TrollStore</li>
           </ul>
         </div>
-        <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.6/ExpenseOS-iOS.ipa" target="_blank" rel="noopener noreferrer" class="btn-download btn-dl-ios" data-platform="ios">
-          <i class="fa-brands fa-apple"></i> Download .IPA
-        </a>
+        <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+          <a href="https://github.com/VaibhavJalota06/Expense-OS-Mobile/releases/download/v3.3.6/ExpenseOS-iOS.ipa" target="_blank" rel="noopener noreferrer" class="btn-download btn-dl-ios" data-platform="ios">
+            <i class="fa-brands fa-apple"></i> Download .IPA
+          </a>
+          <button type="button" class="platform-guide-btn" onclick="openInstallModal('ios')">
+            <i class="fa-solid fa-circle-question"></i> AltStore / IPA Guide
+          </button>
+        </div>
       </div>
 
       <!-- Web Application Card -->
-      <div class="glass-panel platform-card web">
+      <div class="glass-panel platform-card web tilt-card">
         <div class="platform-card-body">
           <div class="platform-icon-box">
             <i class="fa-solid fa-globe"></i>
@@ -332,9 +350,14 @@
             <li><i class="fa-solid fa-cloud-arrow-up"></i> Installable to home screen / desktop as PWA</li>
           </ul>
         </div>
-        <a href="/index.html" target="_blank" class="btn-download btn-dl-web">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Web App
-        </a>
+        <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+          <a href="/index.html" target="_blank" class="btn-download btn-dl-web">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Web App
+          </a>
+          <button type="button" class="platform-guide-btn" onclick="openInstallModal('web')">
+            <i class="fa-solid fa-circle-question"></i> PWA Install Guide
+          </button>
+        </div>
       </div>
 
     </div>
@@ -468,28 +491,40 @@
       <p class="section-desc">Clear visual charts, recurring subscription alerts, and simple bill splitting with friends.</p>
     </div>
 
-    <div class="mockup-frame">
-      <div class="mockup-header">
-        <div class="mockup-dots">
-          <span class="dot dot-red"></span>
-          <span class="dot dot-yellow"></span>
-          <span class="dot dot-green"></span>
+    <!-- Device Frame Switcher -->
+    <div class="showcase-view-control">
+      <button type="button" class="view-switch-btn active" id="btn-view-desktop" onclick="setMockupDevice('desktop')">
+        <i class="fa-solid fa-desktop"></i> Desktop Window
+      </button>
+      <button type="button" class="view-switch-btn" id="btn-view-mobile" onclick="setMockupDevice('mobile')">
+        <i class="fa-solid fa-mobile-screen"></i> Mobile App
+      </button>
+    </div>
+
+    <div id="showcase-container">
+      <div class="mockup-frame" id="mockup-frame-element">
+        <div class="mockup-header" id="mockup-header-element">
+          <div class="mockup-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="mockup-url-bar"><i class="fa-solid fa-lock" style="color: var(--planet-emerald); font-size: 0.7rem;"></i> https://expenseos.app/dashboard</div>
+          <a href="/index.html" target="_blank" class="nav-cta-btn" style="padding: 4px 12px; font-size: 0.75rem;">
+            Try Live Demo <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
         </div>
-        <div class="mockup-url-bar"><i class="fa-solid fa-lock" style="color: var(--planet-emerald); font-size: 0.7rem;"></i> https://expenseos.app/dashboard</div>
-        <a href="/index.html" target="_blank" class="nav-cta-btn" style="padding: 4px 12px; font-size: 0.75rem;">
-          Try Live Demo <i class="fa-solid fa-arrow-up-right-from-square"></i>
-        </a>
-      </div>
 
-      <div class="mockup-tabs">
-        <button class="mockup-tab-btn active" onclick="switchShowcaseTab('dashboard', this)">📊 Spending Dashboard</button>
-        <button class="mockup-tab-btn" onclick="switchShowcaseTab('bills', this)">📅 Subscriptions &amp; Bills</button>
-        <button class="mockup-tab-btn" onclick="switchShowcaseTab('split', this)">👥 Shared Expenses</button>
-        <button class="mockup-tab-btn" onclick="switchShowcaseTab('export', this)">📤 Export &amp; Backup</button>
-      </div>
+        <div class="mockup-tabs">
+          <button class="mockup-tab-btn active" onclick="switchShowcaseTab('dashboard', this)">📊 Spending Dashboard</button>
+          <button class="mockup-tab-btn" onclick="switchShowcaseTab('bills', this)">📅 Subscriptions &amp; Bills</button>
+          <button class="mockup-tab-btn" onclick="switchShowcaseTab('split', this)">👥 Shared Expenses</button>
+          <button class="mockup-tab-btn" onclick="switchShowcaseTab('export', this)">📤 Export &amp; Backup</button>
+        </div>
 
-      <div class="mockup-body" id="showcase-content">
-        <!-- Injected via JavaScript -->
+        <div class="mockup-body" id="showcase-content">
+          <!-- Injected via JavaScript -->
+        </div>
       </div>
     </div>
   </section>
@@ -548,6 +583,45 @@
           </tr>
         </tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- 7b. Privacy & Data Ownership Guarantee -->
+  <section class="privacy-guarantee-section">
+    <div class="privacy-guarantee-card">
+      <div class="privacy-header">
+        <div class="privacy-badge"><i class="fa-solid fa-shield-halved"></i> 100% PRIVATE ARCHITECTURE</div>
+        <h3 class="privacy-title">Your financial data stays <span class="gradient-text">yours alone</span></h3>
+        <p class="section-desc" style="font-size: 0.95rem;">
+          Expense OS was engineered with a strict zero-telemetry policy. We don't store your bank credentials, we don't sell marketing profiles, and we never track your spending habits.
+        </p>
+      </div>
+
+      <div class="privacy-grid">
+        <div class="privacy-item">
+          <div class="privacy-item-icon"><i class="fa-solid fa-database"></i></div>
+          <div class="privacy-item-title">Client-Side IndexedDB</div>
+          <div class="privacy-item-desc">All entries live in encrypted storage on your physical machine or phone.</div>
+        </div>
+
+        <div class="privacy-item">
+          <div class="privacy-item-icon"><i class="fa-solid fa-ban"></i></div>
+          <div class="privacy-item-title">Zero Analytics Trackers</div>
+          <div class="privacy-item-desc">No Google Analytics, no Facebook SDK, and no telemetry pings.</div>
+        </div>
+
+        <div class="privacy-item">
+          <div class="privacy-item-icon"><i class="fa-solid fa-file-export"></i></div>
+          <div class="privacy-item-title">One-Click CSV / JSON Export</div>
+          <div class="privacy-item-desc">Never locked in. Download your complete financial archives anytime.</div>
+        </div>
+
+        <div class="privacy-item">
+          <div class="privacy-item-icon"><i class="fa-solid fa-code"></i></div>
+          <div class="privacy-item-title">100% Open Source (MIT)</div>
+          <div class="privacy-item-desc">Every line of code is open on GitHub for community verification.</div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -803,8 +877,45 @@
     </div>
   </footer>
 
+  <!-- Sideloading & Installation Guide Modal -->
+  <div id="install-modal" class="install-modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="modal-title">
+    <div class="install-modal-card">
+      <button type="button" class="modal-close-btn" onclick="closeInstallModal()" aria-label="Close modal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title">
+          <i class="fa-solid fa-circle-down" style="color: var(--planet-blue);"></i> Installation &amp; Setup Guide
+        </div>
+        <p class="modal-desc">
+          Quick step-by-step instructions for installing and running Expense OS on your platform.
+        </p>
+      </div>
+
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab-btn active" data-tab="android" onclick="switchInstallTab('android')">
+          <i class="fa-brands fa-android"></i> Android APK
+        </button>
+        <button type="button" class="modal-tab-btn" data-tab="windows" onclick="switchInstallTab('windows')">
+          <i class="fa-brands fa-windows"></i> Windows PC
+        </button>
+        <button type="button" class="modal-tab-btn" data-tab="ios" onclick="switchInstallTab('ios')">
+          <i class="fa-brands fa-apple"></i> Apple iOS
+        </button>
+        <button type="button" class="modal-tab-btn" data-tab="web" onclick="switchInstallTab('web')">
+          <i class="fa-solid fa-globe"></i> Web &amp; PWA
+        </button>
+      </div>
+
+      <div id="install-tab-content">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
   <!-- Custom Script -->
-  <script src="/landing/script.js?v=3.7.0"></script>
+  <script src="/landing/script.js?v=3.7.3"></script>
 
   <!-- Fail-safe Preloader Auto-Dismissal -->
   <script>
