@@ -309,31 +309,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ],
                               ),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.notifications_none_rounded,
-                                        color: isDark ? const Color(0xFFF8FAFC) : AppTheme.textPrimary, size: 24),
-                                    tooltip: 'Reminders & Alerts',
-                                    onPressed: () {
-                                      HapticFeedback.selectionClick();
-                                      _showRemindersSheet();
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.logout_rounded,
-                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF667085), size: 22),
-                                    tooltip: 'Sign Out / Switch Account',
-                                    onPressed: () async {
-                                      HapticFeedback.mediumImpact();
-                                      await _supabaseService.signOut();
-                                      if (widget.onSignOut != null) {
-                                        widget.onSignOut!();
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
+                              const SizedBox.shrink(),
                             ],
                           ),
 
