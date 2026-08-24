@@ -208,18 +208,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .fold(0.0, (sum, e) => sum + e.amount);
   }
 
-  double get _effectiveBudgetCap {
-    return _monthlyBudgetCap + _currentMonthIncome;
-  }
-
   double get _totalIncome {
-    return _startingBalance;
+    final loggedIncome = _expenses.where((e) => e.type == 'income').fold(0.0, (sum, e) => sum + e.amount);
+    return _startingBalance + loggedIncome;
   }
 
   /// Available money in bank account after monthly budget allocation is deducted
   double get _availableMoney {
-    if (_monthlyBudgetCap <= 0) return _startingBalance;
-    return (_startingBalance - _monthlyBudgetCap).clamp(0.0, double.infinity);
+    if (_monthlyBudgetCap <= 0) return _totalIncome;
+    return (_totalIncome - _monthlyBudgetCap).clamp(0.0, double.infinity);
   }
 
   double get _currentMonthExpenses {
@@ -230,8 +227,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   double get _remainingMonthlyBudget {
-    if (_effectiveBudgetCap <= 0) return 0.0;
-    return _effectiveBudgetCap - _currentMonthExpenses;
+    if (_monthlyBudgetCap <= 0) return 0.0;
+    return _monthlyBudgetCap - _currentMonthExpenses;
   }
 
   void _openAddExpenseSheet([Expense? expenseToEdit]) {
@@ -332,12 +329,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               scrollDirection: Axis.horizontal,
                               clipBehavior: Clip.none,
                               children: [
-                                // Card 1: Total Money (Bank Funds = Total Bank Account Balance)
+                                // Card 1: Total Money (Bank Funds = Initial Starting Balance + Incomes)
                                 _buildStatCard(
                                   index: 0,
                                   title: 'Total Money',
-                                  amount: currency.format(_startingBalance),
-                                  subtitle: 'Total Bank Cash',
+                                  amount: currency.format(_availableMoney),
+                                  subtitle: _monthlyBudgetCap > 0 ? 'Gross: ${currency.format(_totalIncome)}' : null,
                                   icon: Icons.account_balance_wallet_outlined,
                                   isHighlighted: _activeStatIndex == 0,
                                 ),
@@ -358,9 +355,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   index: 2,
                                   title: 'Remaining Budget',
                                   amount: currency.format(_remainingMonthlyBudget),
-                                  subtitle: _monthlyBudgetCap > 0 
-                                      ? (_currentMonthIncome > 0 ? 'Cap: ${currency.format(_effectiveBudgetCap)} (+${currency.format(_currentMonthIncome)})' : 'Cap: ${currency.format(_monthlyBudgetCap)}') 
-                                      : (_currentMonthIncome > 0 ? 'Income: ${currency.format(_currentMonthIncome)}' : 'Tap to set cap'),
+                                  subtitle: _monthlyBudgetCap > 0 ? 'Cap: ${currency.format(_monthlyBudgetCap)}' : 'Tap to set cap',
                                   icon: Icons.pie_chart_outline_rounded,
                                   isHighlighted: _activeStatIndex == 2,
                                 ),
