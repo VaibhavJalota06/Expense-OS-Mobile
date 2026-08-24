@@ -1,7 +1,7 @@
 {
   "version": 2,
   "outputDirectory": "web-desktop",
-  "cleanUrls": true,
+  "cleanUrls": false,
   "headers": [
     {
       "source": "/service-worker.js",
@@ -49,16 +49,16 @@
       "destination": "/landing/index.html"
     },
     {
+      "source": "/landing",
+      "destination": "/landing/index.html"
+    },
+    {
       "source": "/app",
       "destination": "/index.html"
     },
     {
       "source": "/dashboard",
       "destination": "/index.html"
-    },
-    {
-      "source": "/landing",
-      "destination": "/landing/index.html"
     },
     {
       "source": "/auth-callback",
