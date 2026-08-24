@@ -1027,7 +1027,7 @@ body {
 
 .section-header {
   text-align: center;
-  max-width: 780px;
+  max-width: 980px;
   margin: 0 auto 3.5rem;
 }
 
@@ -1050,10 +1050,10 @@ body {
 
 .section-title {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  font-size: clamp(1.85rem, 3.6vw, 2.9rem);
   font-weight: 800;
   color: var(--text-pure);
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.02em;
   margin-bottom: 1rem;
 }
@@ -1068,6 +1068,8 @@ body {
   font-size: 1.05rem;
   color: var(--text-med);
   line-height: 1.7;
+  max-width: 680px;
+  margin: 0 auto;
 }
 
 /* Glass Panels */
