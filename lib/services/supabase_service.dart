@@ -748,10 +748,11 @@ class SupabaseService {
         }
 
         if (response['expenses'] is List) {
+          mergedMap.clear();
           for (var exp in response['expenses']) {
             if (exp is Map) {
               final item = Expense.fromJson(Map<String, dynamic>.from(exp));
-              if (item.id != null && !mergedMap.containsKey(item.id)) {
+              if (item.id != null) {
                 mergedMap[item.id!] = item;
               }
             }
