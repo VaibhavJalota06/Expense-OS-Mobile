@@ -725,20 +725,23 @@ input[type="date"] {
 }
 
 /* Fix iOS Safari native date value overflow & center alignment */
-input[type="date"]::-webkit-date-and-time-value {
+input[type="date"]::-webkit-date-and-time-value,
+input[type="month"]::-webkit-date-and-time-value {
   text-align: left;
   min-height: 1.4em;
   margin: 0;
 }
 
 /* Style calendar icon indicator with emerald accent */
-input[type="date"]::-webkit-calendar-picker-indicator {
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
   filter: invert(0.85) sepia(1) saturate(5) hue-rotate(110deg);
   cursor: pointer;
   opacity: 0.85;
   padding: 0.2rem;
 }
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
   filter: invert(0.95) sepia(1) saturate(6) hue-rotate(110deg);
 }
@@ -2425,7 +2428,7 @@ select option {
 }
 .modal-card {
   width: 100%;
-  max-width: 440px;
+  max-width: 480px;
   background: var(--bg-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
