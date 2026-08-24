@@ -27,12 +27,24 @@
   ],
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/landing/index.html"
+    },
+    {
       "source": "/app",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dashboard",
       "destination": "/index.html"
     },
     {
       "source": "/landing",
       "destination": "/landing/index.html"
+    },
+    {
+      "source": "/auth-callback",
+      "destination": "/auth-callback.html"
     }
   ]
 }
