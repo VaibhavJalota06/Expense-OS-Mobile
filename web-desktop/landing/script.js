@@ -465,6 +465,101 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.log('Using default universal release endpoints:', e);
     }
+  // ---------- 9. Interactive FAQ Accordion & Live Filter ----------
+  const faqContainer = document.getElementById('faq-grid-container');
+  const faqSearchInput = document.getElementById('faq-search-input');
+
+  if (faqContainer) {
+    faqContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.faq-question-btn');
+      if (!btn) return;
+
+      const card = btn.closest('.faq-card');
+      if (!card) return;
+
+      const isOpen = card.classList.contains('active');
+
+      // Close all other cards for a clean single-open accordion feel
+      faqContainer.querySelectorAll('.faq-card').forEach(c => {
+        if (c !== card) {
+          c.classList.remove('active');
+          const b = c.querySelector('.faq-question-btn');
+          if (b) b.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      card.classList.toggle('active', !isOpen);
+      btn.setAttribute('aria-expanded', String(!isOpen));
+    });
+  }
+
+  if (faqSearchInput && faqContainer) {
+    faqSearchInput.addEventListener('input', () => {
+      const query = faqSearchInput.value.toLowerCase().trim();
+      const cards = faqContainer.querySelectorAll('.faq-card');
+
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (!query || text.includes(query)) {
+          card.style.display = 'block';
+          if (query) card.classList.add('active'); // auto expand when matching search
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  }
+
+  // ---------- 10. Animated Numbers & Stats Counters ----------
+  const statCounters = document.querySelectorAll('.stat-counter');
+  if (statCounters.length > 0) {
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.getAttribute('data-target'), 10);
+          if (!isNaN(target)) {
+            let start = 0;
+            const duration = 1200;
+            const stepTime = 20;
+            const steps = duration / stepTime;
+            const increment = target / steps;
+
+            const timer = setInterval(() => {
+              start += increment;
+              if (start >= target) {
+                el.textContent = target;
+                clearInterval(timer);
+              } else {
+                el.textContent = Math.floor(start);
+              }
+            }, stepTime);
+          }
+          obs.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    statCounters.forEach(c => observer.observe(c));
+  }
+
+  // ---------- 11. Floating Scroll-To-Top Controller ----------
+  const scrollTopBtn = document.getElementById('scroll-to-top');
+  if (scrollTopBtn) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 450) {
+        scrollTopBtn.classList.add('visible');
+      } else {
+        scrollTopBtn.classList.remove('visible');
+      }
+    }, { passive: true });
+
+    scrollTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
   }
 
   fetchLatestRelease();
