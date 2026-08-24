@@ -847,7 +847,8 @@ class SupabaseService {
             }
           } catch (_) {}
 
-          await prefs.setString('user_saved_subscriptions', jsonEncode(cloudSubs));
+          final cleanSubs = _deduplicateSubscriptionMaps(cloudSubs);
+          await prefs.setString('user_saved_subscriptions', jsonEncode(cleanSubs));
           await prefs.setString('expense_os_goals', jsonEncode(cloudGoals));
           if (cloudGroup.isNotEmpty) {
             await prefs.setString('saved_group_expenses', jsonEncode(cloudGroup));
@@ -862,7 +863,8 @@ class SupabaseService {
             final tableSubs = await client.from('subscriptions').select().eq('user_id', userId);
             if (tableSubs.isNotEmpty) {
               final cloudSubs = tableSubs.map((e) => Map<String, dynamic>.from(e)).toList();
-              await prefs2.setString('user_saved_subscriptions', jsonEncode(cloudSubs));
+              final cleanSubs = _deduplicateSubscriptionMaps(cloudSubs);
+              await prefs2.setString('user_saved_subscriptions', jsonEncode(cleanSubs));
             } else {
               await prefs2.remove('user_saved_subscriptions');
             }
@@ -946,6 +948,35 @@ class SupabaseService {
       debugPrint('Error syncing with user_data: $e');
     }
     return List.unmodifiable(_localExpenses);
+  }
+
+  List<Map<String, dynamic>> _deduplicateSubscriptionMaps(List<Map<String, dynamic>> list) {
+    final Map<String, Map<String, dynamic>> dedupMap = {};
+    for (final item in list) {
+      final name = (item['title'] ?? item['name'] ?? '').toString().trim().toLowerCase();
+      final id = item['id']?.toString() ?? '';
+
+      String? matchKey;
+      if (id.isNotEmpty && dedupMap.containsKey(id)) {
+        matchKey = id;
+      } else {
+        for (final entry in dedupMap.entries) {
+          final existingName = (entry.value['title'] ?? entry.value['name'] ?? '').toString().trim().toLowerCase();
+          if (name.isNotEmpty && existingName == name) {
+            matchKey = entry.key;
+            break;
+          }
+        }
+      }
+
+      if (matchKey != null) {
+        final prev = dedupMap[matchKey]!;
+        dedupMap[matchKey] = {...prev, ...item, 'id': prev['id'] ?? item['id']};
+      } else {
+        dedupMap[id.isNotEmpty ? id : (name.isNotEmpty ? name : item.hashCode.toString())] = item;
+      }
+    }
+    return dedupMap.values.toList();
   }
 
   List<Expense> get localExpenses => List.unmodifiable(_localExpenses);

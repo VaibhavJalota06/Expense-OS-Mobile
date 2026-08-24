@@ -46,7 +46,33 @@ class _BillsScreenState extends State<BillsScreen> {
     if (raw != null && raw.isNotEmpty) {
       try {
         final List<dynamic> decoded = jsonDecode(raw);
-        _subscriptions = decoded.map((e) => SubscriptionItem.fromJson(e)).toList();
+        final rawList = decoded.map((e) => SubscriptionItem.fromJson(e)).toList();
+        
+        final Map<String, SubscriptionItem> dedupMap = {};
+        for (final item in rawList) {
+          final nameKey = item.title.trim().toLowerCase();
+          final idKey = item.id;
+
+          String? matchKey;
+          if (dedupMap.containsKey(idKey)) {
+            matchKey = idKey;
+          } else {
+            for (final entry in dedupMap.entries) {
+              if (entry.value.title.trim().toLowerCase() == nameKey) {
+                matchKey = entry.key;
+                break;
+              }
+            }
+          }
+
+          if (matchKey != null) {
+            final prev = dedupMap[matchKey]!;
+            dedupMap[matchKey] = item.copyWith(id: prev.id);
+          } else {
+            dedupMap[idKey] = item;
+          }
+        }
+        _subscriptions = dedupMap.values.toList();
       } catch (_) {
         _subscriptions = [];
       }
