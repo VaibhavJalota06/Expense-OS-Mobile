@@ -112,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       try {
         final updateInfo = await AppUpdateService().checkForUpdate();
-        if (updateInfo.isUpdateAvailable && mounted) {
+        if (updateInfo.isUpdateAvailable && updateInfo.isMandatory && mounted) {
           AppUpdateService().showUpdateModal(context, updateInfo);
         }
       } catch (_) {}
