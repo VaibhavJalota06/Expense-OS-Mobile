@@ -82,6 +82,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final savedSymbol = prefs.getString('app_currency_symbol') ?? CurrencyService.currencySymbolNotifier.value;
     final user = _supabaseService.currentUser;
 
+    if (user != null) {
+      final lastActiveId = prefs.getString('last_active_user_id');
+      if (lastActiveId != null && lastActiveId != user.id) {
+        // User changed account! Reset cached profile fields from old account
+        await prefs.remove('custom_user_name');
+        await prefs.remove('custom_avatar_path');
+        await prefs.remove('google_user_email');
+        await prefs.remove('google_user_avatar');
+      }
+      await prefs.setString('last_active_user_id', user.id);
+    }
+
     final googleEmail = prefs.getString('google_user_email');
     final googleAvatar = prefs.getString('google_user_avatar');
     final customName = prefs.getString('custom_user_name');

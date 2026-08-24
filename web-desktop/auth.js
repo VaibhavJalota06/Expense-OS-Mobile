@@ -1303,17 +1303,34 @@ window.closeEditProfileModal = function(e) {
         try {
           let storedProfile = JSON.parse(localStorage.getItem('expense_cal_user_profile') || '{}');
           let changed = false;
-          if (!storedProfile.name || storedProfile.name === 'User' || storedProfile.name === 'System Administrator ⭐️' || storedProfile.name === 'Tech Bounty Hunter') {
-            storedProfile.name = rawName;
+
+          // If switching accounts or email does not match, reset profile to current user
+          if (storedProfile.email && userEmail && storedProfile.email.toLowerCase() !== userEmail.toLowerCase()) {
+            storedProfile = {
+              name: rawName,
+              email: userEmail,
+              avatar: userAvatar,
+              phone: '',
+              job: '',
+              country: 'India',
+              currency: 'INR',
+              bio: '',
+              completed: true
+            };
             changed = true;
-          }
-          if (!storedProfile.email || storedProfile.email === 'admin@expenseos.com' || storedProfile.email === 'bountyh745@gmail.com') {
-            storedProfile.email = userEmail;
-            changed = true;
-          }
-          if (userAvatar && (!storedProfile.avatar || storedProfile.avatar.startsWith('data:image/svg'))) {
-            storedProfile.avatar = userAvatar;
-            changed = true;
+          } else {
+            if (!storedProfile.name || storedProfile.name === 'User' || storedProfile.name === 'System Administrator ⭐️' || storedProfile.name === 'Tech Bounty Hunter') {
+              storedProfile.name = rawName;
+              changed = true;
+            }
+            if (!storedProfile.email) {
+              storedProfile.email = userEmail;
+              changed = true;
+            }
+            if (userAvatar && (!storedProfile.avatar || storedProfile.avatar.startsWith('data:image/svg'))) {
+              storedProfile.avatar = userAvatar;
+              changed = true;
+            }
           }
           if (changed) {
             localStorage.setItem('expense_cal_user_profile', JSON.stringify(storedProfile));
