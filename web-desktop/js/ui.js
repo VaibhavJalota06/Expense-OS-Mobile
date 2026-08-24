@@ -841,8 +841,9 @@ function renderRadialGauge(spentRatio, totalSpent, budgetLimit) {
 }
 
 function renderSubscriptions() {
+  const now = new Date();
   const currentYM = getCurrentYearMonth();
-  const currentDay = new Date().getDate();
+  const currentDay = now.getDate();
 
   let totalMonthlySubs = 0;
   let dueSoonCount = 0;
