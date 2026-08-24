@@ -5340,38 +5340,47 @@ window.sendAutomatedEmail = function(triggerType, payload) {
     timestamp: new Date().toISOString()
   };
 
-  fetch('/api/send-email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(emailPayload)
-  }).then(res => res.json()).then(data => {
-    if (typeof window.showToast === 'function') {
-      window.showToast(`📧 [Email Automated] Sent to ${userEmail} (${payload.subject || 'Receipt'})`, 'success');
-    }
-  }).catch(err => {
-    if (typeof window.showToast === 'function') {
-      window.showToast(`📧 [Email Dispatched] Alert generated for ${userEmail}`, 'success');
-    }
-  });
-
-  // Try sending live via EmailJS SDK if templateId & publicKey exist
-  const cfg = window.emailjsConfig || {};
+  // Check if EmailJS keys exist in localStorage or memory
+  const cfg = window.emailjsConfig || JSON.parse(localStorage.getItem('expense_cal_emailjs_config') || '{}');
   if (typeof emailjs !== 'undefined' && cfg.serviceId && cfg.templateId && cfg.publicKey) {
     try {
       emailjs.send(cfg.serviceId, cfg.templateId, {
         to_email: userEmail,
         email: userEmail,
         to: userEmail,
-        to_name: 'Super Admin',
+        to_name: 'Vaibhav',
         subject: emailPayload.subject,
-        message: fullHtml,
+        message: payload.message || 'Expense OS Financial Alert',
         html_content: fullHtml
       }, cfg.publicKey).then(() => {
-        if (typeof window.showToast === 'function') window.showToast(`📧 [EmailJS Live Sent] ${emailPayload.subject}`, 'success');
+        if (typeof window.showToast === 'function') {
+          window.showToast(`📧 [Live Email Delivered] Sent to ${userEmail}`, 'success');
+        }
       }).catch(err => {
-        console.warn('EmailJS live send fallback:', err);
+        console.warn('EmailJS live send error:', err);
+        if (typeof window.showToast === 'function') {
+          window.showToast(`⚠️ EmailJS delivery issue: ${err.text || err.message || 'Check EmailJS config'}`, 'warning');
+        }
       });
-    } catch(e) {}
+    } catch(e) {
+      console.warn('EmailJS exception:', e);
+    }
+  } else {
+    // Attempt backend webhook if running on custom server
+    fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(emailPayload)
+    }).then(res => {
+      if (!res.ok) throw new Error('Endpoint not available');
+      return res.json();
+    }).then(data => {
+      if (typeof window.showToast === 'function') {
+        window.showToast(`📧 [Email Sent] Sent to ${userEmail}`, 'success');
+      }
+    }).catch(err => {
+      console.log('Email delivery notice: EmailJS keys or backend SMTP endpoint not connected.');
+    });
   }
 };
 
