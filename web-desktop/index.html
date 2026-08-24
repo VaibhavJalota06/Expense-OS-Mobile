@@ -663,6 +663,24 @@
                       <span id="receipt-preview-name" class="receipt-name">receipt.webp</span>
                       <button type="button" class="btn-remove-receipt" onclick="if(window.clearReceiptAttachment)window.clearReceiptAttachment(event)"><i class="fa-solid fa-xmark"></i></button>
                     </div>
+
+                    <!-- Scanned Receipt Itemized Breakdown -->
+                    <div id="ocr-itemized-breakdown" class="ocr-itemized-breakdown hidden">
+                      <div class="ocr-breakdown-header">
+                        <span class="ocr-breakdown-title"><i class="fa-solid fa-receipt text-emerald"></i> Scanned Items Breakdown</span>
+                        <span id="ocr-detected-store" class="ocr-detected-store"></span>
+                      </div>
+                      <div id="ocr-items-list" class="ocr-items-list"></div>
+                      <div class="ocr-breakdown-summary">
+                        <div class="ocr-summary-row text-muted"><span>Subtotal:</span><span id="ocr-subtotal-val">₹0.00</span></div>
+                        <div class="ocr-summary-row text-muted"><span>Tax / GST:</span><span id="ocr-tax-val">₹0.00</span></div>
+                        <div class="ocr-summary-row font-bold text-emerald"><span>Total:</span><span id="ocr-total-val">₹0.00</span></div>
+                      </div>
+                      <div class="ocr-breakdown-actions" style="margin-top: 0.6rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary btn-xs" onclick="if(window.applyOcrSingleExpense)window.applyOcrSingleExpense();"><i class="fa-solid fa-check"></i> Fill Main Form</button>
+                        <button type="button" class="btn btn-primary btn-xs" onclick="if(window.logOcrSplitTransactions)window.logOcrSplitTransactions();"><i class="fa-solid fa-layer-group"></i> Split & Log Each Item</button>
+                      </div>
+                    </div>
                   </div>
 
                   <button type="submit" class="btn btn-primary btn-block">

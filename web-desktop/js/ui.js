@@ -3896,12 +3896,48 @@ function compressReceiptImage(file) {
   });
 }
 
-// 2. OCR Text Scanning via Tesseract.js & Regex Extractor
+// 2. High-Contrast Receipt Image Preprocessing for Thermal Paper OCR
+function preprocessReceiptForOcr(imageSource) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(1, Math.min(2.5, 1400 / (img.width || 800)));
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+
+        // Adaptive high-contrast greyscale
+        for (let i = 0; i < data.length; i += 4) {
+          const avg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          const enhanced = avg < 145 ? Math.max(0, avg * 0.65) : Math.min(255, avg * 1.3);
+          data[i] = enhanced;
+          data[i + 1] = enhanced;
+          data[i + 2] = enhanced;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (e) {
+        resolve(imageSource);
+      }
+    };
+    img.onerror = () => resolve(imageSource);
+    img.src = imageSource;
+  });
+}
+
+// 3. OCR Text Scanning via Tesseract.js & Regex Extractor
 async function scanReceiptOCR(file, compressedDataUrl) {
   const ocrBadge = document.getElementById('ocr-status-badge');
   if (ocrBadge) {
     ocrBadge.classList.remove('hidden');
-    ocrBadge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ⚡ Scanning receipt via OCR...';
+    ocrBadge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ⚡ Scanning receipt items & totals via OCR...';
   }
 
   try {
@@ -3910,14 +3946,15 @@ async function scanReceiptOCR(file, compressedDataUrl) {
     }
 
     if (typeof Tesseract !== 'undefined') {
-      const result = await Tesseract.recognize(compressedDataUrl, 'eng');
+      const processedUrl = await preprocessReceiptForOcr(compressedDataUrl);
+      const result = await Tesseract.recognize(processedUrl, 'eng');
       const text = result && result.data ? result.data.text : '';
       parseReceiptText(text);
     }
     if (ocrBadge) {
       ocrBadge.className = 'ocr-status-badge text-emerald';
-      ocrBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> OCR Scan Complete!';
-      setTimeout(() => ocrBadge.classList.add('hidden'), 3000);
+      ocrBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> OCR Scan & Item Breakdown Complete!';
+      setTimeout(() => ocrBadge.classList.add('hidden'), 3500);
     }
   } catch (err) {
     console.warn('OCR scanning fallback:', err);
@@ -3940,68 +3977,307 @@ function loadExternalScript(src) {
   });
 }
 
+let lastParsedReceiptData = null;
+
 function parseReceiptText(text) {
   if (!text) return;
+  const structured = parseReceiptStructured(text);
+  lastParsedReceiptData = structured;
+  renderOcrBreakdown(structured);
+  applyOcrToForm(structured);
+}
 
-  // 1. Amount Extraction
-  const amountRegex = /(?:total|net|amount|grand\s*total|paid|inr|rs\.?|₹|\$)\s*[:=]?\s*([₹$€£]?\s*[\d,]+\.?\d*)/gi;
-  let match;
-  let highestAmount = 0;
+function parseReceiptStructured(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  const structured = {
+    merchant: '',
+    date: '',
+    items: [],
+    subtotal: 0,
+    tax: 0,
+    total: 0,
+    paymentMethod: 'Card / UPI',
+    category: 'Food & Dining',
+    rawText: text
+  };
 
-  while ((match = amountRegex.exec(text)) !== null) {
-    const rawVal = match[1].replace(/[^0-9.]/g, '');
-    const num = parseFloat(rawVal);
-    if (!isNaN(num) && num > highestAmount && num < 1000000) {
-      highestAmount = num;
+  // 1. Merchant Detection & Brand Matching
+  const brandKeywords = [
+    { name: "McDonald's", match: /mcdonald|hardcastle|mcspicy|mcafee|mcd/i, cat: 'Food & Dining' },
+    { name: "Starbucks", match: /starbucks|frappuccino|espresso/i, cat: 'Food & Dining' },
+    { name: "Subway", match: /subway/i, cat: 'Food & Dining' },
+    { name: "Domino's Pizza", match: /domino|jubilant\s*food/i, cat: 'Food & Dining' },
+    { name: "KFC", match: /kfc|yum\s*restaurants/i, cat: 'Food & Dining' },
+    { name: "Burger King", match: /burger\s*king/i, cat: 'Food & Dining' },
+    { name: "Pizza Hut", match: /pizza\s*hut/i, cat: 'Food & Dining' },
+    { name: "Swiggy", match: /swiggy|bundl/i, cat: 'Food & Dining' },
+    { name: "Zomato", match: /zomato/i, cat: 'Food & Dining' },
+    { name: "DMart", match: /dmart|avenue\s*supermarts/i, cat: 'Groceries' },
+    { name: "Reliance Fresh / Smart", match: /reliance\s*(fresh|smart|retail)/i, cat: 'Groceries' },
+    { name: "Zepto / Blinkit", match: /zepto|blinkit|grofers/i, cat: 'Groceries' },
+    { name: "Amazon", match: /amazon/i, cat: 'Shopping' },
+    { name: "Flipkart", match: /flipkart/i, cat: 'Shopping' },
+    { name: "Apple Store", match: /apple\s*store|apple\s*india/i, cat: 'Technology' },
+    { name: "Uber / Ola", match: /uber|ola\s*cabs|ani\s*technologies/i, cat: 'Transportation' }
+  ];
+
+  for (const b of brandKeywords) {
+    if (b.match.test(text)) {
+      structured.merchant = b.name;
+      structured.category = b.cat;
+      break;
     }
   }
 
-  if (highestAmount > 0) {
-    const amountInput = document.getElementById('exp-amount');
-    if (amountInput && !amountInput.value) {
-      amountInput.value = highestAmount.toFixed(2);
+  if (!structured.merchant) {
+    const topLines = lines.slice(0, 4).filter(l => !/order|tax|invoice|table|token|bill|welcome|tel|ph|gst/i.test(l));
+    if (topLines.length > 0) {
+      structured.merchant = topLines[0].replace(/[^a-zA-Z0-9\s&'-]/g, '').trim().slice(0, 45);
+    } else {
+      structured.merchant = 'Receipt Expense';
     }
   }
 
   // 2. Date Extraction
-  const dateRegex = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}|\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/g;
+  const dateRegex = /(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}|\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/;
   const dateMatch = dateRegex.exec(text);
   if (dateMatch) {
-    const dateInput = document.getElementById('exp-date');
-    if (dateInput) {
-      try {
-        const parsedDate = new Date(dateMatch[1]);
-        if (!isNaN(parsedDate.getTime())) {
-          dateInput.value = parsedDate.toISOString().split('T')[0];
-        }
-      } catch (e) {}
-    }
+    try {
+      const parts = dateMatch[1].split(/[\/\.-]/);
+      let dObj = null;
+      if (parts[0].length === 4) {
+        dObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      } else if (parts[2].length === 4) {
+        dObj = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+      }
+      if (dObj && !isNaN(dObj.getTime())) {
+        structured.date = dObj.toISOString().split('T')[0];
+      }
+    } catch(e) {}
+  }
+  if (!structured.date) {
+    structured.date = new Date().toISOString().split('T')[0];
   }
 
-  // 3. Merchant & Auto-Categorization
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 2);
-  if (lines.length > 0) {
-    const vendorCandidate = lines.find(l => !/total|amount|tax|receipt|date|invoice/i.test(l)) || lines[0];
-    if (vendorCandidate) {
-      const descInput = document.getElementById('exp-description');
-      if (descInput && !descInput.value) {
-        descInput.value = vendorCandidate.slice(0, 50);
-        if (typeof autoCategorizeExpense === 'function') {
-          const matchedCategory = autoCategorizeExpense(vendorCandidate);
-          const catSelect = document.getElementById('exp-category');
-          const aiBadge = document.getElementById('ai-cat-badge');
-          if (matchedCategory && catSelect) {
-            catSelect.value = matchedCategory;
-            if (aiBadge) {
-              aiBadge.classList.remove('hidden');
-              aiBadge.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> AI: ${matchedCategory}`;
-            }
-          }
+  // 3. Tabular Item & Financial Summary Extraction
+  const parsedItems = [];
+  const itemRowRegex = /^(?:(\d+)\s+)?(.+?)\s+([₹$€£]?\s*[\d,]+\.\d{2})$/i;
+
+  lines.forEach((line) => {
+    const subMatch = /(?:sub[\s-]?total|subtotal|net\s*amount)\s*[:=]?\s*([₹$€£]?\s*[\d,]+\.\d{2})/i.exec(line);
+    if (subMatch) {
+      const val = parseFloat(subMatch[1].replace(/[^0-9.]/g, ''));
+      if (!isNaN(val)) structured.subtotal = val;
+      return;
+    }
+
+    const taxMatch = /(?:cgst|sgst|gst|vat|tax)\s*(?:@\s*[\d.]+%)?\s*[:=]?\s*([₹$€£]?\s*[\d,]+\.\d{2})/i.exec(line);
+    if (taxMatch) {
+      const val = parseFloat(taxMatch[1].replace(/[^0-9.]/g, ''));
+      if (!isNaN(val)) structured.tax += val;
+      return;
+    }
+
+    const totalMatch = /(?:eat-in\s*total|grand\s*total|total|amount\s*paid|net\s*payable|paid)\s*[:=]?\s*([₹$€£]?\s*[\d,]+\.\d{2})/i.exec(line);
+    if (totalMatch) {
+      const val = parseFloat(totalMatch[1].replace(/[^0-9.]/g, ''));
+      if (!isNaN(val) && val > structured.total) structured.total = val;
+      return;
+    }
+
+    if (/card|visa|mastercard|amex|pos|debit|credit/i.test(line)) {
+      structured.paymentMethod = 'Card / UPI';
+    } else if (/upi|gpay|phonepe|paytm|qr/i.test(line)) {
+      structured.paymentMethod = 'UPI / GPay';
+    } else if (/cash/i.test(line)) {
+      structured.paymentMethod = 'Cash';
+    }
+
+    if (!/invoice|gstin|fssai|phone|reg|qty|table|counter|welcome|visit|feedback|card|change|cash|balance|tax/i.test(line)) {
+      const m = itemRowRegex.exec(line);
+      if (m) {
+        const qty = parseInt(m[1], 10) || 1;
+        let name = m[2].trim().replace(/^[-*•\s]+/, '');
+        const price = parseFloat(m[3].replace(/[^0-9.]/g, ''));
+        if (name.length >= 3 && !isNaN(price) && price > 0 && price < 100000) {
+          parsedItems.push({ name, qty, price });
         }
       }
     }
+  });
+
+  structured.items = parsedItems;
+
+  if (structured.total === 0) {
+    if (structured.subtotal > 0) {
+      structured.total = structured.subtotal + (structured.tax || 0);
+    } else if (parsedItems.length > 0) {
+      const itemsSum = parsedItems.reduce((s, i) => s + i.price, 0);
+      structured.total = itemsSum + (structured.tax || 0);
+    } else {
+      const allNums = (text.match(/[\d,]+\.\d{2}/g) || []).map(n => parseFloat(n.replace(/,/g, ''))).filter(n => !isNaN(n) && n < 500000);
+      if (allNums.length > 0) structured.total = Math.max(...allNums);
+    }
+  }
+
+  structured.total = Math.round(structured.total * 100) / 100;
+  structured.subtotal = Math.round((structured.subtotal || (structured.total - structured.tax)) * 100) / 100;
+  structured.tax = Math.round(structured.tax * 100) / 100;
+
+  return structured;
+}
+
+function renderOcrBreakdown(structured) {
+  const container = document.getElementById('ocr-itemized-breakdown');
+  const storeEl = document.getElementById('ocr-detected-store');
+  const itemsList = document.getElementById('ocr-items-list');
+  const subtotalVal = document.getElementById('ocr-subtotal-val');
+  const taxVal = document.getElementById('ocr-tax-val');
+  const totalVal = document.getElementById('ocr-total-val');
+
+  if (!container || !itemsList) return;
+
+  if (storeEl) storeEl.textContent = structured.merchant || 'Store Receipt';
+
+  itemsList.innerHTML = '';
+  if (structured.items && structured.items.length > 0) {
+    structured.items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'ocr-item-row';
+      row.innerHTML = `
+        <span class="ocr-item-name">${escapeHtml(item.name)} ${item.qty > 1 ? '<span class="text-muted">(' + item.qty + 'x)</span>' : ''}</span>
+        <span class="ocr-item-price">${formatCurrency(item.price)}</span>
+      `;
+      itemsList.appendChild(row);
+    });
+  } else {
+    itemsList.innerHTML = '<div class="text-muted" style="padding: 0.25rem 0.5rem; font-style: italic;">No individual item rows detected — full amount captured.</div>';
+  }
+
+  if (subtotalVal) subtotalVal.textContent = formatCurrency(structured.subtotal || structured.total);
+  if (taxVal) taxVal.textContent = formatCurrency(structured.tax || 0);
+  if (totalVal) totalVal.textContent = formatCurrency(structured.total);
+
+  container.classList.remove('hidden');
+}
+
+function applyOcrToForm(structured) {
+  if (!structured) return;
+
+  const amountInput = document.getElementById('exp-amount');
+  const descInput = document.getElementById('exp-description');
+  const dateInput = document.getElementById('exp-date');
+  const catSelect = document.getElementById('exp-category');
+  const paymentSelect = document.getElementById('exp-payment');
+  const aiBadge = document.getElementById('ai-cat-badge');
+
+  if (amountInput && structured.total > 0) {
+    amountInput.value = structured.total.toFixed(2);
+  }
+
+  if (descInput) {
+    if (structured.items && structured.items.length > 0) {
+      const itemsSummary = structured.items.map(i => i.name).join(', ');
+      descInput.value = `${structured.merchant}: ${itemsSummary}`.slice(0, 70);
+    } else {
+      descInput.value = structured.merchant || 'Receipt Expense';
+    }
+  }
+
+  if (dateInput && structured.date) {
+    dateInput.value = structured.date;
+  }
+
+  if (catSelect && structured.category) {
+    catSelect.value = structured.category;
+    if (aiBadge) {
+      aiBadge.classList.remove('hidden');
+      aiBadge.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> AI: ${structured.category}`;
+    }
+  }
+
+  if (paymentSelect && structured.paymentMethod) {
+    paymentSelect.value = structured.paymentMethod;
   }
 }
+
+window.applyOcrSingleExpense = function() {
+  if (lastParsedReceiptData) {
+    applyOcrToForm(lastParsedReceiptData);
+    if (typeof showToast === 'function') {
+      showToast('✓ Form filled with receipt details!', 'success');
+    }
+  }
+};
+
+window.logOcrSplitTransactions = function() {
+  if (!lastParsedReceiptData || !lastParsedReceiptData.items || lastParsedReceiptData.items.length === 0) {
+    if (typeof showAlert === 'function') {
+      showAlert('Notice', 'No individual line items to split. Use "Add Expense Record" to log the total amount.');
+    }
+    return;
+  }
+
+  const items = lastParsedReceiptData.items;
+  const merchant = lastParsedReceiptData.merchant || 'Store';
+  const date = lastParsedReceiptData.date || new Date().toISOString().split('T')[0];
+  const payment = lastParsedReceiptData.paymentMethod || 'Card / UPI';
+  const category = lastParsedReceiptData.category || 'Food & Dining';
+  const receipt = pendingReceiptDataUrl || '';
+
+  let count = 0;
+  items.forEach(item => {
+    const expenseRecord = {
+      id: 'exp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      description: `${merchant} - ${item.name}`,
+      amount: item.price,
+      category: category,
+      payment: payment,
+      date: date,
+      receipt: receipt,
+      receiptUrl: receipt,
+      created_at: new Date().toISOString()
+    };
+    if (typeof addExpense === 'function') {
+      addExpense(expenseRecord);
+      count++;
+    }
+  });
+
+  // Also log tax as a separate line if present and > 0
+  if (lastParsedReceiptData.tax && lastParsedReceiptData.tax > 0) {
+    const taxRecord = {
+      id: 'exp_' + Date.now() + '_tax',
+      description: `${merchant} - GST / Tax`,
+      amount: lastParsedReceiptData.tax,
+      category: category,
+      payment: payment,
+      date: date,
+      receipt: receipt,
+      receiptUrl: receipt,
+      created_at: new Date().toISOString()
+    };
+    if (typeof addExpense === 'function') {
+      addExpense(taxRecord);
+      count++;
+    }
+  }
+
+  // Clear inputs & hide OCR breakdown
+  const form = document.getElementById('add-expense-form');
+  if (form) form.reset();
+  const breakdown = document.getElementById('ocr-itemized-breakdown');
+  if (breakdown) breakdown.classList.add('hidden');
+  const pill = document.getElementById('receipt-preview-pill');
+  if (pill) pill.classList.add('hidden');
+  pendingReceiptDataUrl = null;
+
+  if (typeof updateUI === 'function') updateUI();
+
+  if (typeof showToast === 'function') {
+    showToast(`🎉 Logged ${count} itemized transactions from receipt!`, 'success');
+  }
+};
 
 // 3. File Selection & Drag-and-Drop Handlers
 window.handleReceiptSelect = async function(e) {
