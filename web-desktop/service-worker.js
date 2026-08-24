@@ -1,14 +1,14 @@
-const CACHE_NAME = 'expense-os-pwa-v3.3.7c';
+const CACHE_NAME = 'expense-os-pwa-v3.3.9';
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './style.css?v=3.3.7',
-  './supabase-config.js?v=3.3.7',
-  './js/state.js?v=3.3.7',
-  './js/ui.js?v=3.3.7',
-  './js/features.js?v=3.3.7',
-  './js/gamification.js?v=3.3.7',
-  './auth.js?v=3.3.7',
+  './style.css?v=3.3.9',
+  './supabase-config.js?v=3.3.9',
+  './js/state.js?v=3.3.9',
+  './js/ui.js?v=3.3.9',
+  './js/features.js?v=3.3.9',
+  './js/gamification.js?v=3.3.9',
+  './auth.js?v=3.3.9',
   './icon.png',
   './manifest.json'
 ];

@@ -46,6 +46,8 @@ ios/Runner.xcworkspace/
 # Node / Web / Desktop
 node_modules/
 dist/
+*.exe
+*.blockmap
 playwright-report/
 test-results/
 web-desktop/node_modules/
@@ -53,4 +55,5 @@ web-desktop/dist/
 web-desktop/playwright-report/
 web-desktop/test-results/
 web-desktop/backup-pre-redesign/
+
 
