@@ -68,7 +68,30 @@ class BudgetRulesEngine {
     await prefs.setBool('rule_$ruleId', enabled);
   }
 
-  /// Evaluates all rules against current transactions and fires real device push notifications (deduplicated to once per day)
+  bool _shouldSendAlert(SharedPreferences prefs, String ruleId) {
+    final now = DateTime.now();
+    final currentMonthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    final lastNotifiedEpoch = prefs.getInt('last_notified_epoch_$ruleId') ?? 0;
+    final lastNotifiedMonth = prefs.getString('last_notified_month_$ruleId');
+
+    // 1. If we are in a new calendar month, reset and allow the alert for the new month
+    if (lastNotifiedMonth != currentMonthKey) {
+      return true;
+    }
+
+    // 2. If in the same month, enforce a strict 7-day (1-week) cooldown
+    final daysPassed = (now.millisecondsSinceEpoch - lastNotifiedEpoch) / (1000 * 60 * 60 * 24);
+    return daysPassed >= 7.0;
+  }
+
+  Future<void> _markAlertSent(SharedPreferences prefs, String ruleId) async {
+    final now = DateTime.now();
+    final currentMonthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    await prefs.setInt('last_notified_epoch_$ruleId', now.millisecondsSinceEpoch);
+    await prefs.setString('last_notified_month_$ruleId', currentMonthKey);
+  }
+
+  /// Evaluates all rules against current transactions and fires real device push notifications (enforcing 7-day cooldown & monthly reset)
   Future<List<String>> evaluateRules({
     required List<Expense> expenses,
     required double budgetCap,
@@ -78,8 +101,6 @@ class BudgetRulesEngine {
     final triggeredAlerts = <String>[];
     final rules = await loadRules();
     final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-    final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
     final totalSpent = expenses.where((e) => e.type == 'expense').fold(0.0, (sum, e) => sum + e.amount);
 
@@ -89,9 +110,8 @@ class BudgetRulesEngine {
       final msg = '80% Spending Cap Warning: You have used ${(totalSpent / budgetCap * 100).toInt()}% of your $currencySymbol${budgetCap.toStringAsFixed(0)} limit.';
       triggeredAlerts.add(msg);
       
-      final lastNotified = prefs.getString('last_notified_day_rule_80_cap');
-      if (lastNotified != todayKey) {
-        await prefs.setString('last_notified_day_rule_80_cap', todayKey);
+      if (_shouldSendAlert(prefs, 'rule_80_cap')) {
+        await _markAlertSent(prefs, 'rule_80_cap');
         await NotificationService().showNotification(
           id: 301,
           title: '⚠️ 80% Budget Cap Warning',
@@ -111,9 +131,8 @@ class BudgetRulesEngine {
         final msg = 'Dining Guard: Leisure spending ($currencySymbol${diningSpent.toStringAsFixed(0)}) exceeded 35% of total budget.';
         triggeredAlerts.add(msg);
 
-        final lastNotified = prefs.getString('last_notified_day_rule_dining_guard');
-        if (lastNotified != todayKey) {
-          await prefs.setString('last_notified_day_rule_dining_guard', todayKey);
+        if (_shouldSendAlert(prefs, 'rule_dining_guard')) {
+          await _markAlertSent(prefs, 'rule_dining_guard');
           await NotificationService().showNotification(
             id: 302,
             title: '🛡️ Dining & Entertainment Guard Alert',
@@ -131,9 +150,8 @@ class BudgetRulesEngine {
         final msg = 'Savings Protection: Net savings balance ($currencySymbol${netBalance.toStringAsFixed(0)}) is below the recommended 20% safety threshold.';
         triggeredAlerts.add(msg);
 
-        final lastNotified = prefs.getString('last_notified_day_rule_savings_protection');
-        if (lastNotified != todayKey) {
-          await prefs.setString('last_notified_day_rule_savings_protection', todayKey);
+        if (_shouldSendAlert(prefs, 'rule_savings_protection')) {
+          await _markAlertSent(prefs, 'rule_savings_protection');
           await NotificationService().showNotification(
             id: 303,
             title: '💰 Net Balance Savings Alert',
@@ -149,9 +167,8 @@ class BudgetRulesEngine {
       final msg = 'Allocation Guard: Monthly budget ($currencySymbol${budgetCap.toStringAsFixed(0)}) exceeds your total bank account money ($currencySymbol${totalIncome.toStringAsFixed(0)}).';
       triggeredAlerts.add(msg);
 
-      final lastNotified = prefs.getString('last_notified_day_rule_budget_allocation_guard');
-      if (lastNotified != todayKey) {
-        await prefs.setString('last_notified_day_rule_budget_allocation_guard', todayKey);
+      if (_shouldSendAlert(prefs, 'rule_budget_allocation_guard')) {
+        await _markAlertSent(prefs, 'rule_budget_allocation_guard');
         await NotificationService().showNotification(
           id: 304,
           title: '🏦 Budget Exceeds Bank Balance',
