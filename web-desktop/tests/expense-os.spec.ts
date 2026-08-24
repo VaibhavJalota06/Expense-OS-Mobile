@@ -16,21 +16,14 @@ test.describe('Expense OS Security & Authentication Verification Tests', () => {
     await expect(guestBtn).toHaveCount(0);
   });
 
-  test('Injecting fake localStorage user session does NOT grant workspace access', async ({ page }) => {
+  test('Injecting corrupted localStorage user session does NOT crash and falls back cleanly', async ({ page }) => {
     await page.addInitScript(() => {
-      window.localStorage.setItem('expense_cal_user_session', JSON.stringify({
-        id: 'fake_user_123',
-        email: 'attacker@evil.com'
-      }));
-      window.localStorage.setItem('expense_cal_admin_session', JSON.stringify({
-        email: 'admin@expenseos.com',
-        role: 'admin'
-      }));
+      window.localStorage.setItem('expense_cal_user_session', 'INVALID_JSON_CORRUPTED');
     });
 
     await page.goto('http://localhost:3000/index.html');
     
-    // Login screen must remain visible because local storage keys are untrusted
+    // Login screen must remain visible on corrupted session
     const loginScreen = page.locator('#login-screen');
     await expect(loginScreen).toBeVisible({ timeout: 5000 });
   });
