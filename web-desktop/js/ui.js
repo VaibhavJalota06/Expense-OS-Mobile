@@ -876,6 +876,11 @@ function renderSubscriptions() {
 
   // Dedicated Bills View Grid
   if (subsGridContainer) {
+    if (typeof deduplicateSubscriptions === 'function') {
+      subscriptions = deduplicateSubscriptions(subscriptions);
+    } else if (window.deduplicateSubscriptions) {
+      subscriptions = window.deduplicateSubscriptions(subscriptions);
+    }
     subsGridContainer.innerHTML = '';
 
     if (subscriptions.length === 0) {

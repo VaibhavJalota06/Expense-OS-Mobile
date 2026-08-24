@@ -575,6 +575,7 @@ async function syncAllSupabaseTables(userId) {
 async function saveState() {
   // Always save to localStorage as backup
   try {
+    subscriptions = deduplicateSubscriptions(subscriptions);
     localStorage.setItem('expense_cal_web_budget', budget.toString());
     localStorage.setItem('expense_cal_web_expenses', JSON.stringify(expenses));
     localStorage.setItem('expense_cal_web_subscriptions', JSON.stringify(subscriptions));
@@ -748,7 +749,7 @@ function loadStateFromLocal() {
   if (savedSubs) {
     try {
       const parsedSubscriptions = JSON.parse(savedSubs);
-      subscriptions = Array.isArray(parsedSubscriptions) ? parsedSubscriptions.filter(isValidSubscription) : [];
+      subscriptions = Array.isArray(parsedSubscriptions) ? deduplicateSubscriptions(parsedSubscriptions) : [];
     } catch (e) { subscriptions = []; }
   } else {
     subscriptions = [];
@@ -810,7 +811,7 @@ function startSupabaseSync(userId) {
     const currentYM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
 
     if (Array.isArray(data.subscriptions)) {
-      subscriptions = data.subscriptions.filter(isValidSubscription).map(s => {
+      subscriptions = deduplicateSubscriptions(data.subscriptions.filter(isValidSubscription).map(s => {
         const isPaidFlag = Boolean(s.is_paid || s.isPaid || s.lastPaidMonth === currentYM);
         return {
           id: String(s.id),
@@ -831,7 +832,7 @@ function startSupabaseSync(userId) {
           lastPaidDate: s.lastPaidDate || s.last_paid_date || '',
           remindOnDueDate: s.remind_on_due_date ?? s.remindOnDueDate ?? true
         };
-      });
+      }));
     }
 
     if (Array.isArray(data.expenses)) {
@@ -1099,10 +1100,43 @@ function isValidSubscription(item) {
   if (!item || typeof item !== 'object') return false;
   if (item.type === 'savings_goal' || item.type === 'split_bill' || item.type === 'system_financial_meta') return false;
   const name = item.name || item.title;
-  return typeof item.id === 'string' &&
+  return (typeof item.id === 'string' || typeof item.id === 'number') &&
     typeof name === 'string' && name.trim().length > 0 &&
     Number.isFinite(Number(item.amount)) && Number(item.amount) > 0;
 }
+
+function deduplicateSubscriptions(list) {
+  if (!Array.isArray(list)) return [];
+  const map = new Map();
+  list.forEach(item => {
+    if (!item || !isValidSubscription(item)) return;
+    const nameKey = (item.name || item.title || '').trim().toLowerCase();
+    const idKey = item.id ? String(item.id) : null;
+
+    let matchKey = null;
+    if (idKey && map.has(idKey)) {
+      matchKey = idKey;
+    } else {
+      for (const [k, v] of map.entries()) {
+        const vName = (v.name || v.title || '').trim().toLowerCase();
+        if (nameKey && vName === nameKey) {
+          matchKey = k;
+          break;
+        }
+      }
+    }
+
+    if (matchKey) {
+      const prev = map.get(matchKey);
+      map.set(matchKey, { ...prev, ...item, id: prev.id || item.id });
+    } else {
+      map.set(idKey || nameKey || Math.random().toString(), item);
+    }
+  });
+  return Array.from(map.values());
+}
+
+window.deduplicateSubscriptions = deduplicateSubscriptions;
 
 function getLocalDateString() {
   const d = new Date();
