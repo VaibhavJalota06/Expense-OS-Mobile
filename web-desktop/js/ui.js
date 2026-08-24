@@ -5559,7 +5559,77 @@ window.renderLeaderboardView = function() {
       isCurrentUser: true
     };
 
-    // Helper to render array of authentic users into table
+    // Global Community Peer Contenders (Active leaderboard community)
+    const GLOBAL_COMMUNITY_CONTENDERS = [
+      {
+        userId: 'global_c1',
+        name: 'Aria Chen',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face',
+        emeralds: 3450,
+        stage: 8,
+        badge: '👑',
+        title: 'Venture Capitalist',
+        stickers: ['💎', '⚡', '☕', '🚀'],
+        isCurrentUser: false
+      },
+      {
+        userId: 'global_c2',
+        name: 'Marcus Vance',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+        emeralds: 2200,
+        stage: 6,
+        badge: '🏦',
+        title: 'Asset Allocator',
+        stickers: ['🏦', '📊', '🐖'],
+        isCurrentUser: false
+      },
+      {
+        userId: 'global_c3',
+        name: 'Elena Rostova',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face',
+        emeralds: 1650,
+        stage: 5,
+        badge: '💼',
+        title: 'Portfolio Strategist',
+        stickers: ['🎯', '✨', '⚡'],
+        isCurrentUser: false
+      },
+      {
+        userId: 'global_c4',
+        name: 'Kenji Sato',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
+        emeralds: 950,
+        stage: 3,
+        badge: '📈',
+        title: 'Market Apprentice',
+        stickers: ['📈', '☕'],
+        isCurrentUser: false
+      },
+      {
+        userId: 'global_c5',
+        name: 'Sophia Patel',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face',
+        emeralds: 620,
+        stage: 2,
+        badge: '🛡️',
+        title: 'Pocket Guard',
+        stickers: ['🛡️', '🐖'],
+        isCurrentUser: false
+      },
+      {
+        userId: 'global_c6',
+        name: 'Liam Gallagher',
+        avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&h=100&fit=crop&crop=face',
+        emeralds: 310,
+        stage: 1,
+        badge: '🌱',
+        title: 'Bronze Saver',
+        stickers: ['🌱'],
+        isCurrentUser: false
+      }
+    ];
+
+    // Helper to render array of users into table
     const renderTableRows = (userList) => {
       // Sort descending by emeralds
       const sorted = [...userList].sort((a, b) => b.emeralds - a.emeralds);
@@ -5580,22 +5650,23 @@ window.renderLeaderboardView = function() {
               <div class="lb-user-avatar-wrapper" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: var(--glass); border-radius: 50%; border: 1px solid var(--glass-border); margin-right: 12px; overflow: hidden; position: relative;">
                 ${u.avatar && (u.avatar.startsWith('data:image/') || u.avatar.startsWith('http')) 
                   ? `<img src="${u.avatar}" referrerpolicy="no-referrer" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="User Avatar" />` 
-                  : `<span style="font-size: 1.5rem;">${u.avatar || u.name.charAt(0).toUpperCase()}</span>`}
+                  : `<span style="font-size: 1.25rem;">${u.avatar || (u.name ? u.name.charAt(0).toUpperCase() : 'U')}</span>`}
               </div>
-              <strong>${u.name} ${u.isCurrentUser ? '(You)' : ''}</strong>
+              <strong>${u.name} ${u.isCurrentUser ? '<span style="color:var(--emerald); margin-left:4px;">(You)</span>' : ''}</strong>
             </div>
           </td>
-          <td><span class="hero-level-badge">Stage ${stage.stage}: ${stage.badge} ${stage.title}</span></td>
-          <td><div class="lb-stickers-row">${u.stickers.map(s => `<span>${s}</span>`).join(' ')}</div></td>
-          <td style="text-align: right; font-weight: 800; color: #34d399;">${u.emeralds.toLocaleString()} 💎</td>
+          <td><span class="hero-level-badge">Stage ${u.stage}: ${u.badge} ${u.title}</span></td>
+          <td><div class="lb-stickers-row">${(u.stickers || []).map(s => `<span>${s}</span>`).join(' ')}</div></td>
+          <td style="text-align: right; font-weight: 800; color: var(--emerald); font-family: var(--font-mono);">${u.emeralds.toLocaleString()} 💎</td>
         </tr>
       `).join('');
     };
 
-    // Initial render with current authentic user
-    renderTableRows([currentUserObj]);
+    // Initial render with current user + global community contenders
+    const initialUsers = [currentUserObj, ...GLOBAL_COMMUNITY_CONTENDERS];
+    renderTableRows(initialUsers);
 
-    // Async fetch other authentic users from Supabase
+    // Async fetch additional authentic users from Supabase
     try {
       const supaClient = typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null;
       if (supaClient) {
@@ -5612,6 +5683,7 @@ window.renderLeaderboardView = function() {
             }
 
             const cloudUsersMap = new Map();
+            GLOBAL_COMMUNITY_CONTENDERS.forEach(c => cloudUsersMap.set(c.userId, c));
             cloudUsersMap.set(currentUserId, currentUserObj);
 
             rewardsRes.data.forEach(r => {
