@@ -2146,12 +2146,13 @@ body {
   }
 }
 
-/* Testimonials Grid Alignment & Layout */
-
+/* Testimonials Grid Alignment & Layout (Balanced 2x2 Grid) */
 .testimonials-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.75rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  max-width: 1050px;
+  margin: 0 auto;
   align-items: stretch;
 }
 
@@ -2166,7 +2167,7 @@ body {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   transition: all 0.35s ease;
-  min-height: 220px;
+  min-height: 200px;
 }
 
 .testimonial-card:hover {
@@ -2175,9 +2176,10 @@ body {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.2);
 }
 
-@media (max-width: 992px) {
+@media (max-width: 768px) {
   .testimonials-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: 1fr;
+    max-width: 520px;
   }
 }
 
