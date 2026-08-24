@@ -108,16 +108,18 @@ class SupabaseService {
       final name = meta?['full_name'] ?? meta?['name'] ?? meta?['display_name'];
       final avatar = meta?['avatar_url'] ?? meta?['picture'] ?? meta?['avatar'];
 
-      await client.from('profiles').upsert({
+      final Map<String, dynamic> row = {
         'user_id': user.id,
         'email': user.email,
         'full_name': name,
         'avatar_url': avatar,
         'currency': currency,
-        'monthly_budget': budget,
-        'starting_balance': balance,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }, onConflict: 'user_id');
+      };
+      if (budget > 0) row['monthly_budget'] = budget;
+      if (balance > 0) row['starting_balance'] = balance;
+
+      await client.from('profiles').upsert(row, onConflict: 'user_id');
     } catch (_) {}
   }
 
@@ -916,7 +918,9 @@ class SupabaseService {
             final prefs4 = await SharedPreferences.getInstance();
             if (profileRow['starting_balance'] != null) {
               final bal = (profileRow['starting_balance'] as num).toDouble();
-              await prefs4.setDouble('user_starting_balance', bal);
+              if (bal > 0) {
+                await prefs4.setDouble('user_starting_balance', bal);
+              }
             }
             if (profileRow['currency'] != null) {
               final curr = profileRow['currency'].toString();

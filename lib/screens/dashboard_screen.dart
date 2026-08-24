@@ -135,10 +135,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _refreshDashboard() async {
-    await Future.wait([
-      _loadExpenses(),
-      _loadUserData(),
-    ]);
+    await _loadExpenses();
+    await _loadUserData();
   }
 
   Future<void> _loadUserData() async {
@@ -152,8 +150,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final budget = prefs.getDouble('monthly_budget_cap') ?? 0.0;
       if (mounted) {
         setState(() {
-          _startingBalance = bal;
-          _monthlyBudgetCap = budget;
+          if (bal > 0 || _startingBalance == 0.0) {
+            _startingBalance = bal;
+          }
+          if (budget > 0 || _monthlyBudgetCap == 0.0) {
+            _monthlyBudgetCap = budget;
+          }
         });
         _evaluateBudgetRules();
       }
@@ -176,8 +178,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       setState(() {
         _expenses = list;
-        _monthlyBudgetCap = budget;
-        _startingBalance = bal;
+        if (budget > 0 || _monthlyBudgetCap == 0.0) {
+          _monthlyBudgetCap = budget;
+        }
+        if (bal > 0 || _startingBalance == 0.0) {
+          _startingBalance = bal;
+        }
       });
 
       // Automatically evaluate AI Smart Budget Rules and push device notifications
