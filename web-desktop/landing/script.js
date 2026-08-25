@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!Array.isArray(releases) || releases.length === 0) return;
 
       const latest = releases[0];
-      const tagName = latest.tag_name || 'v3.3.6';
+      const tagName = latest.tag_name || 'v3.3.9';
 
       // Update all release version tags on page
       document.querySelectorAll('.release-version-tag, .footer-status-text').forEach(el => {
