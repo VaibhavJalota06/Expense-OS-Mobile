@@ -696,8 +696,8 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
               ),
               ElevatedButton.icon(
                 onPressed: () => _showQuickDepositDialog(goal),
-                icon: const Icon(Icons.add, size: 14),
-                label: Text('+ Deposit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
+                icon: const Icon(Icons.add_rounded, size: 14),
+                label: Text('Deposit', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 11)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.monexBlue.withValues(alpha: 0.1),
                   foregroundColor: AppTheme.monexBlue,
