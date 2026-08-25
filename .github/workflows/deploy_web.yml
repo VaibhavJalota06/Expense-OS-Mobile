@@ -1,11 +1,10 @@
-name: Deploy Web App & Landing Page to GitHub Pages
+name: Redirect GitHub Pages to Vercel
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'web-desktop/**'
       - '.github/workflows/deploy_web.yml'
   workflow_dispatch:
 
@@ -19,54 +18,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy-pages:
-    name: Deploy to GitHub Pages
+  redirect-pages:
+    name: Deploy Vercel Redirect to GitHub Pages
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Assemble Web & Landing Site
+      - name: Create Redirect Site
         run: |
           mkdir -p _site
-          mkdir -p _site/landing
-          mkdir -p _site/app
+          cat << 'EOF' > _site/index.html
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="refresh" content="0; url=https://expense-os-mobile.vercel.app/landing">
+            <link rel="canonical" href="https://expense-os-mobile.vercel.app/landing">
+            <title>Redirecting to Expense OS...</title>
+            <script>
+              (function() {
+                var target = 'https://expense-os-mobile.vercel.app';
+                var path = window.location.pathname.replace(/^\/Expense-OS-Mobile/, '');
+                var search = window.location.search || '';
+                var hash = window.location.hash || '';
+                if (!path || path === '/' || path === '/index.html') {
+                  window.location.replace(target + '/landing' + search + hash);
+                } else {
+                  window.location.replace(target + path + search + hash);
+                }
+              })();
+            </script>
+          </head>
+          <body style="background:#090C11;color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;">
+            <div>
+              <h2 style="color:#38bdf8;margin-bottom:0.5rem;">Redirecting to Expense OS...</h2>
+              <p style="color:#94a3b8;">Please wait or <a href="https://expense-os-mobile.vercel.app/landing" style="color:#38bdf8;text-decoration:underline;">click here if not redirected automatically</a>.</p>
+            </div>
+          </body>
+          </html>
+          EOF
 
-          # Copy entire web app to root and /app/
-          cp -r web-desktop/index.html _site/
-          cp -r web-desktop/style.css _site/
-          cp -r web-desktop/main.js _site/
-          cp -r web-desktop/auth.js _site/
-          cp -r web-desktop/auth-callback.html _site/
-          cp -r web-desktop/supabase-config.js _site/
-          cp -r web-desktop/service-worker.js _site/
-          cp -r web-desktop/manifest.json _site/
-          cp -r web-desktop/icon.png _site/
-          cp -r web-desktop/icon.ico _site/
-          cp -r web-desktop/js _site/
-          cp -r web-desktop/templates _site/
-
-          # Also mirror to /app/
-          cp -r web-desktop/index.html _site/app/
-          cp -r web-desktop/style.css _site/app/
-          cp -r web-desktop/main.js _site/app/
-          cp -r web-desktop/auth.js _site/app/
-          cp -r web-desktop/auth-callback.html _site/app/
-          cp -r web-desktop/supabase-config.js _site/app/
-          cp -r web-desktop/service-worker.js _site/app/
-          cp -r web-desktop/manifest.json _site/app/
-          cp -r web-desktop/icon.png _site/app/
-          cp -r web-desktop/icon.ico _site/app/
-          cp -r web-desktop/js _site/app/
-          cp -r web-desktop/templates _site/app/
-
-          # Copy landing page to /landing/
-          cp -r web-desktop/landing/* _site/landing/
-          
-          # Create root landing.html with corrected asset paths for root location
-          sed 's|href="style\.css|href="landing/style.css|g; s|src="script\.js|src="landing/script.js|g; s|href="\.\./icon\.png"|href="icon.png"|g; s|href="\.\./index\.html"|href="index.html"|g' web-desktop/landing/index.html > _site/landing.html
-
-          # Create a .nojekyll file to prevent Jekyll processing
+          # Mirror to 404.html to catch all subroutes
+          cp _site/index.html _site/404.html
           touch _site/.nojekyll
 
       - name: Deploy to gh-pages branch
