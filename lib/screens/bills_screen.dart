@@ -126,7 +126,7 @@ class _BillsScreenState extends State<BillsScreen> {
           date: now,
           paymentMethod: 'Auto-Pay',
         );
-        SupabaseService().addExpense(payExpense).catchError((_) {});
+        SupabaseService().addExpense(payExpense).catchError((_) => payExpense);
         continue;
       }
 
