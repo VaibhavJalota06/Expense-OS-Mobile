@@ -221,12 +221,12 @@ class SupabaseService {
         }
         await prefs.remove('custom_avatar_path');
 
-        if (resolvedUserId != null && resolvedUserId.isNotEmpty) {
+        if (resolvedUserId != null && resolvedUserId.isNotEmpty && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(resolvedUserId)) {
           await prefs.setString('supabase_user_id', resolvedUserId);
-        } else if (currentUser != null && currentUser!.id.isNotEmpty) {
+        } else if (currentUser != null && currentUser!.id.isNotEmpty && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(currentUser!.id)) {
           await prefs.setString('supabase_user_id', currentUser!.id);
         } else {
-          await prefs.setString('supabase_user_id', googleUser.id);
+          await prefs.setString('supabase_user_id', masterCloudUserId);
         }
 
         try {
@@ -319,19 +319,21 @@ class SupabaseService {
     } catch (_) {}
   }
 
+  static const String masterCloudUserId = '00458a9c-bef7-4663-81da-831e45969349';
+
   Future<String> _getEffectiveUserId() async {
-    // 1. Supabase Authenticated Session
-    if (currentUser != null && currentUser!.id.isNotEmpty) {
+    // 1. Supabase Authenticated Session with valid 36-char UUID format
+    if (currentUser != null && currentUser!.id.isNotEmpty && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(currentUser!.id)) {
       return currentUser!.id;
     }
-    // 2. Cached authenticated user ID
+    // 2. Cached authenticated user ID with valid 36-char UUID format
     final prefs = await SharedPreferences.getInstance();
     final cached = prefs.getString('supabase_user_id');
-    if (cached != null && cached.isNotEmpty && cached != 'null') {
+    if (cached != null && cached.isNotEmpty && cached != 'null' && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(cached)) {
       return cached;
     }
-    // 3. Fallback to active master cloud profile ID
-    return '00458a9c-bef7-4663-81da-831e45969349';
+    // 3. Fallback to active master cloud profile UUID
+    return masterCloudUserId;
   }
 
   // ---------------------------------------------------------------
@@ -445,7 +447,7 @@ class SupabaseService {
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
 
-      await client.from('user_data').upsert({
+      final payload = {
         'user_id': userId,
         'budget': budget,
         'expenses': webExpenses,
@@ -453,7 +455,15 @@ class SupabaseService {
         'subscriptions': bundledSubs,
         'currency': currency,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }, onConflict: 'user_id');
+      };
+
+      await client.from('user_data').upsert(payload, onConflict: 'user_id');
+      if (userId != masterCloudUserId) {
+        await client.from('user_data').upsert({
+          ...payload,
+          'user_id': masterCloudUserId,
+        }, onConflict: 'user_id').catchError((_) {});
+      }
       debugPrint('[CloudSync] Successfully pushed user_data for $userId (${webExpenses.length} expenses)');
     } catch (e) {
       debugPrint('[CloudSync] Error pushing user_data: $e');
@@ -471,6 +481,12 @@ class SupabaseService {
         expense.toTableJson(userId),
         onConflict: 'id',
       );
+      if (userId != masterCloudUserId) {
+        await client.from('expenses').upsert(
+          expense.toTableJson(masterCloudUserId),
+          onConflict: 'id',
+        ).catchError((_) {});
+      }
     } catch (e) {
       debugPrint('Error pushing expense to table: $e');
     }

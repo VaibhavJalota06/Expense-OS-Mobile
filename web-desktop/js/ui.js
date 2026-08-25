@@ -3249,7 +3249,7 @@ document.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', applyEnvironmentAdjustments);
 
 // ---------- Live Update Manager & GitHub Checker ----------
-const CURRENT_APP_VERSION = 'v3.3.11';
+const CURRENT_APP_VERSION = 'v3.3.12';
 
 window.showUpdateToast = function(title, message, showActions = false) {
   const toast = document.getElementById('update-notification');
