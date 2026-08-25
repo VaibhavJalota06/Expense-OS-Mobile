@@ -476,6 +476,9 @@ class SupabaseService {
   // ---------------------------------------------------------------
   Future<void> _pushExpenseToTable(Expense expense) async {
     try {
+      if (expense.id == null || !RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(expense.id!)) {
+        return; // Only push valid UUIDs to relational expenses table (non-UUIDs are synced in user_data JSON)
+      }
       final userId = await _getEffectiveUserId();
       await client.from('expenses').upsert(
         expense.toTableJson(userId),
@@ -494,7 +497,9 @@ class SupabaseService {
 
   Future<void> _deleteExpenseFromTable(String id) async {
     try {
-      await client.from('expenses').delete().eq('id', id);
+      if (RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(id)) {
+        await client.from('expenses').delete().eq('id', id);
+      }
     } catch (e) {
       debugPrint('Error deleting expense from table: $e');
     }
