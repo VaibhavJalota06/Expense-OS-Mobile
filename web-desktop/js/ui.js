@@ -1942,21 +1942,13 @@ window.renderIncomeList = function() {
 
 window.deleteIncome = function(incomeId) {
   if (!incomeId) return;
-  const target = incomes.find(inc => String(inc.id) === String(incomeId));
-  const amt = target ? Number(target.amount || 0) : 0;
-  const wasAddedToBudget = target ? (target.addedToBudget !== false) : true;
 
   incomes = incomes.filter(inc => String(inc.id) !== String(incomeId));
-
-  // If this income was added to monthly budget, deduct it from budget on deletion
-  if (amt > 0 && wasAddedToBudget && typeof budget !== 'undefined' && budget > 0) {
-    budget = Math.max(0, Number(budget || 0) - amt);
-  }
 
   saveState();
   updateUI();
   if (window.renderIncomeList) window.renderIncomeList();
-  showToast('Income record removed & budget updated');
+  showToast('Income record removed successfully');
 };
 
 // ---------- Income Modal Logic ----------
@@ -2015,15 +2007,10 @@ window.handleSaveIncome = function(e) {
 
   incomes.push(newIncome);
 
-  // If user selected to add to Monthly Spending Budget, increase budget directly
-  if (addToBudget) {
-    budget = Number(budget || 0) + amount;
-  }
-
   saveState();
   updateUI();
   if (window.renderIncomeList) window.renderIncomeList();
-  showToast(addToBudget ? '✓ Income logged & added to Monthly Budget!' : '✓ Income logged to Total Account Money!');
+  showToast('✓ Income logged successfully!');
   if (sourceInput) sourceInput.value = '';
   if (amountInput) amountInput.value = '';
 };
