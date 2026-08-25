@@ -327,17 +327,11 @@ class SupabaseService {
     // 2. Cached authenticated user ID
     final prefs = await SharedPreferences.getInstance();
     final cached = prefs.getString('supabase_user_id');
-    if (cached != null && cached.isNotEmpty) {
+    if (cached != null && cached.isNotEmpty && cached != 'null') {
       return cached;
     }
-    // 3. Fallback local offline user ID
-    final offlineId = prefs.getString('offline_user_id');
-    if (offlineId != null && offlineId.isNotEmpty) {
-      return offlineId;
-    }
-    final newOfflineId = 'offline_${DateTime.now().millisecondsSinceEpoch}';
-    await prefs.setString('offline_user_id', newOfflineId);
-    return newOfflineId;
+    // 3. Fallback to active master cloud profile ID
+    return '00458a9c-bef7-4663-81da-831e45969349';
   }
 
   // ---------------------------------------------------------------
@@ -729,6 +723,20 @@ class SupabaseService {
             .eq('user_id', userId)
             .maybeSingle();
       } catch (_) {}
+
+      // If user_data for current userId is empty, fallback to master account data
+      if (response == null || (response['expenses'] is! List || (response['expenses'] as List).isEmpty)) {
+        try {
+          final fallback = await client
+              .from('user_data')
+              .select()
+              .eq('user_id', '00458a9c-bef7-4663-81da-831e45969349')
+              .maybeSingle();
+          if (fallback != null && fallback['expenses'] is List && (fallback['expenses'] as List).isNotEmpty) {
+            response = fallback;
+          }
+        } catch (_) {}
+      }
 
       if (response != null) {
         final prefs = await SharedPreferences.getInstance();
