@@ -134,7 +134,7 @@ jobs:
           if-no-files-found: error
 
   build-desktop-exe:
-    name: Build Windows Desktop EXE (Tauri v2)
+    name: Build Windows Desktop Setup EXE
     needs: [get-version, run-tests]
     runs-on: windows-latest
     steps:
@@ -148,24 +148,18 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'web-desktop/package.json'
 
-      - name: Setup Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
-
       - name: Install Dependencies
         working-directory: web-desktop
-        run: npm install
+        run: npm ci
 
-      - name: Build Tauri Desktop Application
+      - name: Build Windows Desktop Installer
         working-directory: web-desktop
         run: |
-          npx @tauri-apps/cli build
-          mkdir -p dist-tauri
-          Get-ChildItem -Path "src-tauri/target/release" -Filter "*.exe" -Recurse | ForEach-Object {
-            Copy-Item $_.FullName "dist-tauri/ExpenseOS-Windows-v${{ needs.get-version.outputs.version }}.exe" -Force
-            Copy-Item $_.FullName "dist-tauri/ExpenseOS-Windows-Setup.exe" -Force
-          }
-          Get-ChildItem -Path "src-tauri/target/release/bundle" -Filter "*.msi" -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
-            Copy-Item $_.FullName "dist-tauri/ExpenseOS-Windows-v${{ needs.get-version.outputs.version }}.msi" -Force
+          npm run dist
+          mkdir -p dist-release
+          Get-ChildItem -Path "dist" -Filter "*.exe" | ForEach-Object {
+            Copy-Item $_.FullName "dist-release/ExpenseOS-Windows-Setup.exe" -Force
+            Copy-Item $_.FullName "dist-release/ExpenseOS-Windows-v${{ needs.get-version.outputs.version }}-Setup.exe" -Force
           }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -174,7 +168,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ExpenseOS-Windows-EXE
-          path: web-desktop/dist-tauri/*
+          path: web-desktop/dist-release/*
           if-no-files-found: warn
 
   create-release:
